@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIME Service Portal</title>
+    
+    <!-- Tailwind CSS (The Design Engine) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PRIME Brand Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        prime: {
+                            orange: '#F15C2B',
+                            navy: '#003E52',
+                            green: '#0F5838',
+                            gray: '#f4f4f4',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-prime-navy text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <!-- Logo Icon -->
+                <div class="w-8 h-8 bg-prime-orange rounded-md flex items-center justify-center text-white font-bold">P</div>
+                <h1 class="text-xl font-bold tracking-wide">PRIME <span class="font-light opacity-80">Service Portal</span></h1>
+            </div>
+
+            <!-- User Profile -->
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-medium leading-none">Richard Haynes</p>
+                    <p class="text-xs text-gray-300 mt-1">Service Desk Manager</p>
+                </div>
+                <div class="h-8 w-8 rounded-full bg-prime-orange border-2 border-white shadow-sm"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-xs text-gray-500">
+                &copy; 2025 PRIME AE Group, Inc. - Information Technology
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configured Global Template Directory (`templates/`).
 - Created Master Layout (`base.html`) with PRIME branding colors.
 - Created Homepage View (`core/views.py`) and URL routing.
+- Added `run_portal.bat` for one-click server startup.
+- Added `dev_shell.bat` for quick terminal access.
 
 ## [0.0.1] - 2025-11-17
 ### Added
