@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'home' %}" class="text-sm text-prime-orange hover:underline">&larr; Back to Catalog</a>
+        <h2 class="text-2xl font-bold text-prime-navy mt-2">Report a Printer or Scanner Issue</h2>
+        <p class="text-gray-600 text-sm">PaperCut issues, toner requests, or connection errors.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Location -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.printer_location.label }} <span class="text-red-500">*</span></label>
+                {{ form.printer_location }}
+            </div>
+
+            <!-- Description (Called "Summary of Problem" in screenshot) -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.description.label }} <span class="text-red-500">*</span></label>
+                {{ form.description }}
+            </div>
+
+            <!-- Affected Computer -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.computer_name.label }}</label>
+                {{ form.computer_name }}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4 border-t border-gray-100 flex justify-end">
+                <button type="submit" class="bg-prime-navy text-white px-6 py-2 rounded-md font-semibold hover:bg-opacity-90 transition shadow-sm">
+                    Submit Ticket
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created Homepage View (`core/views.py`) and URL routing.
 - Added `run_portal.bat` for one-click server startup.
 - Added `dev_shell.bat` for quick terminal access.
+- Integrated Tailwind CSS via CDN.
+- Implemented PRIME Brand Colors (Navy/Orange) in Tailwind config.
+- Built 8-Card Service Catalog Grid with Heroicons.
+- Updated Footer to official corporate standard.
 
 ## [0.0.1] - 2025-11-17
 ### Added

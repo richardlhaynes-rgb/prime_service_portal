@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'home' %}" class="text-sm text-prime-orange hover:underline">&larr; Back to Catalog</a>
+        <h2 class="text-2xl font-bold text-prime-navy mt-2">Report an Application Problem</h2>
+        <p class="text-gray-600 text-sm">Please provide details about the software issue.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Application Dropdown -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.application_name.label }}</label>
+                {{ form.application_name }}
+            </div>
+
+            <!-- Other App (Hidden by default) -->
+            <div id="other-app-container" class="hidden transition-all duration-300 ease-in-out">
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.other_application.label }}</label>
+                {{ form.other_application }}
+            </div>
+
+            <!-- Computer Name -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.computer_name.label }}</label>
+                {{ form.computer_name }}
+            </div>
+
+            <!-- Summary -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.summary.label }} <span class="text-red-500">*</span></label>
+                {{ form.summary }}
+                <p class="text-xs text-gray-400 mt-1">Ex: Revit crashing when opening file</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.description.label }} <span class="text-red-500">*</span></label>
+                {{ form.description }}
+            </div>
+
+            <!-- File Upload -->
+            <div class="p-4 bg-gray-50 rounded-md border border-dashed border-gray-300">
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.screenshot.label }}</label>
+                {{ form.screenshot }}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4 border-t border-gray-100 flex justify-end">
+                <button type="submit" class="bg-prime-navy text-white px-6 py-2 rounded-md font-semibold hover:bg-opacity-90 transition shadow-sm">
+                    Submit Ticket
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript for Conditional Logic -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const appDropdown = document.getElementById('id_application_name');
+        const otherContainer = document.getElementById('other-app-container');
+        const otherInput = document.getElementById('id_other_application');
+
+        function toggleOtherField() {
+            if (appDropdown.value === 'Other') {
+                otherContainer.classList.remove('hidden');
+                otherInput.required = true;
+            } else {
+                otherContainer.classList.add('hidden');
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        }
+
+        appDropdown.addEventListener('change', toggleOtherField);
+        toggleOtherField();
+    });
+</script>
+{% endblock %}
