@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+        <h1 class="text-4xl font-bold text-prime-navy mb-2">Knowledge Base</h1>
+        <form method="get" action="." class="max-w-2xl mx-auto relative px-4 mt-6">
+            <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search..." class="w-full p-4 border border-gray-300 rounded-lg shadow-sm">
+            <button type="submit" class="absolute right-6 top-4 text-prime-orange font-bold">Search</button>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-prime-navy">Recent Articles</h3>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for article in recent_articles %}
+            <a href="{% url 'article_detail' article.pk %}" class="block p-6 hover:bg-gray-50 transition">
+                <h4 class="text-lg font-medium text-prime-orange">{{ article.title }}</h4>
+                <p class="text-sm text-gray-500">{{ article.category }} - {{ article.subcategory }}</p>
+            </a>
+            {% empty %}
+            <div class="p-8 text-center text-gray-500">No articles found.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

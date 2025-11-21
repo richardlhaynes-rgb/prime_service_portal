@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <!-- 1. Welcome Banner & System Status -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-prime-orange mb-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-prime-navy">Welcome, Richard.</h2>
+            <p class="text-gray-600 mt-1">System Status: <span class="font-bold text-prime-green">● Operational</span></p>
+        </div>
+        <div class="flex gap-4">
+             <!-- Link to Knowledge Base -->
+            <a href="{% url 'kb_home' %}" class="bg-white text-prime-navy border border-gray-300 px-6 py-3 rounded-md font-bold shadow-sm hover:bg-gray-50 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
+                <span>Browse KB</span>
+            </a>
+            
+            <!-- Link to New Ticket (Action Button) -->
+            <a href="{% url 'service_catalog' %}" class="bg-prime-orange text-white px-6 py-3 rounded-md font-bold shadow hover:bg-opacity-90 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <span>New Ticket</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2. Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Open Tickets -->
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500 flex justify-between items-center">
+            <div>
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wide">Open Tickets</div>
+                <div class="text-3xl font-bold text-gray-800 mt-1">{{ open_tickets }}</div>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-full text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Resolved -->
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-prime-green flex justify-between items-center">
+            <div>
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wide">Resolved</div>
+                <div class="text-3xl font-bold text-gray-800 mt-1">{{ resolved_tickets }}</div>
+            </div>
+            <div class="p-3 bg-green-50 rounded-full text-prime-green">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Total History -->
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-gray-400 flex justify-between items-center">
+            <div>
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wide">Total History</div>
+                <div class="text-3xl font-bold text-gray-800 mt-1">{{ total_tickets }}</div>
+            </div>
+            <div class="p-3 bg-gray-100 rounded-full text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Recent Tickets Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-prime-navy">Your Ticket History</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for ticket in tickets %}
+                    <tr class="hover:bg-gray-50 transition duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-prime-navy">
+                            #{{ ticket.connectwise_id|default:ticket.id }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ ticket.title|truncatechars:50 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ ticket.get_ticket_type_display }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if ticket.status == 'New' %} bg-blue-100 text-blue-800 
+                                {% elif ticket.status == 'In Progress' %} bg-yellow-100 text-yellow-800
+                                {% elif ticket.status == 'Resolved' %} bg-green-100 text-green-800
+                                {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ ticket.created_at|date:"M d, Y" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <p>No tickets found. Start by submitting a request!</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

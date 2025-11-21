@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <!-- FIXED LINK HERE -->
+        <a href="{% url 'service_catalog' %}" class="text-sm text-prime-orange hover:underline">&larr; Back to Catalog</a>
+        <h2 class="text-2xl font-bold text-prime-navy mt-2">Software Installation Request</h2>
+        <p class="text-gray-600 text-sm">Request new software, license keys, or upgrades.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Software Name -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.software_name.label }} <span class="text-red-500">*</span></label>
+                {{ form.software_name }}
+            </div>
+
+            <!-- Justification -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.justification.label }} <span class="text-red-500">*</span></label>
+                {{ form.justification }}
+            </div>
+
+            <!-- Radio Buttons: Myself vs Another User -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-2">{{ form.request_for.label }}</label>
+                <div class="flex gap-6">
+                    {% for radio in form.request_for %}
+                    <div class="flex items-center">
+                        {{ radio.tag }}
+                        <label for="{{ radio.id_for_label }}" class="ml-2 text-gray-700 text-sm">{{ radio.choice_label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Target User (Hidden logic via JS) -->
+            <div id="target-user-container" class="hidden transition-all duration-300 ease-in-out">
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.target_user.label }}</label>
+                {{ form.target_user }}
+            </div>
+
+            <!-- Computer Name -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.computer_name.label }} <span class="text-red-500">*</span></label>
+                {{ form.computer_name }}
+            </div>
+
+            <!-- License Info -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.license_info.label }}</label>
+                {{ form.license_info }}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4 border-t border-gray-100 flex justify-end">
+                <button type="submit" class="bg-prime-navy text-white px-6 py-2 rounded-md font-semibold hover:bg-opacity-90 transition shadow-sm">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript for Conditional Logic (Myself vs Another User) -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const radioButtons = document.querySelectorAll('input[name="request_for"]');
+        const targetContainer = document.getElementById('target-user-container');
+        
+        function toggleTargetUser() {
+            let selectedValue = 'Myself';
+            radioButtons.forEach(radio => {
+                if (radio.checked) selectedValue = radio.value;
+            });
+
+            if (selectedValue === 'Another User') {
+                targetContainer.classList.remove('hidden');
+            } else {
+                targetContainer.classList.add('hidden');
+            }
+        }
+
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', toggleTargetUser);
+        });
+        
+        toggleTargetUser();
+    });
+</script>
+{% endblock %}

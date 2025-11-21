@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <!-- FIXED LINK HERE -->
+        <a href="{% url 'service_catalog' %}" class="text-sm text-prime-orange hover:underline">&larr; Back to Catalog</a>
+        <h2 class="text-2xl font-bold text-prime-navy mt-2">Modify VP Permissions or Report Issue</h2>
+        <p class="text-gray-600 text-sm">Request access changes, project updates, or report errors.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Request Type -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.request_type.label }} <span class="text-red-500">*</span></label>
+                {{ form.request_type }}
+            </div>
+
+            <!-- Other Type (Hidden by Default) -->
+            <div id="other-type-container" class="hidden transition-all duration-300 ease-in-out">
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.other_type.label }}</label>
+                {{ form.other_type }}
+            </div>
+
+            <!-- Affected Project -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.affected_project.label }}</label>
+                {{ form.affected_project }}
+            </div>
+
+            <!-- User List -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.user_list.label }}</label>
+                {{ form.user_list }}
+            </div>
+
+            <!-- Summary -->
+            <div>
+                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.summary.label }} <span class="text-red-500">*</span></label>
+                {{ form.summary }}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4 border-t border-gray-100 flex justify-end">
+                <button type="submit" class="bg-prime-navy text-white px-6 py-2 rounded-md font-semibold hover:bg-opacity-90 transition shadow-sm">
+                    Submit Ticket
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript for "Other" Logic -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdown = document.getElementById('id_request_type');
+        const otherContainer = document.getElementById('other-type-container');
+        const otherInput = document.getElementById('id_other_type');
+
+        function toggleOther() {
+            if (dropdown.value === 'Other') {
+                otherContainer.classList.remove('hidden');
+                otherInput.required = true;
+            } else {
+                otherContainer.classList.add('hidden');
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        }
+
+        dropdown.addEventListener('change', toggleOther);
+        toggleOther(); // Run on load
+    });
+</script>
+{% endblock %}

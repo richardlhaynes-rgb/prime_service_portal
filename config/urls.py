@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.urls import path, include
-from core.views import home
+from service_desk import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home, name='home'),
+    path('', views.dashboard, name='dashboard'),
     path('service-desk/', include('service_desk.urls')),
+    path('kb/', include('knowledge_base.urls')),
 ]

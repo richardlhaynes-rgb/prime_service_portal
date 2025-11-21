@@ -34,23 +34,39 @@
             <div class="flex items-center gap-2">
                 <!-- Logo Icon -->
                 <div class="w-8 h-8 bg-prime-orange rounded-md flex items-center justify-center text-white font-bold">P</div>
-                <h1 class="text-xl font-bold tracking-wide">PRIME <span class="font-light opacity-80">Service Portal</span></h1>
+                <!-- Logo Text Links to Dashboard -->
+                <a href="{% url 'dashboard' %}" class="text-xl font-bold tracking-wide hover:opacity-90">PRIME <span class="font-light opacity-80">Service Portal</span></a>
             </div>
 
-            <!-- User Profile -->
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-medium leading-none">Richard Haynes</p>
-                    <p class="text-xs text-gray-300 mt-1">Service Desk Manager</p>
+            <!-- Navigation & User Profile -->
+            <div class="flex items-center gap-6">
+                <!-- Nav Links -->
+                <nav class="hidden md:flex gap-6">
+                    <a href="{% url 'dashboard' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">My Dashboard</a>
+                    
+                    <!-- RESTORED TO 'CATALOG' AS REQUESTED -->
+                    <a href="{% url 'service_catalog' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">Catalog</a>
+                    
+                    <!-- Knowledge Base Link -->
+                    <a href="{% url 'kb_home' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">Knowledge Base</a>
+                </nav>
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-4 border-l border-blue-900 pl-6">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-medium leading-none">Richard Haynes</p>
+                        <p class="text-xs text-gray-300 mt-1">Service Desk Manager</p>
+                    </div>
+                    <div class="h-8 w-8 rounded-full bg-prime-orange border-2 border-white shadow-sm"></div>
                 </div>
-                <div class="h-8 w-8 rounded-full bg-prime-orange border-2 border-white shadow-sm"></div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main Content Injector -->
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% block content %}
+        <!-- Individual pages (Dashboard, Forms, Catalog, KB) will inject their content here -->
         {% endblock %}
     </main>
 

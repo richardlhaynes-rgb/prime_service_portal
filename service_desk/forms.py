@@ -1,4 +1,4 @@
-from django import forms
+﻿from django import forms
 
 # --- Shared Styling Class ---
 INPUT_STYLE = 'w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-transparent'
@@ -24,7 +24,6 @@ class ApplicationIssueForm(forms.Form):
         ('Windows OS', '(Windows / Operating System)'),
         ('Other', 'Other'),
     ]
-
     application_name = forms.ChoiceField(choices=APP_CHOICES, label="Application Name", widget=forms.Select(attrs={'class': INPUT_STYLE}))
     other_application = forms.CharField(required=False, label="Other Application", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "If 'Other' selected, please specify"}))
     computer_name = forms.CharField(required=False, label="Affected Computer (if not your own)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Leave blank if it's your primary computer"}))
@@ -65,23 +64,39 @@ class HardwareIssueForm(forms.Form):
     description = forms.CharField(label="Detailed Description", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please provide details, including any errors."}))
     screenshot = forms.FileField(required=False, label="Add Screenshot or Photo (Optional)", widget=forms.FileInput(attrs={'class': 'w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-opacity-90'}))
 
-# --- 4. Printer & Scanner Form (New) ---
+# --- 4. Printer & Scanner Form ---
 class PrinterScannerForm(forms.Form):
-    # Based on your screenshot image_033bdf.png
-    
-    printer_location = forms.CharField(
-        label="Printer/Scanner Location",
-        widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'Location (e.g., "Lexington 1st Floor")'})
-    )
+    printer_location = forms.CharField(label="Printer/Scanner Location", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'Location (e.g., "Lexington 1st Floor")'}))
+    description = forms.CharField(label="Summary of Problem", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please describe the problem in detail."}))
+    computer_name = forms.CharField(required=False, label="Affected Computer (if not your own)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Leave blank if it's your primary computer"}))
 
-    # In your screenshot, "Summary" is a big box, acting like a Description.
-    description = forms.CharField(
-        label="Summary of Problem",
-        widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please describe the problem in detail."})
-    )
+# --- 5. Software Install Form ---
+class SoftwareInstallForm(forms.Form):
+    software_name = forms.CharField(label="Software Name", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "e.g., Adobe Photoshop, AutoCAD 2026"}))
+    justification = forms.CharField(label="Business Justification / Project", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24', 'placeholder': "e.g., Needed for Project XYZ graphics"}))
+    REQUEST_FOR_CHOICES = [('Myself', 'Myself'), ('Another User', 'Another User')]
+    request_for = forms.ChoiceField(label="Is this request for yourself or someone else?", choices=REQUEST_FOR_CHOICES, widget=forms.RadioSelect(attrs={'class': 'ml-2'}), initial='Myself')
+    target_user = forms.CharField(required=False, label="User Requiring Software (if not yourself)", widget=forms.TextInput(attrs={'class': INPUT_STYLE}))
+    computer_name = forms.CharField(label="Computer Name / Asset Tag", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "e.g., 001234 or DESKTOP-ABCDE"}))
+    license_info = forms.CharField(required=False, label="License Information (if known)", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24'}))
 
-    computer_name = forms.CharField(
-        required=False,
-        label="Affected Computer (if not your own)",
-        widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Leave blank if it's your primary computer"})
-    )
+# --- 6. General Question Form ---
+class GeneralQuestionForm(forms.Form):
+    summary = forms.CharField(label="Subject", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Briefly state your question or issue."}))
+    description = forms.CharField(label="Your Question / Issue Details", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Provide details about your question or problem."}))
+    screenshot = forms.FileField(required=False, label="Add Screenshot (Optional)", widget=forms.FileInput(attrs={'class': 'w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-opacity-90'}))
+
+# --- 7. VP Reset Form ---
+class VPResetForm(forms.Form):
+    your_name = forms.CharField(label="Your Name", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Please enter your full name"}))
+    deltek_username = forms.CharField(required=False, label="Deltek Username (if different)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Leave blank if it's your email or full name"}))
+    summary = forms.CharField(label="Summary of Problem", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': 'e.g., "Forgot my password", "Password expired"'}))
+
+# --- 8. VP Permissions Form ---
+class VPPermissionsForm(forms.Form):
+    TYPE_CHOICES = [('', '-- Select Request Type --'), ('Permission Change', 'Permission Change'), ('Project Update', 'Project Update'), ('Report an Error', 'Report an Error'), ('General Question', 'General Question'), ('Other', 'Other')]
+    request_type = forms.ChoiceField(label="Request Type", choices=TYPE_CHOICES, widget=forms.Select(attrs={'class': INPUT_STYLE}))
+    other_type = forms.CharField(required=False, label="If 'Other', please specify", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "If 'Other' selected, please specify"}))
+    affected_project = forms.CharField(required=False, label="Affected Project (if any)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "(Optional) e.g., 2025-123.00"}))
+    user_list = forms.CharField(required=False, label="List of Users (if adding/removing)", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24', 'placeholder': "(Optional) e.g., John Smith, Jane Doe"}))
+    summary = forms.CharField(label="Summary of Problem or Request", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please add John Smith to project X"}))
