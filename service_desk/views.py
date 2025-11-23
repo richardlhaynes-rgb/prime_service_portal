@@ -1,38 +1,118 @@
-﻿from django.shortcuts import render, redirect
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.db.models import Case, When, Value, IntegerField
 from .forms import (
     ApplicationIssueForm, EmailMailboxForm, HardwareIssueForm, PrinterScannerForm,
-    SoftwareInstallForm, GeneralQuestionForm, VPResetForm, VPPermissionsForm
+    SoftwareInstallForm, GeneralQuestionForm, VPResetForm, VPPermissionsForm, TicketReplyForm
 )
-from .models import Ticket
+from .models import Ticket, Comment
 
-# --- 1. THE DASHBOARD (Homepage) ---
+# --- IMPORT THE SERVICE LAYER ---
+from services import ticket_service
+
+# --- 1. THE DASHBOARD ---
 def dashboard(request):
-    # Fetch tickets for the current user
-    if request.user.is_authenticated:
-        user_tickets = Ticket.objects.filter(submitter=request.user).order_by('-created_at')
+    # Use the Service Layer instead of direct database query
+    tickets = ticket_service.get_all_tickets(user=request.user)
+    stats = ticket_service.get_ticket_stats(tickets)
+    
+    # Sorting logic (only applies if NOT using mock data)
+    sort_by = request.GET.get('sort', '-created_at')
+    
+    if not ticket_service.USE_MOCK_DATA:
+        # Apply Django ORM sorting
+        priority_order = Case(
+            When(priority='Critical', then=Value(1)),
+            When(priority='High', then=Value(2)),
+            When(priority='Medium', then=Value(3)),
+            When(priority='Low', then=Value(4)),
+            output_field=IntegerField(),
+        )
+        
+        if sort_by == 'priority':
+            tickets = tickets.alias(priority_rank=priority_order).order_by('priority_rank')
+        elif sort_by == '-priority':
+            tickets = tickets.alias(priority_rank=priority_order).order_by('-priority_rank')
+        else:
+            valid_sorts = ['id', '-id', 'title', '-title', 'ticket_type', '-ticket_type', 'status', '-status', 'created_at', '-created_at']
+            if sort_by in valid_sorts:
+                tickets = tickets.order_by(sort_by)
     else:
-        user_tickets = Ticket.objects.none()
-
-    # Stats Calculation
-    total = user_tickets.count()
-    resolved = user_tickets.filter(status__in=[Ticket.Status.RESOLVED, Ticket.Status.CLOSED]).count()
-    open_count = total - resolved
+        # Mock data: Apply basic sorting to the list of dicts
+        if sort_by == 'title':
+            tickets = sorted(tickets, key=lambda x: x['title'])
+        elif sort_by == '-title':
+            tickets = sorted(tickets, key=lambda x: x['title'], reverse=True)
+        elif sort_by == 'status':
+            tickets = sorted(tickets, key=lambda x: x['status'])
+        elif sort_by == '-status':
+            tickets = sorted(tickets, key=lambda x: x['status'], reverse=True)
+        # Default: sort by created_at (newest first)
+        else:
+            tickets = sorted(tickets, key=lambda x: x.get('created_at', ''), reverse=True)
 
     context = {
-        'tickets': user_tickets,
-        'total_tickets': total,
-        'open_tickets': open_count,
-        'resolved_tickets': resolved,
+        'tickets': tickets,
+        'total_tickets': stats['total'],
+        'open_tickets': stats['open'],
+        'resolved_tickets': stats['resolved'],
+        'current_sort': sort_by,
     }
     return render(request, 'dashboard.html', context)
 
-# --- 2. THE CATALOG (Grid) ---
+# --- 2. TICKET DETAIL & REPLY ---
+def ticket_detail(request, pk):
+    ticket = ticket_service.get_ticket_by_id(pk)
+    
+    if not ticket:
+        messages.error(request, "Ticket not found.")
+        return redirect('dashboard')
+    
+    # Mock data doesn't support comments yet
+    if ticket_service.USE_MOCK_DATA:
+        comments = []
+        form = None
+        messages.warning(request, "⚠️ DEMO MODE: Ticket details are read-only. Comment functionality requires live database.")
+    else:
+        ticket = get_object_or_404(Ticket, pk=pk)
+        comments = ticket.comments.all()
+        
+        if request.method == 'POST':
+            form = TicketReplyForm(request.POST)
+            if form.is_valid():
+                text = form.cleaned_data.get('comment')
+                if text:
+                    Comment.objects.create(ticket=ticket, author=request.user, text=text)
+                    messages.success(request, "Comment added.")
+                
+                new_priority = form.cleaned_data.get('priority')
+                if new_priority and new_priority != ticket.priority:
+                    ticket.priority = new_priority
+                    ticket.save()
+                    messages.info(request, "Priority updated.")
+
+                if form.cleaned_data.get('close_ticket'):
+                    ticket.status = Ticket.Status.CLOSED
+                    ticket.save()
+                    messages.success(request, "Ticket closed.")
+                    return redirect('dashboard')
+
+                return redirect('ticket_detail', pk=ticket.id)
+        else:
+            form = TicketReplyForm(initial={'priority': ticket.priority})
+    
+    return render(request, 'service_desk/ticket_detail.html', {
+        'ticket': ticket,
+        'comments': comments,
+        'form': form
+    })
+
+# --- 3. THE CATALOG ---
 def service_catalog(request):
     return render(request, 'service_catalog.html')
 
-
-# --- 3. REPORTING FORMS ---
+# --- 4. REPORTING FORMS ---
+# (No changes needed - these create NEW tickets in the database)
 
 def report_application_issue(request):
     if request.method == 'POST':
@@ -41,10 +121,8 @@ def report_application_issue(request):
             data = form.cleaned_data
             app = data['application_name']
             if app == 'Other' and data['other_application']: app = f"Other ({data['other_application']})"
-            
             title = f"[Portal] App Issue: {app} - {data['summary']}"
             desc = f"USER REPORT:\n-----------------\nApp: {app}\nComputer: {data['computer_name'] or 'Primary'}\n\nDETAILS:\n{data['description']}"
-            
             Ticket.objects.create(title=title, description=desc, ticket_type=Ticket.TicketType.APPLICATION, submitter=request.user, priority=Ticket.Priority.P3, status=Ticket.Status.NEW)
             messages.success(request, f"Ticket Submitted: {title}")
             return redirect('dashboard')

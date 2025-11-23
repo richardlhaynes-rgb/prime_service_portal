@@ -1,63 +1,87 @@
 PRIME Service Portal - Architecture Overview
 
+Last Updated: November 21, 2025
+
 1. High-Level Concept
 
-The PRIME Service Portal is a monolithic Django web application designed to serve as the internal "One-Stop-Shop" for IT support. It replaces the legacy ConnectWise portal with a modern, responsive interface.
+The PRIME Service Portal is a centralized, web-based dashboard for IT support. It replaces the legacy ConnectWise Manage portal with a modern, responsive interface designed for speed and clarity.
 
-Framework: Django 5.x (Python)
+Core Philosophy: "Dashboard First." Users land immediately on their status overview, reducing anxiety and clicks.
 
-Frontend: HTML5 + Tailwind CSS (via CDN for Prototyping)
+Framework: Django 5.x (Python).
 
-Database: SQLite (Local Prototype) -> Azure SQL (Future Production)
+Frontend: HTML5 + Tailwind CSS (Utility-First design system).
 
-Authentication: Native Django Auth -> Azure AD (Future)
+Database: SQLite (Prototype) -> Azure SQL (Production).
 
-2. Application Modules (Django Apps)
+Authentication: Native Django Auth (Phase 1) -> Azure AD / SSO (Future Phase).
 
-The project is split into logical domains to ensure separation of concerns:
+2. System Architecture
 
-A. config (The Project Root)
+The project is a monolithic Django application split into three logical domains ("Apps"):
 
-Holds global configurations (settings.py).
+A. config (The Root)
 
-Controls the main URL routing (urls.py).
+Role: The project brain. Handles global settings, middleware, and the master URL routing map.
 
-Configures the WSGI/ASGI entry points for server deployment.
+Key File: urls.py (Maps / to Dashboard, /catalog/ to Service Catalog, /kb/ to Knowledge Base).
 
-B. core (The UI/UX Engine)
+B. service_desk (The Engine)
 
-Responsibility: Manages shared layouts, the dashboard (Homepage), and navigation logic.
+Role: Manages the core IT workflows: Ticket submission, Dashboard logic, and Form processing.
 
-Key Files: views.py (renders the home page).
+Key Components:
 
-C. service_desk (The Ticket Engine) - [Planned]
+models.py: Defines the Ticket database schema.
 
-Responsibility: Will handle Ticket creation, API calls to ConnectWise Manage, and Service Catalog logic.
+forms.py: Contains the 8 specific forms (Application, Email, Hardware, etc.) with conditional logic.
 
-Future State: Will contain models.py for caching ticket data and api.py for external communication.
+views.py: Handles the business logic for the Dashboard stats (open_tickets, resolved_tickets) and form processing.
 
-D. knowledge_base (The Library) - [Planned]
+C. knowledge_base (The Library)
 
-Responsibility: Will handle articles, FAQs, and search functionality.
+Role: Manages self-service articles to deflect tickets.
 
-3. Design System
+Design: Mirrors the ConnectWise Manage schema for future synchronization.
 
-Framework: Tailwind CSS (Utility-First).
+Key Components:
 
-Brand Identity:
+models.py: Defines the Article schema (Category, Problem, Solution).
 
-Navy: #003E52 (Header, Primary Text)
+views.py: Handles search logic (kb_home) and article display (article_detail).
 
-Flamingo Orange: #F15C2B (Accents, Buttons, Hovers)
+3. The User Journey (Navigation Flow)
 
-Forest Green: #0F5838 (Success States)
+Landing (/): The Dashboard.
+
+Goal: Instant status visibility.
+
+Features: Welcome Banner, System Status, Ticket Stats, Recent History table.
+
+Action (/catalog/): The Service Catalog.
+
+Goal: Triage the user's request.
+
+Features: 8-Card Grid layout directing users to specific forms.
+
+Submission (/report/...): The Forms.
+
+Goal: Capture structured data.
+
+Features: tailored fields (e.g., "Computer Name", "Error Message") that map to a standard Ticket.
+
+Self-Help (/kb/): The Knowledge Base.
+
+Goal: Solve problems without a ticket.
+
+Features: Search bar, Recent Articles list, detailed Article view.
 
 4. Deployment Strategy
 
-Current: Localhost (Windows 11).
+Current State: Local Development (Windows 11 + VS Code).
 
-Target: Azure App Service (Linux Container).
+Source Control: GitHub (Private Repo).
 
-CI/CD: GitHub Actions -> Azure Deployment.
+Future Target: Azure App Service (Containerized).
 
 Architected by: Richard Haynes & The AI Architect

@@ -16,7 +16,7 @@
                 <span>Browse KB</span>
             </a>
             
-            <!-- Link to New Ticket (Action Button) -->
+            <!-- Link to New Ticket -->
             <a href="{% url 'service_catalog' %}" class="bg-prime-orange text-white px-6 py-3 rounded-md font-bold shadow hover:bg-opacity-90 transition flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -42,14 +42,14 @@
         </div>
 
         <!-- Resolved -->
-        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-prime-green flex justify-between items-center">
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500 flex justify-between items-center">
             <div>
                 <div class="text-gray-500 text-xs font-bold uppercase tracking-wide">Resolved</div>
                 <div class="text-3xl font-bold text-gray-800 mt-1">{{ resolved_tickets }}</div>
             </div>
-            <div class="p-3 bg-green-50 rounded-full text-prime-green">
+            <div class="p-3 bg-green-50 rounded-full text-green-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
         </div>
@@ -71,48 +71,71 @@
     <!-- 3. Recent Tickets Table -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-lg font-semibold text-prime-navy">Your Ticket History</h3>
+            <h3 class="text-lg font-semibold text-prime-navy">My Recent Tickets</h3>
         </div>
-        
+
+        <!-- Sortable Table -->
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket ID</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'id' %}-id{% else %}id{% endif %}" class="flex items-center">ID {% if current_sort == 'id' %}&uarr;{% elif current_sort == '-id' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'title' %}-title{% else %}title{% endif %}" class="flex items-center">Subject {% if current_sort == 'title' %}&uarr;{% elif current_sort == '-title' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'ticket_type' %}-ticket_type{% else %}ticket_type{% endif %}" class="flex items-center">Type {% if current_sort == 'ticket_type' %}&uarr;{% elif current_sort == '-ticket_type' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'priority' %}-priority{% else %}priority{% endif %}" class="flex items-center">Priority {% if current_sort == 'priority' %}&uarr;{% elif current_sort == '-priority' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="flex items-center">Status {% if current_sort == 'status' %}&uarr;{% elif current_sort == '-status' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'created_at' %}-created_at{% else %}created_at{% endif %}" class="flex items-center">Date {% if current_sort == 'created_at' %}&uarr;{% elif current_sort == '-created_at' %}&darr;{% endif %}</a>
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for ticket in tickets %}
-                    <tr class="hover:bg-gray-50 transition duration-150">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-prime-navy">
-                            #{{ ticket.connectwise_id|default:ticket.id }}
-                        </td>
+                    <tr class="hover:bg-gray-50 transition duration-150 cursor-pointer" onclick="window.location='{% url 'ticket_detail' ticket.id %}'">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-prime-navy">#{{ ticket.id }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ ticket.title|truncatechars:50 }}
+                            {% if ticket.title|length > 50 %}{{ ticket.title|slice:":50" }}...{% else %}{{ ticket.title }}{% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ ticket.get_ticket_type_display }}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ticket.ticket_type }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                {% if ticket.priority == 'Critical' %}bg-red-100 text-red-800
+                                {% elif ticket.priority == 'High' %}bg-orange-100 text-orange-800
+                                {% elif ticket.priority == 'Medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ ticket.priority }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                {% if ticket.status == 'New' %} bg-blue-100 text-blue-800 
-                                {% elif ticket.status == 'In Progress' %} bg-yellow-100 text-yellow-800
-                                {% elif ticket.status == 'Resolved' %} bg-green-100 text-green-800
-                                {% else %} bg-gray-100 text-gray-800 {% endif %}">
-                                {{ ticket.get_status_display }}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                {% if ticket.status == 'New' %}bg-blue-100 text-blue-800
+                                {% elif ticket.status == 'In Progress' or ticket.status == 'Assigned' %}bg-purple-100 text-purple-800
+                                {% elif ticket.status == 'Resolved' or ticket.status == 'Closed' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ ticket.status }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ ticket.created_at|date:"M d, Y" }}
+                            {% if ticket.created_at %}
+                                {{ ticket.created_at|date:"M d, Y" }}
+                            {% else %}
+                                N/A
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

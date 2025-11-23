@@ -9,9 +9,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Get the admin user (Richard) to assign these tickets to
-        user = User.objects.first()
+        # Since we disabled login, we might not have a user in the request context
+        # during normal use, but for this script, we need to assign them to SOMEONE.
+        # We'll grab the first superuser.
+        user = User.objects.filter(is_superuser=True).first()
+        
         if not user:
-            self.stdout.write(self.style.ERROR("No user found. Create a superuser first!"))
+            self.stdout.write(self.style.ERROR("No superuser found. Please create one with 'python manage.py createsuperuser' first!"))
             return
 
         self.stdout.write(f"Generating tickets for user: {user.username}...")

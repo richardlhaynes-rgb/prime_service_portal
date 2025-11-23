@@ -1,0 +1,57 @@
+[
+    {
+        "id": 1,
+        "title": "3D Mouse: 3Dconnexion SpaceMouse Not Working in 3ds Max",
+        "category": "Hardware & Peripherals",
+        "subcategory": "Specialty Peripherals",
+        "status": "Approved",
+        "problem": "A user's 3Dconnexion SpaceMouse (3D puck) works on the desktop but does not function (or stops working) inside 3ds Max.",
+        "solution": "1. Check 3ds Max Driver: In 3ds Max, go to Customize > Preferences > 3Dconnexion tab.\n2. Re-run the Driver: Re-install the 3Dconnexion add-ins.\n3. Restart PC and open 3ds Max.",
+        "created_at": "2025-01-10T10:00:00Z",
+        "updated_at": "2025-01-10T10:00:00Z"
+    },
+    {
+        "id": 2,
+        "title": "Outlook: How to Create a New Mail Profile",
+        "category": "Business & Admin Software",
+        "subcategory": "Email & Outlook",
+        "status": "Approved",
+        "problem": "Outlook is freezing, not opening, or displaying corruption errors.",
+        "solution": "1. Close Outlook.\n2. Open Control Panel > Mail.\n3. Click 'Show Profiles'.\n4. Click 'Add' and name the new profile.\n5. Follow the wizard.",
+        "created_at": "2025-01-09T14:30:00Z",
+        "updated_at": "2025-01-09T14:30:00Z"
+    },
+    {
+        "id": 3,
+        "title": "VPN: Common 'Cannot Connect' Troubleshooting",
+        "category": "Networking & Connectivity",
+        "subcategory": "VPN / Remote Access",
+        "status": "Approved",
+        "problem": "FortiClient hangs at 98% or displays 'Unable to establish the VPN connection'.",
+        "solution": "1. Check your internet connection.\n2. Verify your MFA token.\n3. Restart FortiClient.",
+        "created_at": "2025-01-08T09:15:00Z",
+        "updated_at": "2025-01-08T09:15:00Z"
+    },
+    {
+        "id": 4,
+        "title": "Bluebeam: Revu Crashing on Startup",
+        "category": "Design Applications",
+        "subcategory": "Bluebeam Revu",
+        "status": "Approved",
+        "problem": "Bluebeam opens a splash screen and then immediately closes.",
+        "solution": "1. Open Bluebeam Administrator.\n2. Go to the 'Revu' tab.\n3. Click 'Reset Settings'.",
+        "created_at": "2025-01-07T11:00:00Z",
+        "updated_at": "2025-01-07T11:00:00Z"
+    },
+    {
+        "id": 5,
+        "title": "Printer: How to add the Xerox C8155",
+        "category": "Printing & Plotting",
+        "subcategory": "Office Printers",
+        "status": "Approved",
+        "problem": "User cannot find the main office printer.",
+        "solution": "1. Open File Explorer.\n2. Type \\\\printserver in the address bar.\n3. Double click 'Xerox-C8155-HQ'.",
+        "created_at": "2025-01-06T13:20:00Z",
+        "updated_at": "2025-01-06T13:20:00Z"
+    }
+]

@@ -1,6 +1,6 @@
 ﻿from django import forms
+from .models import Ticket, Comment
 
-# --- Shared Styling Class ---
 INPUT_STYLE = 'w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-transparent'
 
 # --- 1. Application Issue Form ---
@@ -100,3 +100,26 @@ class VPPermissionsForm(forms.Form):
     affected_project = forms.CharField(required=False, label="Affected Project (if any)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "(Optional) e.g., 2025-123.00"}))
     user_list = forms.CharField(required=False, label="List of Users (if adding/removing)", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24', 'placeholder': "(Optional) e.g., John Smith, Jane Doe"}))
     summary = forms.CharField(label="Summary of Problem or Request", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please add John Smith to project X"}))
+
+# --- NEW: Ticket Reply Form (Comments Only) ---
+class TicketReplyForm(forms.Form):
+    comment = forms.CharField(
+        label="Add Comment / Reply",
+        required=False,
+        widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24', 'placeholder': 'Add a note, reply to the technician...'})
+    )
+    
+    # Close Ticket Checkbox
+    close_ticket = forms.BooleanField(
+        required=False,
+        label="Close this ticket?",
+        widget=forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-prime-orange border-gray-300 rounded focus:ring-prime-orange'})
+    )
+    
+    # Allow updating Priority (but not Status)
+    priority = forms.ChoiceField(
+        label="Update Priority",
+        choices=Ticket.Priority.choices,
+        required=False,
+        widget=forms.Select(attrs={'class': INPUT_STYLE})
+    )

@@ -2,12 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Ticket(models.Model):
-    """
-    The core unit of work. Represents a request from a user.
-    Aligned with ConnectWise Manage fields.
-    """
-    
-    # --- Configuration Enums (Choices) ---
+    # --- Configuration Enums ---
     class TicketType(models.TextChoices):
         APPLICATION = 'Application', 'Application Issue'
         EMAIL = 'Email', 'Email & Mailbox'
@@ -29,63 +24,49 @@ class Ticket(models.Model):
         P2 = 'High', 'High - Urgent'
         P3 = 'Medium', 'Medium - Normal'
         P4 = 'Low', 'Low - Scheduled'
-        NO_RESPONSE = 'NoResponse', 'Do Not Respond'
 
     class Status(models.TextChoices):
         NEW = 'New', 'New'
         ASSIGNED = 'Assigned', 'Assigned'
-        IN_PROGRESS = 'InProgress', 'In Progress'
+        IN_PROGRESS = 'In Progress', 'In Progress'
         RESOLVED = 'Resolved', 'Resolved'
         CLOSED = 'Closed', 'Closed'
 
     # --- Core Data ---
-    title = models.CharField(max_length=200, help_text="Summary of the issue")
-    description = models.TextField(help_text="Detailed notes")
+    title = models.CharField(max_length=200)
+    description = models.TextField()
     
-    submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets')
+    # People
+    submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submitted_tickets')
+    technician = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
     
-    # --- CWM Categorization ---
-    ticket_type = models.CharField(
-        max_length=50,
-        choices=TicketType.choices,
-        default=TicketType.GENERAL,
-        verbose_name="Type"
-    )
-
+    # Categorization
+    ticket_type = models.CharField(max_length=50, choices=TicketType.choices, default=TicketType.GENERAL)
     subtype = models.CharField(max_length=100, blank=True)
     item = models.CharField(max_length=100, blank=True)
-    
-    source = models.CharField(
-        max_length=20,
-        choices=Source.choices,
-        default=Source.PORTAL
-    )
+    source = models.CharField(max_length=20, choices=Source.choices, default=Source.PORTAL)
+    priority = models.CharField(max_length=20, choices=Priority.choices, default=Priority.P3)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
 
-    priority = models.CharField(
-        max_length=20,
-        choices=Priority.choices,
-        default=Priority.P3
-    )
-    
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.NEW
-    )
-
-    # --- Integration Data ---
     connectwise_id = models.IntegerField(null=True, blank=True, unique=True)
-    
-    # --- Timestamps ---
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at'] 
-        verbose_name = "Service Ticket"
-        verbose_name_plural = "Service Tickets"
+        ordering = ['-created_at']
 
     def __str__(self):
-        if self.connectwise_id:
-            return f"CW#{self.connectwise_id} - {self.title}"
-        return f"Local#{self.id} - {self.title}"
+        return f"#{self.id} - {self.title}"
+
+class Comment(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_internal = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comment by {self.author} on #{self.ticket.id}"

@@ -1,168 +1,126 @@
 PRIME Service Portal - Developer Guide
 
-Version: 1.0.0
+Version: 1.2.0
 
-Last Updated: November 18, 2025
+Last Updated: November 21, 2025
 
 Maintainer: Richard Haynes (Internal IT)
 
 1. Introduction
 
-This document serves as the comprehensive reference manual for the PRIME Service Portal. It contains precise instructions to rebuild the development environment from scratch on a fresh Windows machine, ensuring business continuity and standardized development practices.
-
-Target Audience: IT Staff, Developers, Future Maintainers.
+This manual details the setup, operation, and maintenance of the PRIME Service Portal development environment. It is designed to allow a new developer (or a reset machine) to go from "Zero" to "Live Server" in under 15 minutes.
 
 2. Prerequisites (The Toolbelt)
 
-Before creating the project files, ensure the host machine has the following installed. These tools form the foundation of the development environment.
+Ensure the host machine has the following installed:
 
-2.1. Required Software
+Python 3.12+ (Download)
 
-Python 3.12+
+Critical: Check "Add python.exe to PATH" during install.
 
-Role: The Backend Runtime. Python is the programming language that powers Django, our web framework.
+Git for Windows (Download)
 
-Download: python.org
+Settings: Default options are fine.
 
-CRITICAL: During installation, check the box "Add python.exe to PATH".
+Visual Studio Code (Download)
 
-Git for Windows
-
-Role: Version Control. Git tracks every change made to the code, allowing us to revert errors and manage project history.
-
-Download: git-scm.com
-
-Settings: Default settings are acceptable.
-
-Visual Studio Code (VS Code)
-
-Role: The Integrated Development Environment (IDE). This is the editor where code is written. It was chosen for its robust ecosystem of extensions that support Python and web development.
-
-Download: code.visualstudio.com
-
-Extensions:
-
-Python (Microsoft): Provides debugging and IntelliSense.
-
-Django (Baptiste Darthenay): Provides syntax highlighting for Django templates.
-
-Tailwind CSS IntelliSense: Provides auto-completion for design classes.
-
-Black Formatter (Microsoft): Automatically formats code to meet PEP8 industry standards.
+Recommended Extensions: Python, Django, Tailwind CSS IntelliSense, Black Formatter.
 
 3. Installation (Rebuilding from Scratch)
 
-3.1. File Placement
+3.1. Clone the Repository
 
-Create a folder on the local drive (Avoid OneDrive/Network Shares):
+Open PowerShell/Terminal in your desired projects folder (C:\Projects\):
 
-Path: C:\Projects\prime_service_portal
-
-If restoring from a ZIP backup:
-
-Extract all contents into this folder.
-
-If restoring from Git:
-
-cd C:\Projects
-git clone <repository_url> prime_service_portal
+git clone [https://github.com/YOUR_USERNAME/prime_service_portal.git](https://github.com/YOUR_USERNAME/prime_service_portal.git)
+cd prime_service_portal
 
 
-3.2. Environment Setup
+3.2. Environment Setup (One-Time)
 
-Open PowerShell and run these commands inside the project folder (C:\Projects\prime_service_portal):
-
-Create the Virtual Environment (Sandbox):
+Create Virtual Environment:
 
 python -m venv venv
 
 
-Activate the Environment:
+Activate Environment:
 
 .\venv\Scripts\Activate
 
 
-(Verify you see (venv) in green on the left).
-
 Install Dependencies:
 
-python -m pip install --upgrade pip
-pip install django black
+pip install django
 
 
-Initialize the Database:
+3.3. Database Initialization
+
+Apply Migrations (Creates tables for Tickets and KB Articles):
 
 python manage.py migrate
 
 
-Create an Admin User:
+Create Admin User (For accessing /admin):
 
 python manage.py createsuperuser
-# Follow prompts for username/password
 
 
-4. Running the Application
+3.4. Data Seeding (Optional but Recommended)
 
-Method A: The "One-Click" Launcher (Preferred)
+To populate the dashboard and KB with realistic demo data immediately:
 
-Open File Explorer to C:\Projects\prime_service_portal.
+Seed Knowledge Base:
 
-Double-click run_portal.bat.
-
-A black window will open, and the browser should launch to http://127.0.0.1:8000/.
-
-Method B: Manual Launch (PowerShell)
-
-Open PowerShell.
-
-Navigate: cd C:\Projects\prime_service_portal
-
-Activate: .\venv\Scripts\Activate
-
-Run: python manage.py runserver
-
-5. The Admin Interface (Back Office)
-
-Django provides a built-in administrative interface for managing users and database records.
-
-URL: http://127.0.0.1:8000/admin
-
-Login: Use the Superuser credentials created in Step 3.2.
-
-Design Note: The Admin Interface uses default Django styling (Navy/Blue). It does not inherit the custom PRIME Service Portal theme (Tailwind CSS). This is intentional behavior.
-
-6. Project Structure (Where things live)
-
-prime_service_portal/
-├── config/                 # The "Brain" (Global Settings, URL Routing)
-│   ├── settings.py         # Apps, Database, & Template config
-│   └── urls.py             # Master traffic controller
-│
-├── core/                   # The "Manager" App
-│   └── views.py            # Homepage logic
-│
-├── templates/              # HTML Files (The Visuals)
-│   ├── base.html           # Master Layout (Header/Footer/Tailwind)
-│   └── home.html           # Homepage Content
-│
-├── docs/                   # Documentation (You are here)
-├── venv/                   # Python Virtual Environment (Do not touch)
-├── manage.py               # Django Command Utility
-├── db.sqlite3              # The Database File
-├── run_portal.bat          # Server Launcher Script
-└── dev_shell.bat           # Developer Terminal Script
+python manage.py import_kb
 
 
-7. Troubleshooting
+(Reads from kb_source.md in the root folder)
 
-Issue: "Script is disabled on this system" error.
+Seed Tickets:
 
-Fix: Run this in PowerShell: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+python manage.py populate_tickets
 
-Issue: Icons look giant / Colors are missing.
 
-Fix: The Tailwind CDN script isn't loading. Ensure templates/base.html contains the <script src="https://cdn.tailwindcss.com"></script> line and you have an active internet connection.
+4. Daily Workflow
 
-Issue: "Port already in use".
+Method A: The "One-Click" Launcher
 
-Fix: You have another server running. Close the other black command window or press Ctrl+C in the active one.
+Double-click the run_portal.bat file in the project root. This opens a terminal, activates the environment, and starts the server automatically.
+
+Method B: Manual Start
+
+Open VS Code in the project folder.
+
+Open Terminal (Ctrl +  `).
+
+Run:
+
+.\venv\Scripts\Activate
+python manage.py runserver
+
+
+Access the site at: http://127.0.0.1:8000/
+
+5. Project Structure
+
+config/: Main settings and global URL map.
+
+service_desk/: Core app. Contains models.py (Ticket schema), forms.py (8 Service Cards), and views.py (Dashboard logic).
+
+knowledge_base/: KB app. Contains Article model and search logic.
+
+templates/: HTML files.
+
+base.html: Master layout (Header/Nav/Footer).
+
+dashboard.html: The homepage.
+
+service_catalog.html: The grid of 8 cards.
+
+kb_source.md: The master content file for Knowledge Base articles.
+
+6. Troubleshooting
+
+"NoReverseMatch" Error: Usually means a template is linking to a URL name that hasn't been defined in urls.py. Check config/urls.py to ensure apps are included.
+
+Missing CSS/Styles: Ensure your computer is online. Tailwind CSS is loaded via CDN.

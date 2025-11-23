@@ -16,7 +16,7 @@
         </div>
         <div class="divide-y divide-gray-200">
             {% for article in recent_articles %}
-            <a href="{% url 'article_detail' article.pk %}" class="block p-6 hover:bg-gray-50 transition">
+            <a href="{% url 'article_detail' article.id %}" class="block p-6 hover:bg-gray-50 transition">
                 <h4 class="text-lg font-medium text-prime-orange">{{ article.title }}</h4>
                 <p class="text-sm text-gray-500">{{ article.category }} - {{ article.subcategory }}</p>
             </a>

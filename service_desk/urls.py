@@ -4,8 +4,11 @@ from . import views
 urlpatterns = [
     # --- The Dashboard ---
     path('dashboard/', views.dashboard, name='dashboard'),
+    
+    # --- Ticket Details (New) ---
+    path('ticket/<int:pk>/', views.ticket_detail, name='ticket_detail'),
 
-    # --- The Service Catalog (The Grid) ---
+    # --- The Service Catalog (Grid) ---
     path('catalog/', views.service_catalog, name='service_catalog'),
 
     # --- Reporting Flows ---

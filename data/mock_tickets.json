@@ -1,0 +1,52 @@
+[
+    {
+        "id": 1,
+        "title": "Laptop Battery Not Charging",
+        "description": "Dell XPS 15 stuck at 5% plugged in. Tried different charger.",
+        "ticket_type": "Hardware",
+        "status": "New",
+        "priority": "Medium",
+        "submitter": "Richard Haynes",
+        "created_at": "2025-01-15T09:30:00Z"
+    },
+    {
+        "id": 2,
+        "title": "Need Bluebeam License for New Hire",
+        "description": "John Doe starts Monday. Needs Revu Standard.",
+        "ticket_type": "Software",
+        "status": "In Progress",
+        "priority": "Medium",
+        "submitter": "Richard Haynes",
+        "created_at": "2025-01-14T14:20:00Z"
+    },
+    {
+        "id": 3,
+        "title": "Cannot Access HR Share Drive",
+        "description": "Getting 'Access Denied' error on Z: drive.",
+        "ticket_type": "VP Permissions",
+        "status": "New",
+        "priority": "High",
+        "submitter": "Richard Haynes",
+        "created_at": "2025-01-13T11:45:00Z"
+    },
+    {
+        "id": 4,
+        "title": "Printer Low on Toner (Lexington)",
+        "description": "Xerox C8155 needs Cyan toner replacement.",
+        "ticket_type": "Printer",
+        "status": "Resolved",
+        "priority": "Low",
+        "submitter": "Richard Haynes",
+        "created_at": "2025-01-12T08:15:00Z"
+    },
+    {
+        "id": 5,
+        "title": "Outlook Crashing on Launch",
+        "description": "Safe mode works, but normal launch crashes instantly.",
+        "ticket_type": "Email",
+        "status": "Resolved",
+        "priority": "High",
+        "submitter": "Richard Haynes",
+        "created_at": "2025-01-10T16:00:00Z"
+    }
+]
