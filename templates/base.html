@@ -1,9 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRIME Service Portal</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo_color.png' %}">
     
     <!-- Tailwind CSS (The Design Engine) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,11 +35,21 @@
     <!-- Header -->
     <header class="bg-prime-navy text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <!-- Logo Icon -->
-                <div class="w-8 h-8 bg-prime-orange rounded-md flex items-center justify-center text-white font-bold">P</div>
-                <!-- Logo Text Links to Dashboard -->
-                <a href="{% url 'dashboard' %}" class="text-xl font-bold tracking-wide hover:opacity-90">PRIME <span class="font-light opacity-80">Service Portal</span></a>
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3">
+                <a href="{% url 'dashboard' %}" class="flex items-center hover:opacity-90 transition">
+                    <img 
+                        src="{% static 'images/logo_white.png' %}" 
+                        alt="PRIME AE" 
+                        class="h-12 w-auto object-contain">
+                </a>
+                
+                <!-- Separator -->
+                <div class="h-8 w-px bg-indigo-400/50"></div>
+                
+                <!-- App Title -->
+                <span class="text-white text-xl font-medium tracking-tight">Service Portal</span>
             </div>
 
             <!-- Navigation & User Profile -->
@@ -44,10 +58,8 @@
                 <nav class="hidden md:flex gap-6">
                     <a href="{% url 'dashboard' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">My Dashboard</a>
                     
-                    <!-- RESTORED TO 'CATALOG' AS REQUESTED -->
                     <a href="{% url 'service_catalog' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">Catalog</a>
                     
-                    <!-- Knowledge Base Link -->
                     <a href="{% url 'kb_home' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">Knowledge Base</a>
                 </nav>
 
