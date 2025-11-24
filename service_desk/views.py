@@ -68,12 +68,19 @@ def ticket_detail(request, pk):
         messages.error(request, "Ticket not found.")
         return redirect('dashboard')
     
-    # Mock data doesn't support comments yet
-    if ticket_service.USE_MOCK_DATA:
-        comments = []
-        form = None
-        messages.warning(request, "⚠️ DEMO MODE: Ticket details are read-only. Comment functionality requires live database.")
+    # --- ALWAYS CREATE THE FORM (for visual demonstration) ---
+    comments = []
+    form = None
+    is_demo_mode = ticket_service.USE_MOCK_DATA
+    
+    if is_demo_mode:
+        # Demo Mode: Show warning but still display the form
+        messages.warning(request, "⚠️ DEMO MODE: This form is for demonstration only. Changes will not be saved.")
+        # Create an empty form with the ticket's current priority (from JSON)
+        form = TicketReplyForm(initial={'priority': ticket.get('priority', 'Medium')})
+        comments = []  # No comments in demo mode
     else:
+        # Live Mode: Full functionality
         ticket = get_object_or_404(Ticket, pk=pk)
         comments = ticket.comments.all()
         
@@ -104,7 +111,8 @@ def ticket_detail(request, pk):
     return render(request, 'service_desk/ticket_detail.html', {
         'ticket': ticket,
         'comments': comments,
-        'form': form
+        'form': form,
+        'is_demo_mode': is_demo_mode
     })
 
 # --- 3. THE CATALOG ---
