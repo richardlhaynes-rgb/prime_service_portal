@@ -2,16 +2,7 @@
 from . import views
 
 urlpatterns = [
-    # --- The Dashboard ---
-    path('dashboard/', views.dashboard, name='dashboard'),
-    
-    # --- Ticket Details (New) ---
-    path('ticket/<int:pk>/', views.ticket_detail, name='ticket_detail'),
-
-    # --- The Service Catalog (Grid) ---
-    path('catalog/', views.service_catalog, name='service_catalog'),
-
-    # --- Reporting Flows ---
+    # --- User-Facing Ticket Submission Forms ---
     path('report/application/', views.report_application_issue, name='report_app_issue'),
     path('report/email/', views.report_email_issue, name='report_email_issue'),
     path('report/hardware/', views.report_hardware_issue, name='report_hardware_issue'),
@@ -20,4 +11,25 @@ urlpatterns = [
     path('report/general/', views.report_general_question, name='report_general_question'),
     path('request/vp-reset/', views.report_vp_reset, name='report_vp_reset'),
     path('request/vp-permissions/', views.report_vp_permissions, name='report_vp_permissions'),
+    
+    # --- Ticket Detail View ---
+    path('ticket/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
+    
+    # --- Service Catalog ---
+    path('catalog/', views.service_catalog, name='service_catalog'),
+    
+    # --- Ticket Survey (CSAT Feedback Portal) ---
+    path('survey/<int:ticket_id>/', views.ticket_survey, name='ticket_survey'),
+    
+    # --- Manager Analytics Dashboard ---
+    path('manager/', views.manager_dashboard, name='manager_dashboard'),
+    
+    # --- CSAT Report ---
+    path('manager/csat/', views.csat_report, name='csat_report'),
+    
+    # --- Admin Settings (NEW - System Health Configuration) ---
+    path('manager/settings/', views.admin_settings, name='admin_settings'),
+    
+    # --- Technician Profile ---
+    path('manager/technician/<str:name>/', views.technician_profile, name='technician_profile'),
 ]

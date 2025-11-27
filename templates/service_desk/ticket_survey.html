@@ -1,0 +1,266 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Survey - PRIME Service Portal</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo_color.png' %}">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PRIME Brand Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        prime: {
+                            orange: '#F15C2B',
+                            navy: '#003E52',
+                            green: '#0F5838',
+                            gray: '#f4f4f4',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <!-- Minimal Header (Logo Only) -->
+    <header class="py-6 bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 flex justify-center">
+            <img 
+                src="{% static 'images/logo_color.png' %}" 
+                alt="PRIME AE" 
+                class="h-16 w-auto object-contain">
+        </div>
+    </header>
+
+    <!-- Survey Card (Focus Mode - Centered) -->
+    <main class="flex-grow flex items-center justify-center px-4 py-12">
+        <div class="max-w-lg w-full">
+            
+            <!-- Survey Form Card -->
+            <div id="survey-form" class="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+                
+                <!-- Title & Subtitle -->
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-prime-navy mb-2">
+                        How did we do on Ticket #{{ ticket.id }}?
+                    </h1>
+                    <p class="text-gray-600 text-sm">
+                        Your feedback helps <span class="font-semibold text-prime-navy">{{ ticket.technician_name }}</span> improve.
+                    </p>
+                    <p class="text-xs text-gray-500 mt-2">
+                        Issue: <span class="font-medium text-gray-700">{{ ticket.title }}</span>
+                    </p>
+                </div>
+
+                <!-- Star Rating (Interactive) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-prime-navy mb-3 text-center">
+                        Rate Your Experience
+                    </label>
+                    <div id="star-container" class="flex justify-center gap-2">
+                        <!-- 5 Stars (Heroicons) -->
+                        <svg 
+                            class="star h-12 w-12 cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" 
+                            data-rating="1"
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        <svg 
+                            class="star h-12 w-12 cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" 
+                            data-rating="2"
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        <svg 
+                            class="star h-12 w-12 cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" 
+                            data-rating="3"
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        <svg 
+                            class="star h-12 w-12 cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" 
+                            data-rating="4"
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        <svg 
+                            class="star h-12 w-12 cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" 
+                            data-rating="5"
+                            xmlns="http://www.w3.org/2000/svg" 
+                            fill="currentColor" 
+                            viewBox="0 0 24 24">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                    </div>
+                    <input type="hidden" id="rating-value" name="rating" value="">
+                </div>
+
+                <!-- Comment Box (Hidden Until Star Clicked) -->
+                <div id="comment-section" class="hidden transition-all duration-300 ease-in-out mb-6">
+                    <label class="block text-sm font-semibold text-prime-navy mb-2">
+                        Additional Comments (Optional)
+                    </label>
+                    <textarea 
+                        id="comment-textarea"
+                        rows="4"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange resize-none"
+                        placeholder="Tell us more about your experience..."></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    id="submit-btn"
+                    class="w-full bg-prime-orange text-white px-6 py-4 rounded-lg font-bold text-lg shadow-md hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
+                    Submit Feedback
+                </button>
+
+            </div>
+
+            <!-- Success State (Hidden by Default) -->
+            <div id="success-message" class="hidden bg-white rounded-xl shadow-lg p-8 border-2 border-green-500">
+                <div class="text-center">
+                    <!-- Success Icon -->
+                    <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Success Text -->
+                    <h2 class="text-2xl font-bold text-green-800 mb-2">Thank You!</h2>
+                    <p class="text-gray-600 mb-6">Your feedback has been received and will help us improve our service.</p>
+                    
+                    <!-- Rating Summary -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <p class="text-sm text-gray-700">
+                            <strong>Your Rating:</strong> 
+                            <span id="final-rating" class="text-prime-orange font-bold"></span> Stars
+                        </p>
+                        <p id="final-comment" class="text-xs text-gray-500 mt-2 italic"></p>
+                    </div>
+
+                    <!-- Return Link -->
+                    <a href="{% url 'dashboard' %}" class="inline-block text-prime-orange hover:underline font-semibold">
+                        Return to Dashboard
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="text-center text-xs text-gray-500">
+                &copy; 2025 PRIME AE Group, Inc. - Information Technology
+            </p>
+        </div>
+    </footer>
+
+    <!-- Interactive Star Rating & Form Logic (Vanilla JavaScript) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('.star');
+            const ratingInput = document.getElementById('rating-value');
+            const commentSection = document.getElementById('comment-section');
+            const submitBtn = document.getElementById('submit-btn');
+            const surveyForm = document.getElementById('survey-form');
+            const successMessage = document.getElementById('success-message');
+            const commentTextarea = document.getElementById('comment-textarea');
+            
+            let selectedRating = 0;
+
+            // --- STAR RATING INTERACTION ---
+            stars.forEach(star => {
+                // Hover Effect: Highlight stars up to hovered star
+                star.addEventListener('mouseenter', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    highlightStars(rating);
+                });
+
+                // Mouse Leave: Reset to selected rating (or gray if none selected)
+                star.addEventListener('mouseleave', function() {
+                    highlightStars(selectedRating);
+                });
+
+                // Click: Select rating and show comment box
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.dataset.rating);
+                    ratingInput.value = selectedRating;
+                    highlightStars(selectedRating);
+                    
+                    // Show comment section with animation
+                    commentSection.classList.remove('hidden');
+                    commentSection.classList.add('block');
+                    
+                    // Enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.classList.add('cursor-pointer');
+                });
+            });
+
+            // Helper: Highlight stars from 1 to N
+            function highlightStars(rating) {
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.remove('text-gray-300');
+                        star.classList.add('text-yellow-400');
+                    } else {
+                        star.classList.remove('text-yellow-400');
+                        star.classList.add('text-gray-300');
+                    }
+                });
+            }
+
+            // --- FORM SUBMISSION (Mock) ---
+            submitBtn.addEventListener('click', function() {
+                if (selectedRating === 0) {
+                    alert('Please select a rating before submitting.');
+                    return;
+                }
+
+                // Mock: Show success message
+                surveyForm.classList.add('hidden');
+                successMessage.classList.remove('hidden');
+                
+                // Populate success message
+                document.getElementById('final-rating').textContent = selectedRating;
+                const comment = commentTextarea.value.trim();
+                if (comment) {
+                    document.getElementById('final-comment').textContent = `"${comment}"`;
+                } else {
+                    document.getElementById('final-comment').textContent = 'No additional comments provided.';
+                }
+
+                // TODO (Future): Send data to backend
+                console.log('Survey Submitted:', {
+                    ticket_id: {{ ticket.id }},
+                    rating: selectedRating,
+                    comment: comment
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+    "announcement": {
+        "title": "Upcoming Maintenance Window",
+        "message": "Network infrastructure upgrade scheduled for Saturday from 10:00 PM to 2:00 AM. Limited VPN access expected.",
+        "type": "warning",
+        "date": "Nov 26, 2025"
+    },
+    "vendor_status": [
+        {"name": "Office 365", "status": "Operational"},
+        {"name": "Autodesk Cloud", "status": "Degraded Performance"},
+        {"name": "Bentley ProjectWise", "status": "Operational"},
+        {"name": "Egnyte File Server", "status": "Operational"},
+        {"name": "Bluebeam Studio", "status": "Operational"}
+    ]
+}

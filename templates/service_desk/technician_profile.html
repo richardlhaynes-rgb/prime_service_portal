@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    
+    <!-- Back Navigation -->
+    <div class="my-6">
+        <a href="{% url 'manager_dashboard' %}" class="text-sm text-prime-orange hover:underline inline-flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Manager Dashboard
+        </a>
+    </div>
+
+    <!-- Profile Header Banner -->
+    <div class="bg-gradient-to-r from-prime-navy to-indigo-900 rounded-t-lg shadow-lg p-8 pb-10 relative overflow-hidden">
+        <!-- Decorative Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#grid)" />
+            </svg>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="relative flex items-center gap-6">
+            <!-- Avatar -->
+            <img src="{{ technician.avatar }}" alt="{{ technician.name }}" 
+                 class="h-32 w-32 rounded-full border-4 border-white shadow-xl">
+            
+            <!-- Name & Title -->
+            <div class="flex-grow">
+                <h1 class="text-4xl font-bold text-white mb-2">{{ technician.name }}</h1>
+                <p class="text-xl text-indigo-200 mb-3">{{ technician.role }}</p>
+                <div class="flex items-center gap-4 text-sm text-indigo-200">
+                    <div class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {{ technician.location }}
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        {{ technician.email }}
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        {{ technician.phone }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Badge -->
+            <div class="text-right">
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold shadow-lg
+                    {% if technician.stats.open_tickets == 0 %}bg-green-500 text-white
+                    {% elif technician.stats.open_tickets <= 5 %}bg-yellow-500 text-white
+                    {% else %}bg-red-500 text-white{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                    {{ technician.stats.open_tickets }} Active Tickets
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Performance Cards (Overlapping Banner) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 -mt-12 px-4">
+        
+        <!-- Card 1: Open Tickets -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Open Tickets</h3>
+                <div class="p-2 bg-blue-50 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-gray-800">{{ technician.stats.open_tickets }}</p>
+            <p class="text-xs text-gray-500 mt-2">Currently assigned</p>
+        </div>
+
+        <!-- Card 2: Resolved This Month -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Resolved (30d)</h3>
+                <div class="p-2 bg-green-50 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-gray-800">{{ technician.stats.resolved_this_month }}</p>
+            <p class="text-xs text-gray-500 mt-2">Last 30 days</p>
+        </div>
+
+        <!-- Card 3: Avg Response Time -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-6 hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Avg Response</h3>
+                <div class="p-2 bg-purple-50 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-gray-800">{{ technician.stats.avg_response }}</p>
+            <p class="text-xs text-gray-500 mt-2">First reply time</p>
+        </div>
+
+        <!-- Card 4: CSAT Score (CLICKABLE LINK) -->
+        <a href="{% url 'csat_report' %}" class="block bg-white rounded-lg shadow-lg border border-gray-200 p-6 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide">CSAT Score</h3>
+                <div class="p-2 bg-yellow-50 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="text-4xl font-bold text-gray-800">{{ technician.stats.csat_score }}</p>
+            <p class="text-xs text-gray-500 mt-2">Customer satisfaction</p>
+        </a>
+
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-12">
+        <h3 class="text-lg font-bold text-prime-navy mb-6 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Recent Activity
+        </h3>
+        <div class="space-y-3">
+            {% for activity in technician.recent_activity %}
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-sm text-gray-700">{{ activity }}</span>
+            </div>
+            {% empty %}
+            <div class="p-6 text-center text-gray-400 italic">
+                <p class="text-sm">No recent activity recorded.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Additional Info Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-12">
+        
+        <!-- Department Info -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-bold text-prime-navy mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Department Information
+            </h3>
+            <div class="space-y-3 text-sm text-gray-700">
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="font-semibold text-gray-600">Department:</span>
+                    <span>Information Technology</span>
+                </div>
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="font-semibold text-gray-600">Team Lead:</span>
+                    <span>Chuck Moore</span>
+                </div>
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="font-semibold text-gray-600">Office:</span>
+                    <span>{{ technician.location }}</span>
+                </div>
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="font-semibold text-gray-600">Specialization:</span>
+                    <span>{{ technician.role }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-semibold text-gray-600">Availability:</span>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                        <svg class="h-2 w-2 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                            <circle cx="4" cy="4" r="3" />
+                        </svg>
+                        Available
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-bold text-prime-navy mb-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Quick Actions
+            </h3>
+            <div class="space-y-3">
+                <a href="mailto:{{ technician.email }}" class="block w-full px-4 py-3 bg-prime-orange text-white text-center rounded-lg font-semibold hover:bg-opacity-90 transition shadow-sm">
+                    Send Email
+                </a>
+                <a href="tel:{{ technician.phone }}" class="block w-full px-4 py-3 bg-prime-navy text-white text-center rounded-lg font-semibold hover:bg-opacity-90 transition shadow-sm">
+                    Call {{ technician.name }}
+                </a>
+                <a href="{% url 'csat_report' %}" class="block w-full px-4 py-3 bg-white border-2 border-gray-300 text-prime-navy text-center rounded-lg font-semibold hover:bg-gray-50 transition">
+                    View Full CSAT Report
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

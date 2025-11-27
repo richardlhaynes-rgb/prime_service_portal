@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'manager_dashboard' %}" class="text-sm text-prime-orange hover:underline flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            <span>Back to Manager Dashboard</span>
+        </a>
+        <h2 class="text-3xl font-bold text-prime-navy mt-4">System Health Settings</h2>
+        <p class="text-gray-600 text-sm mt-2">Manage the global announcement banner and vendor service status.</p>
+    </div>
+
+    <!-- Form Container -->
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- CARD 1: Announcement Configuration -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" />
+                    </svg>
+                    Announcement Banner Configuration
+                </h3>
+                <p class="text-xs text-gray-500 mt-1">This banner appears at the top of every page for all users.</p>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Announcement Title -->
+                <div>
+                    <label for="announcement_title" class="block text-sm font-medium text-prime-navy mb-2">
+                        Announcement Title <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        name="announcement_title" 
+                        id="announcement_title" 
+                        value="{{ system_health.announcement.title|default:'All Systems Operational' }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
+                        placeholder="e.g., Scheduled Maintenance Window"
+                        required>
+                    <p class="text-xs text-gray-500 mt-1">Keep this concise (50 characters max).</p>
+                </div>
+
+                <!-- Announcement Message -->
+                <div>
+                    <label for="announcement_message" class="block text-sm font-medium text-prime-navy mb-2">
+                        Announcement Message <span class="text-red-500">*</span>
+                    </label>
+                    <textarea 
+                        name="announcement_message" 
+                        id="announcement_message" 
+                        rows="4"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
+                        placeholder="e.g., VPN services will be offline Saturday 10 PM - 2 AM for upgrades."
+                        required>{{ system_health.announcement.message|default:'No known issues at this time.' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Provide clear, actionable information. Users can expand this to read the full text.</p>
+                </div>
+
+                <!-- Announcement Type (Severity) -->
+                <div>
+                    <label for="announcement_type" class="block text-sm font-medium text-prime-navy mb-2">
+                        Announcement Type <span class="text-red-500">*</span>
+                    </label>
+                    <select 
+                        name="announcement_type" 
+                        id="announcement_type"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
+                        <option value="info" {% if system_health.announcement.type == 'info' %}selected{% endif %}>
+                            ℹ️ Info (Blue) - General updates
+                        </option>
+                        <option value="maintenance" {% if system_health.announcement.type == 'maintenance' %}selected{% endif %}>
+                            🔧 Maintenance (Yellow) - Planned downtime
+                        </option>
+                        <option value="alert" {% if system_health.announcement.type == 'alert' %}selected{% endif %}>
+                            ⚠️ Alert (Orange) - Service degradation
+                        </option>
+                        <option value="critical" {% if system_health.announcement.type == 'critical' %}selected{% endif %}>
+                            🔴 Critical (Red) - Major outage
+                        </option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">This controls the banner's color scheme and urgency indicator.</p>
+                </div>
+
+                <!-- Announcement Date -->
+                <div>
+                    <label for="announcement_date" class="block text-sm font-medium text-prime-navy mb-2">
+                        Date/Timeframe
+                    </label>
+                    <input 
+                        type="text" 
+                        name="announcement_date" 
+                        id="announcement_date" 
+                        value="{{ system_health.announcement.date|default:'Today' }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
+                        placeholder="e.g., This Saturday, Dec 15 10 PM - 2 AM">
+                    <p class="text-xs text-gray-500 mt-1">Optional. Provide context for when this announcement applies.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 2: Vendor Service Status -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                    </svg>
+                    Vendor Service Status
+                </h3>
+                <p class="text-xs text-gray-500 mt-1">Update the real-time status of critical third-party services.</p>
+            </div>
+
+            <div class="divide-y divide-gray-200">
+                {% for vendor in system_health.vendor_status %}
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <!-- Vendor Name -->
+                    <div class="flex items-center gap-3">
+                        <span class="h-2.5 w-2.5 rounded-full 
+                            {% if vendor.status == 'Operational' %}bg-green-500
+                            {% elif vendor.status == 'Degraded Performance' %}bg-yellow-500
+                            {% elif vendor.status == 'Partial Outage' %}bg-orange-500
+                            {% else %}bg-red-500{% endif %}">
+                        </span>
+                        <span class="text-sm font-medium text-gray-800">{{ vendor.name }}</span>
+                    </div>
+
+                    <!-- Hidden Input for Vendor Name -->
+                    <input type="hidden" name="vendor_name_{{ forloop.counter0 }}" value="{{ vendor.name }}">
+
+                    <!-- Status Dropdown -->
+                    <select 
+                        name="vendor_status_{{ forloop.counter0 }}"
+                        class="px-3 py-1.5 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
+                        <option value="Operational" {% if vendor.status == 'Operational' %}selected{% endif %}>
+                            ✅ Operational
+                        </option>
+                        <option value="Degraded Performance" {% if vendor.status == 'Degraded Performance' %}selected{% endif %}>
+                            ⚠️ Degraded Performance
+                        </option>
+                        <option value="Partial Outage" {% if vendor.status == 'Partial Outage' %}selected{% endif %}>
+                            🟠 Partial Outage
+                        </option>
+                        <option value="Major Outage" {% if vendor.status == 'Major Outage' %}selected{% endif %}>
+                            🔴 Major Outage
+                        </option>
+                    </select>
+                </div>
+                {% empty %}
+                <div class="px-6 py-10 text-center">
+                    <p class="text-sm text-gray-400 italic">No vendor services configured.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Submit Button (Sticky Bottom Bar) -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky bottom-6 z-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-700">Ready to save?</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Changes will be visible immediately on all pages.</p>
+                </div>
+                <button 
+                    type="submit" 
+                    class="bg-prime-orange text-white px-8 py-3 rounded-lg font-bold shadow-md hover:bg-opacity-90 transition-all duration-200 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

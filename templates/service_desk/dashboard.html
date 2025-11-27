@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <!-- Welcome Banner & System Status -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-prime-orange mb-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-prime-navy">Welcome, Richard.</h2>
+            <p class="text-gray-600 mt-1">System Status: <span class="font-bold text-prime-green">● Operational</span></p>
+        </div>
+        <div class="flex gap-4">
+             <!-- Link to Knowledge Base -->
+            <a href="{% url 'kb_home' %}" class="bg-white text-prime-navy border border-gray-300 px-6 py-3 rounded-md font-bold shadow-sm hover:bg-gray-50 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
+                <span>Browse KB</span>
+            </a>
+            
+            <!-- Link to New Ticket -->
+            <a href="{% url 'service_catalog' %}" class="bg-prime-orange text-white px-6 py-3 rounded-md font-bold shadow hover:bg-opacity-90 transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <span>New Ticket</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Open Tickets -->
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500 flex justify-between items-center">
+            <div>
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wide">Open Tickets</div>
+                <div class="text-3xl font-bold text-gray-800 mt-1">{{ open_tickets }}</div>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-full text-blue-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Resolved -->
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500 flex justify-between items-center">
+            <div>
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wide">Resolved</div>
+                <div class="text-3xl font-bold text-gray-800 mt-1">{{ resolved_tickets }}</div>
+            </div>
+            <div class="p-3 bg-green-50 rounded-full text-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Total History -->
+        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-gray-400 flex justify-between items-center">
+            <div>
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-wide">Total History</div>
+                <div class="text-3xl font-bold text-gray-800 mt-1">{{ total_tickets }}</div>
+            </div>
+            <div class="p-3 bg-gray-100 rounded-full text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- SURVEY NOTIFICATION BANNER (NEW - POSITIONED BETWEEN STATS & TABLE) -->
+    <div class="bg-indigo-50 border-l-4 border-indigo-600 p-4 mb-8 rounded-r-lg shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <!-- Star Icon (Heroicon Solid) -->
+            <div class="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+            </div>
+            
+            <!-- Message Text -->
+            <div>
+                <p class="text-sm font-semibold text-indigo-900">Your feedback matters!</p>
+                <p class="text-sm text-indigo-700 mt-0.5">
+                    Please take a moment to rate your experience on 
+                    <span class="font-bold">Ticket #104 - VPN Connection Issue</span>.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Take Survey Button -->
+        <a href="{% url 'ticket_survey' ticket_id=104 %}" 
+           class="bg-indigo-600 text-white px-6 py-2 rounded-md text-sm font-semibold shadow-md hover:bg-indigo-800 transition-all duration-200 flex items-center gap-2 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+            <span>Take Survey</span>
+        </a>
+    </div>
+
+    <!-- Recent Tickets Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-prime-navy">My Recent Tickets</h3>
+        </div>
+
+        <!-- Sortable Table -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'id' %}-id{% else %}id{% endif %}" class="flex items-center">ID {% if current_sort == 'id' %}&uarr;{% elif current_sort == '-id' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'title' %}-title{% else %}title{% endif %}" class="flex items-center">Title {% if current_sort == 'title' %}&uarr;{% elif current_sort == '-title' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'priority' %}-priority{% else %}priority{% endif %}" class="flex items-center">Priority {% if current_sort == 'priority' %}&uarr;{% elif current_sort == '-priority' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="flex items-center">Status {% if current_sort == 'status' %}&uarr;{% elif current_sort == '-status' %}&darr;{% endif %}</a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'created_at' %}-created_at{% else %}created_at{% endif %}" class="flex items-center">Date {% if current_sort == 'created_at' %}&uarr;{% elif current_sort == '-created_at' %}&darr;{% endif %}</a>
+                        </th>
+                        <!-- NEW: Action Column Header (Empty) -->
+                        <th scope="col" class="px-6 py-3"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for ticket in tickets %}
+                    <tr class="group hover:bg-gray-50 transition duration-150 cursor-pointer" onclick="window.location='{% url 'ticket_detail' ticket.id %}'">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-prime-navy">#{{ ticket.id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {% if ticket.title|length > 50 %}{{ ticket.title|slice:":50" }}...{% else %}{{ ticket.title }}{% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ticket.ticket_type }}</td>
+                        
+                        <!-- PRIORITY INDICATOR (ICON-ONLY WITH TOOLTIP) -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center justify-center h-8 w-8 rounded-full shadow-sm
+                                {% if ticket.priority == 'Critical' or ticket.priority == 'High' %}bg-red-100 text-red-600
+                                {% elif ticket.priority == 'Medium' %}bg-yellow-100 text-yellow-600
+                                {% else %}bg-gray-100 text-gray-600{% endif %}"
+                                title="Priority: {{ ticket.priority }}">
+                                {% if ticket.priority == 'Critical' or ticket.priority == 'High' %}
+                                <!-- Exclamation Icon (High Priority) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                                {% elif ticket.priority == 'Medium' %}
+                                <!-- Minus Icon (Medium Priority) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                                </svg>
+                                {% else %}
+                                <!-- Arrow Down Icon (Low Priority) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
+                                </svg>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- STATUS INDICATOR (ICON-ONLY WITH TOOLTIP) -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center justify-center h-8 w-8 rounded-full shadow-sm
+                                {% if ticket.status == 'New' %}bg-blue-100 text-blue-600
+                                {% elif ticket.status == 'In Progress' or ticket.status == 'Assigned' %}bg-purple-100 text-purple-600
+                                {% elif ticket.status == 'Resolved' or ticket.status == 'Closed' %}bg-green-100 text-green-600
+                                {% else %}bg-gray-100 text-gray-600{% endif %}"
+                                title="Status: {{ ticket.status }}">
+                                {% if ticket.status == 'New' %}
+                                <!-- Star Icon (New Status) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                {% elif ticket.status == 'In Progress' or ticket.status == 'Assigned' %}
+                                <!-- Clock Icon (In Progress Status) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                </svg>
+                                {% elif ticket.status == 'Resolved' or ticket.status == 'Closed' %}
+                                <!-- Check Circle Icon (Resolved Status) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                                {% else %}
+                                <!-- Question Icon (Unknown Status) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                                </svg>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- DATE COLUMN (NOW POPULATED) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ ticket.formatted_date }}
+                        </td>
+                        
+                        <!-- NEW: CHEVRON ACTION COLUMN -->
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <!-- Chevron Right Icon (Heroicon Outline) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" 
+                                 class="h-5 w-5 text-gray-300 group-hover:text-prime-orange transition-colors">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-10 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <p>No tickets found. Start by submitting a request!</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
