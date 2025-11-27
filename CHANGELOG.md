@@ -6,31 +6,139 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.2] - 2025-11-17
-### Added
-- Created Application Architecture:
-    - `core`: Main UI and navigation logic.
-    - `service_desk`: Ticket and API logic.
-    - `knowledge_base`: Documentation engine.
-- Registered apps in `config/settings.py`.
-- Configured Global Template Directory (`templates/`).
-- Created Master Layout (`base.html`) with PRIME branding colors.
-- Created Homepage View (`core/views.py`) and URL routing.
-- Added `run_portal.bat` for one-click server startup.
-- Added `dev_shell.bat` for quick terminal access.
-- Integrated Tailwind CSS via CDN.
-- Implemented PRIME Brand Colors (Navy/Orange) in Tailwind config.
-- Built 8-Card Service Catalog Grid with Heroicons.
-- Updated Footer to official corporate standard.
+## [0.5.1] - 2025-01-15 (Mid-Day Checkpoint)
 
-## [0.0.1] - 2025-11-17
-### Added
-- Initialized project directory `prime_service_portal`.
-- Created Virtual Environment (`venv`).
-- Installed Django 5.x and Black formatter.
-- Configured Project Skeleton using `config` pattern.
-- Applied initial SQLite database migrations.
-- Created Superuser `richard.haynes`.
+### 🎨 **Visual & UI Polish**
+
+#### **Knowledge Base**
+- **Complete Redesign**:
+  - **2-Column Layout**: Left sidebar (1/4 width) for topic navigation, right content area (3/4 width) for article list
+  - **Aligned Search Bar**: Moved to right column, aligned with article content (no more misalignment)
+  - **Dynamic Category Icons**: 12 unique Heroicon SVGs mapped from backend data:
+    - Autodesk → Cube (3D wireframe)
+    - Email & Outlook → Envelope
+    - VPN / Remote Access → Lock (padlock)
+    - Workstations → Computer Desktop
+    - Mobile Devices → Phone
+    - File Storage → Cloud
+    - Web Browsers → Globe
+    - Conference Room AV → Speaker
+    - Specialty Peripherals → Cursor with rays
+    - Microsoft 365 → Squares 2x2 (grid)
+    - Deltek → Building Office
+    - Monitors & Docks → TV (display)
+  - **Icon Mapper**: `_get_icon_for_article()` function in `services/ticket_service.py` auto-assigns icons based on article subcategory
+  - **Hover Effects**: Icons transition from gray to orange on hover
+  - **Search Integration**: Real-time filtering by keyword, category, problem, or solution text
+
+#### **Manager Dashboard**
+- **Fixed "Infinite Chart" Bug**: Charts now render at fixed `h-80` (320px) height with proper `maintainAspectRatio: false`
+- **Swap Mode Date Picker**: 
+  - Clicking "Custom Range" replaces button row with inline date inputs (zero vertical layout shift)
+  - "From" and "To" date pickers with "Apply" and "Cancel" buttons
+  - Active state management (orange button when selected)
+  - Compacted input row (reduced padding from `p-4` to `p-2`)
+- **Restored Compact Team Roster**: 3-column grid with horizontal cards showing avatar, name, role, and status badge
+
+#### **User Dashboard**
+- **Modernized Ticket Table**:
+  - **Icon-Only Status Badges**: Visual indicators with no text clutter
+    - Blue star → New
+    - Yellow hourglass → In Progress
+    - Green checkmark → Resolved
+    - Gray archive box → Closed
+  - **Chevron Navigation**: Right-pointing arrow replaces "View Ticket" button
+  - **Hover Effects**: Entire row highlights on hover, icons turn orange
+
+#### **Technician Profile Page**
+- **Restored Hero Banner**: Prime Navy gradient background with decorative pattern overlay
+- **Fixed Broken Links**: Profile page now uses URL-safe IDs (`/manager/technician/richard_haynes/`)
+- **Stats Grid**: 4-column layout with visual stat cards (Open Tickets, Resolved This Month, CSAT Score, Avg Response Time)
+
+---
+
+### ⚙️ **Backend & Architecture**
+
+#### **Technician Lookup Refactor**
+- **Problem**: Profile URLs were breaking because tech names contained spaces ("Richard Haynes" → 404)
+- **Solution**: Updated `STAFF_ROSTER` dictionary in `services/ticket_service.py` to use URL-safe IDs as keys:
+  ```python
+  STAFF_ROSTER = {
+      "richard_haynes": {...},  # Was: "Richard Haynes"
+      "rob_german": {...},      # Was: "Rob German"
+      ...
+  }
+  ```
+- **Impact**: All profile links now use slug-based routing (`/technician/richard_haynes/` instead of `/technician/Richard%20Haynes/`)
+
+#### **KB Data Enrichment**
+- **Expanded `data/mock_articles.json`**:
+  - Added 45 professional articles across all categories
+  - Full metadata: `id`, `title`, `category`, `subcategory`, `problem`, `solution`, `status`, `created_at`, `updated_at`
+  - Examples:
+    - "AutoCAD: Fix Missing Toolbars After Update" (Autodesk)
+    - "Outlook: How to Create a New Mail Profile" (Email & Outlook)
+    - "VPN: Common 'Cannot Connect' Troubleshooting" (VPN / Remote Access)
+    - "3D Mouse: 3Dconnexion SpaceMouse Not Working in 3ds Max" (Specialty Peripherals)
+
+#### **KB Icon Mapping Logic**
+- **New Helper Function**: `_get_icon_for_article(article)` in `services/ticket_service.py`
+  - Reads `article['subcategory']` field
+  - Returns corresponding Heroicon name string (e.g., `'cube'`, `'envelope'`, `'lock-closed'`)
+  - Default fallback: `'document-text'` for unmapped categories
+- **Integration Point**: `get_knowledge_base_articles()` now injects `article['icon']` property before sending data to template:
+  ```python
+  for article in articles:
+      article['icon'] = _get_icon_for_article(article)  # Critical line
+  ```
+- **Template Rendering**: `templates/knowledge_base/kb_home.html` uses 13 conditional SVG blocks to render correct icon
+
+#### **View Layer Update**
+- **Fixed `knowledge_base/views.py`**:
+  - Changed import from `kb_service` to `ticket_service`
+  - Updated `kb_home()` to call `ticket_service.get_knowledge_base_articles()`
+  - Updated `article_detail()` to fetch articles from `ticket_service`
+
+---
+
+### 🐛 **Bug Fixes**
+
+- **Manager Dashboard**:
+  - Fixed chart overflow bug (charts no longer exceed container height)
+  - Fixed "Custom Range" button hover state (now stays orange when active)
+  - Aligned date picker to right side of header
+- **Technician Profile**:
+  - Fixed 404 errors on profile links (moved from name-based to ID-based routing)
+  - Restored hero banner gradient background
+- **Knowledge Base**:
+  - Fixed generic icons (all articles now show category-specific icons)
+  - Fixed search bar misalignment (moved to right column, aligned with content)
+  - Added "No results found" message for empty searches
+
+---
+
+### 📊 **Data Quality**
+
+- **Professional Mock Data**: All demo content uses realistic IT scenarios (no "Foo/Bar" placeholder text)
+- **Consistent Formatting**: Dates in `"Mon DD, YYYY"` format across all views
+- **Icon Coverage**: 100% of KB articles have mapped icons (no generic fallbacks in production data)
+
+---
+
+### 🛠️ **Technical Improvements**
+
+- **Service Layer Consolidation**: All KB data now flows through `services/ticket_service.py` (removed dependency on `kb_service.py`)
+- **URL-Safe Identifiers**: Tech roster uses slugified IDs (`richard_haynes`) for clean, bookmarkable URLs
+- **Template Optimization**: Removed debug code from `kb_home.html` (production-ready)
+
+---
+
+**Developer Notes**:
+- This checkpoint represents a major UI/UX overhaul of the Knowledge Base system
+- All features tested in Demo Mode (`USE_MOCK_DATA = True`)
+- Ready for client demo and feedback collection
+
+---
 
 ## [0.5.0] - 2025-11-27 (The Copilot Sprint)
 
@@ -377,3 +485,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Signed:** Richard Haynes, Service Desk Manager  
 **Approved by:** GitHub Copilot (AI Architect)  
 **Date:** November 27, 2025 (Thanksgiving Day 🦃)
+
+---
+
+## [0.0.2] - 2025-11-17
+### Added
+- Created Application Architecture:
+    - `core`: Main UI and navigation logic.
+    - `service_desk`: Ticket and API logic.
+    - `knowledge_base`: Documentation engine.
+- Registered apps in `config/settings.py`.
+- Configured Global Template Directory (`templates/`).
+- Created Master Layout (`base.html`) with PRIME branding colors.
+- Created Homepage View (`core/views.py`) and URL routing.
+- Added `run_portal.bat` for one-click server startup.
+- Added `dev_shell.bat` for quick terminal access.
+- Integrated Tailwind CSS via CDN.
+- Implemented PRIME Brand Colors (Navy/Orange) in Tailwind config.
+- Built 8-Card Service Catalog Grid with Heroicons.
+- Updated Footer to official corporate standard.
+
+---
+
+## [0.0.1] - 2025-11-17
+### Added
+- Initialized project directory `prime_service_portal`.
+- Created Virtual Environment (`venv`).
+- Installed Django 5.x and Black formatter.
+- Configured Project Skeleton using `config` pattern.
+- Applied initial SQLite database migrations.
+- Created Superuser `richard.haynes`.
+
+---
+
+**Maintained by:** Richard Haynes (PRIME AE - IT Department)  
+**Last Updated:** January 15, 2025

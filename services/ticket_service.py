@@ -129,6 +129,38 @@ def _save_mock_data(filename, data):
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
+# --- HELPER: KB Icon Mapper ---
+def _get_icon_for_article(article):
+    """
+    Maps Knowledge Base subcategory to Heroicon name.
+    
+    Args:
+        article: Dictionary with 'subcategory' key
+    
+    Returns:
+        String: Heroicon name (e.g., 'cube', 'envelope', 'computer-desktop')
+    """
+    subcategory = article.get('subcategory', '')
+    
+    # Icon mapping based on subcategory
+    icon_map = {
+        'Autodesk': 'cube',
+        'Deltek': 'building-office',
+        'Microsoft 365': 'squares-2x2',
+        'Email & Outlook': 'envelope',
+        'File Storage': 'cloud',
+        'Web Browsers': 'globe-alt',
+        'Workstations': 'computer-desktop',
+        'Monitors & Docks': 'tv',
+        'Mobile Devices': 'device-phone-mobile',
+        'VPN / Remote Access': 'lock-closed',
+        'Conference Room AV': 'speaker-wave',
+        'Specialty Peripherals': 'cursor-arrow-rays'
+    }
+    
+    # Return mapped icon or default
+    return icon_map.get(subcategory, 'document-text')
+
 # --- DATA RETRIEVAL FUNCTIONS ---
 def get_all_tickets(user=None):
     """
@@ -240,16 +272,14 @@ def get_ticket_by_id(ticket_id):
     Retrieves a single ticket by ID.
     """
     if USE_MOCK_DATA:
-        # Demo Mode: Search JSON list
         all_tickets = get_all_tickets()
         for ticket in all_tickets:
             if ticket['id'] == ticket_id:
                 return ticket
         return None
     else:
-        # Database Mode
         try:
-            ticket = Ticket.objects.get(id=ticket_id)
+            ticket = Ticket.objects.get(pk=ticket_id)
             return {
                 "id": ticket.id,
                 "title": ticket.title,
@@ -262,6 +292,37 @@ def get_ticket_by_id(ticket_id):
             }
         except Ticket.DoesNotExist:
             return None
+
+# --- KNOWLEDGE BASE ARTICLES (CRITICAL ICON INJECTION) ---
+def get_knowledge_base_articles(search_query=None):
+    """
+    Retrieves all KB articles with icon enrichment.
+    
+    Args:
+        search_query: Optional search string to filter articles
+    
+    Returns:
+        List of article dictionaries with 'icon' property injected
+    """
+    # Load articles from JSON
+    articles = _load_mock_data('mock_articles.json') or []
+    
+    # Filter by search query if provided
+    if search_query:
+        query_lower = search_query.lower()
+        articles = [
+            article for article in articles
+            if query_lower in article.get('title', '').lower() or
+               query_lower in article.get('subcategory', '').lower() or
+               query_lower in article.get('problem', '').lower() or
+               query_lower in article.get('solution', '').lower()
+        ]
+    
+    # *** CRITICAL STEP: Inject icon property for each article ***
+    for article in articles:
+        article['icon'] = _get_icon_for_article(article)
+    
+    return articles
 
 # --- MANAGER ANALYTICS DASHBOARD ---
 def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
@@ -329,13 +390,12 @@ def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
                     'data': [112, 125, 98, 135, 105]
                 },
                 'sla_breaches': [
-                    {'ticket_id': 1502, 'title': 'Database Performance Degradation', 'age_hours': 72, 'technician': 'Unassigned'},
-                    {'ticket_id': 1489, 'title': 'Email Server Intermittent Outage', 'age_hours': 48, 'technician': 'Andrew Vohs'},
-                    {'ticket_id': 1476, 'title': 'Critical Application Crash', 'age_hours': 36, 'technician': 'Ryan Chitwood'},
-                    {'ticket_id': 1465, 'title': 'Network Switch Failure - Bldg 2', 'age_hours': 28, 'technician': 'Chuck Moore'}
+                    {'ticket_id': 1489, 'title': 'VPN Connection Failure', 'age_hours': 48, 'technician': 'Unassigned'},
+                    {'ticket_id': 1502, 'title': 'Laptop Battery Not Charging', 'age_hours': 36, 'technician': 'Gary Long'},
+                    {'ticket_id': 1517, 'title': 'Outlook Crashing on Launch', 'age_hours': 32, 'technician': 'Taylor Blevins'}
                 ],
-                'avg_resolution_time': '6.8 hours',
-                'first_response_time': '18 minutes',
+                'avg_resolution_time': '5.8 hours',
+                'first_response_time': '15 minutes',
                 'avg_resolution_time_by_member': {
                     'labels': ['Gary Long', 'Taylor Blevins', 'Dodi Moore', 'Chuck Moore', 'Rob German', 'Auto-Heal System'],
                     'data': [7.2, 5.8, 6.5, 4.9, 6.3, 0.1]
@@ -394,23 +454,25 @@ def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
                 'total_tickets': 11,
                 'volume_by_status': {
                     'labels': ['Open', 'In Progress', 'Resolved', 'Closed'],
-                    'data': [3, 2, 5, 1]
+                    'data': [1, 0, 7, 3]
                 },
                 'resolved_by_member': {
                     'Richard Haynes': 2,
                     'Gary Long': 2,
-                    'Taylor Blevins': 1,
-                    'Auto-Heal System': 0
+                    'Dodi Moore': 2,
+                    'Auto-Heal System': 1
                 },
                 'tickets_by_type': {
-                    'labels': ['Hardware', 'Software', 'Access', 'Network'],
-                    'data': [3, 4, 2, 2]
+                    'labels': ['Hardware', 'Software', 'Email', 'Network'],
+                    'data': [3, 4, 1, 1]
                 },
                 'trend_data': {
-                    'labels': ['12am', '3am', '6am', '9am', '12pm', '3pm', '6pm', '9pm'],
-                    'data': [0, 0, 2, 2, 3, 2, 2, 0]
+                    'labels': ['12am', '6am', '12pm', '6pm'],
+                    'data': [0, 2, 5, 2]
                 },
-                'sla_breaches': [],
+                'sla_breaches': [
+                    {'ticket_id': 98, 'title': 'Outlook Crash', 'age_hours': 3, 'technician': 'Gary Long'}
+                ],
                 'avg_resolution_time': '2.8 hours',
                 'first_response_time': '9 minutes',
                 'avg_resolution_time_by_member': {
@@ -581,7 +643,7 @@ def _calculate_overall_status(vendor_list):
             'color': 'text-green-600'
         }
 
-# --- ADMIN BACKEND: Update System Health ---
+# --- ADMIN: Update System Health ---
 def update_system_health(new_data):
     """
     Saves updated system health data to JSON file.

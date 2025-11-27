@@ -1,29 +1,250 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto">
-    <div class="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-        <h1 class="text-4xl font-bold text-prime-navy mb-2">Knowledge Base</h1>
-        <form method="get" action="." class="max-w-2xl mx-auto relative px-4 mt-6">
-            <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search..." class="w-full p-4 border border-gray-300 rounded-lg shadow-sm">
-            <button type="submit" class="absolute right-6 top-4 text-prime-orange font-bold">Search</button>
-        </form>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Page Header with Search (GRID LAYOUT FOR ALIGNMENT) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Left Side: Title & Subtitle (1/4 Width) -->
+        <div class="lg:col-span-1">
+            <h1 class="text-3xl font-bold text-prime-navy">Knowledge Base</h1>
+            <p class="text-gray-600 mt-1">Search articles or browse by topic</p>
+        </div>
+
+        <!-- Right Side: Search Bar (3/4 Width - Aligned with Content Column) -->
+        <div class="lg:col-span-3">
+            <form method="get" action="." class="relative">
+                <div class="relative">
+                    <!-- Search Icon (Inside Input) -->
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Search Input -->
+                    <input 
+                        type="text" 
+                        name="q" 
+                        value="{{ search_query|default:'' }}" 
+                        placeholder="Search articles by keyword, category, or topic..." 
+                        class="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange transition-colors text-gray-800 text-sm">
+                </div>
+                
+                <!-- Hidden Submit Button (Enter key triggers) -->
+                <button type="submit" class="hidden">Search</button>
+            </form>
+        </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-lg font-semibold text-prime-navy">Recent Articles</h3>
+    <!-- 2-Column Layout: Sidebar + Article List -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Left Sidebar: Browse by Topic (1/4 Width) -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">Browse by Topic</h3>
+                
+                <nav class="space-y-2">
+                    <!-- All Articles (Active State) -->
+                    <a href="{% url 'kb_home' %}" 
+                       class="flex items-center gap-2 px-3 py-2 rounded-md text-prime-orange bg-orange-50 border-l-4 border-prime-orange font-semibold text-sm transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                        </svg>
+                        All Articles
+                    </a>
+                    
+                    <!-- Mock Categories (Inactive States) -->
+                    <a href="#" 
+                       class="flex items-center gap-2 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 hover:text-prime-orange font-medium text-sm transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Software
+                    </a>
+                    
+                    <a href="#" 
+                       class="flex items-center gap-2 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 hover:text-prime-orange font-medium text-sm transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Hardware
+                    </a>
+                    
+                    <a href="#" 
+                       class="flex items-center gap-2 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 hover:text-prime-orange font-medium text-sm transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        Network
+                    </a>
+                    
+                    <a href="#" 
+                       class="flex items-center gap-2 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 hover:text-prime-orange font-medium text-sm transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Printers
+                    </a>
+                </nav>
+            </div>
         </div>
-        <div class="divide-y divide-gray-200">
-            {% for article in recent_articles %}
-            <a href="{% url 'article_detail' article.id %}" class="block p-6 hover:bg-gray-50 transition">
-                <h4 class="text-lg font-medium text-prime-orange">{{ article.title }}</h4>
-                <p class="text-sm text-gray-500">{{ article.category }} - {{ article.subcategory }}</p>
-            </a>
-            {% empty %}
-            <div class="p-8 text-center text-gray-500">No articles found.</div>
-            {% endfor %}
+
+        <!-- Right Column: Article Results (3/4 Width) -->
+        <div class="lg:col-span-3">
+            
+            <!-- Article Results Table -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <!-- Table Header -->
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 class="text-lg font-semibold text-prime-navy">
+                        {% if search_query %}Search Results{% else %}Recent Articles{% endif %}
+                    </h3>
+                </div>
+
+                <!-- Article Rows -->
+                <div class="divide-y divide-gray-200">
+                    {% for article in recent_articles %}
+                    <a href="{% url 'article_detail' article.id %}" 
+                       class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer group">
+                        
+                        <!-- DYNAMIC CATEGORY ICON (LEFT) - EXACT SVG IMPLEMENTATION -->
+                        <div class="flex-shrink-0">
+                            {% if article.icon == 'cube' %}
+                                <!-- Autodesk Icon: Cube (3D Box) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            
+                            {% elif article.icon == 'building-office' %}
+                                <!-- Deltek Icon: Building Office -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            
+                            {% elif article.icon == 'squares-2x2' %}
+                                <!-- Microsoft 365 Icon: Squares 2x2 (Grid) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'envelope' %}
+                                <!-- Email & Outlook Icon: Envelope -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'cloud' %}
+                                <!-- File Storage Icon: Cloud (Egnyte/OneDrive) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'globe-alt' %}
+                                <!-- Web Browsers Icon: Globe Alt (Chrome/Edge/Firefox) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                </svg>
+                            
+                            {% elif article.icon == 'computer-desktop' %}
+                                <!-- Workstations Icon: Computer Desktop -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'tv' %}
+                                <!-- Monitors & Docks Icon: TV (External Display) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'device-phone-mobile' %}
+                                <!-- Mobile Devices Icon: Device Phone Mobile (iPhone/Android) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'lock-closed' %}
+                                <!-- VPN / Remote Access Icon: Lock Closed (Security/FortiClient) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'speaker-wave' %}
+                                <!-- Conference Room AV Icon: Speaker Wave (Audio/Teams/Zoom) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                </svg>
+                            
+                            {% elif article.icon == 'cursor-arrow-rays' %}
+                                <!-- Specialty Peripherals Icon: Cursor Arrow Rays (3D Mouse/Wacom) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                </svg>
+                            
+                            {% else %}
+                                <!-- Default Icon: Document Text (Generic Article) -->
+                                <svg class="h-6 w-6 text-gray-400 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            {% endif %}
+                        </div>
+
+                        <!-- Article Title & Category (Middle) -->
+                        <div class="flex-grow">
+                            <h4 class="font-medium text-gray-900 group-hover:text-prime-orange transition-colors">
+                                {{ article.title }}
+                            </h4>
+                            
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                    {{ article.category }}
+                                </span>
+                                {% if article.subcategory %}
+                                <span class="text-xs text-gray-400">•</span>
+                                <span class="text-xs text-gray-500">{{ article.subcategory }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Chevron Right (Right) -->
+                        <div class="flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300 group-hover:text-prime-orange transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <!-- Empty State -->
+                    <div class="px-6 py-12 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        <p class="text-gray-500 font-medium">
+                            {% if search_query %}
+                                No articles found matching "{{ search_query }}".
+                            {% else %}
+                                No articles available.
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-2">
+                            {% if search_query %}
+                                Try a different search term or browse by category.
+                            {% else %}
+                                Check back later for new content.
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
     </div>
+
 </div>
 {% endblock %}
