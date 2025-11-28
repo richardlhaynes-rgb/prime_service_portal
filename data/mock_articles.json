@@ -9,7 +9,8 @@
         "solution": "Note: This process will back up and reset your custom settings.\n1. Close all AutoCAD applications.\n2. Open the Windows Start Menu.\n3. Navigate to the folder for your AutoCAD version (e.g., AutoCAD 20xx).\n4. Click the application named \"Reset Settings to Default\".\n5. A dialog box will open. Choose the \"Back up and Reset Custom Settings\" option. This will create a backup of your current settings in a ZIP file before resetting.\n6. Allow the reset utility to run. It will re-launch AutoCAD, which will appear as it did on a fresh installation.",
         "views": 1247,
         "created_at": "2025-01-10T09:15:00Z",
-        "updated_at": "2025-01-14T14:22:00Z"
+        "updated_at": "2025-01-14T14:22:00Z",
+        "internal_notes": "INTERNAL NOTE: This issue often occurs after the Windows 11 23H2 update. Check the user's roaming profile size before resetting."
     },
     {
         "id": 2,
@@ -21,7 +22,8 @@
         "solution": "AUDIT: Type AUDIT in the command line. AutoCAD will scan the drawing and attempt to fix structural errors. When prompted, type Y to fix errors. Save the drawing after the audit completes.\n\nRECOVER: If AUDIT does not fix the issue, type RECOVER. Select the corrupt drawing file. AutoCAD will attempt a deeper repair. Save the recovered file with a new name.\n\nPURGE (All): In the command line, type PURGE. In the dialog box, check all checkboxes (including 'Purge nested items'). Click 'Purge All'. Repeat this process until the 'Purge All' button is grayed out.\n\nSAVE: Save the drawing.\n\nWBLOCK (For severe corruption): If the steps above are not enough, WBLOCK (Write Block) can export the drawing data to a new, clean file. Type WBLOCK in the command line. Select the 'Entire drawing' option. Specify a new file name and location. Click OK. Open the new file you just created. This file will be 'clean' of the corrupt elements.",
         "views": 892,
         "created_at": "2025-01-08T11:30:00Z",
-        "updated_at": "2025-01-13T16:45:00Z"
+        "updated_at": "2025-01-13T16:45:00Z",
+        "internal_notes": ""
     },
     {
         "id": 3,
@@ -33,7 +35,8 @@
         "solution": "Purge Unused Elements: Go to Manage > Settings > Purge Unused. Check all boxes and click OK. Repeat until no items remain.\n\nCompact the Central File (Worksharing Only): On the BIM 360/ACC server, locate the central model. Right-click and select 'Compact Central Model'. This removes old worksets and SWC history.\n\nAudit the File: Go to File > Open. Check the 'Audit' box before opening the file. This repairs internal errors.\n\nDisable Worksharing Display Modes: Avoid using 'Worksharing Display' modes during active work. These add visual overhead.\n\nReview Worksets: Unload heavy worksets (e.g., site models, large linked files) that are not needed for the current task.\n\nUpgrade Hardware: If the model is genuinely large (>1GB), ensure the workstation meets Revit's recommended specs (16GB+ RAM, dedicated GPU).",
         "views": 1104,
         "created_at": "2025-01-07T08:20:00Z",
-        "updated_at": "2025-01-15T10:18:00Z"
+        "updated_at": "2025-01-15T10:18:00Z",
+        "internal_notes": ""
     },
     {
         "id": 4,
@@ -45,7 +48,8 @@
         "solution": "An Online Repair will download fresh installation files and fix corrupt Office components.\n1. Close all Microsoft Office applications.\n2. Open the Windows Start Menu and click the Settings gear ⚙.\n3. Click on 'Apps' (or 'Apps & Features').\n4. Scroll down and find your 'Microsoft 365' or 'Microsoft Office' installation in the list.\n5. Click on it, then click 'Modify'.\n6. A new window will appear. Select the 'Online Repair' option (do not choose 'Quick Repair').\n7. Click 'Repair' and follow the prompts. This may take 10-15 minutes and requires an internet connection.",
         "views": 2341,
         "created_at": "2025-01-05T13:45:00Z",
-        "updated_at": "2025-01-14T09:30:00Z"
+        "updated_at": "2025-01-14T09:30:00Z",
+        "internal_notes": ""
     },
     {
         "id": 5,
@@ -57,7 +61,8 @@
         "solution": "Creating a new mail profile will set up a fresh connection to your email server.\n1. Close Outlook completely.\n2. Open the Windows Control Panel.\n3. Click on 'Mail (Microsoft Outlook)'.\n4. In the Mail Setup dialog, click 'Show Profiles'.\n5. Click 'Add' to create a new profile.\n6. Name the new profile (e.g., 'Outlook-New').\n7. Follow the setup wizard to add your email account.\n8. Once complete, select the new profile as the default and click 'OK'.\n9. Restart Outlook. It will now use the new, clean profile.",
         "views": 1876,
         "created_at": "2025-01-06T10:15:00Z",
-        "updated_at": "2025-01-15T11:05:00Z"
+        "updated_at": "2025-01-15T11:05:00Z",
+        "internal_notes": ""
     },
     {
         "id": 6,
@@ -69,7 +74,8 @@
         "solution": "1. Check Internet Connection: Ensure you have an active internet connection. Try opening a website (e.g., google.com).\n2. Verify Credentials: Double-check your username and password. The VPN uses your network credentials.\n3. MFA/2FA Token: If your company uses multi-factor authentication (MFA), ensure you have your phone/token ready to approve the login.\n4. Restart FortiClient: Fully close FortiClient (check the system tray). Reopen it and try again.\n5. Reboot Your Computer: A simple restart often clears network conflicts.\n6. Check Firewall: Ensure your personal firewall or antivirus is not blocking FortiClient. Temporarily disable it to test.\n7. Contact IT: If the issue persists, the VPN server may be down or your account may be locked. Contact the Service Desk.",
         "views": 3102,
         "created_at": "2025-01-04T15:30:00Z",
-        "updated_at": "2025-01-14T17:20:00Z"
+        "updated_at": "2025-01-14T17:20:00Z",
+        "internal_notes": ""
     },
     {
         "id": 7,
@@ -81,7 +87,8 @@
         "solution": "1. Open File Explorer.\n2. Right-click on 'This PC' and select 'Map network drive'.\n3. Choose a drive letter (e.g., P:).\n4. In the 'Folder' field, type the network path (e.g., \\\\fileserver\\projects).\n5. Check the box 'Reconnect at sign-in' so the drive appears every time you log in.\n6. Click 'Finish'.\n7. If prompted, enter your network username and password.\n8. The drive will now appear under 'This PC' in File Explorer.",
         "views": 1654,
         "created_at": "2025-01-09T12:00:00Z",
-        "updated_at": "2025-01-15T08:45:00Z"
+        "updated_at": "2025-01-15T08:45:00Z",
+        "internal_notes": ""
     },
     {
         "id": 8,
@@ -93,7 +100,8 @@
         "solution": "For security, do not use the native 'Mail' app. You must use the official Microsoft Outlook app.\n1. Go to the App Store (iPhone) or Google Play Store (Android).\n2. Search for and download 'Microsoft Outlook'.\n3. Open the Outlook app.\n4. When prompted to add an account, enter your full PRIME email address (e.g., user@primeeng.com).\n5. Click 'Add Account'.\n6. You will be redirected to the PRIME login page.\n7. Enter your password when prompted.\n8. You will then be prompted for 2FA/MFA. Approve the login using the Duo Mobile application on your device.\n9. Once authenticated, your email, calendar, and contacts will sync automatically.",
         "views": 987,
         "created_at": "2025-01-11T09:30:00Z",
-        "updated_at": "2025-01-14T13:15:00Z"
+        "updated_at": "2025-01-14T13:15:00Z",
+        "internal_notes": ""
     },
     {
         "id": 9,
@@ -105,7 +113,8 @@
         "solution": "1. Turn off the printer (power button).\n2. Open all access doors (front, rear, top tray).\n3. Gently pull out any visible jammed paper. Pull in the direction of paper flow (usually toward the output tray).\n4. Check inside the rollers and behind the toner cartridge.\n5. Close all doors.\n6. Turn the printer back on.\n7. If the error persists, unplug the printer for 30 seconds, then plug it back in.\n8. If the jam cannot be cleared, contact IT for service.",
         "views": 2203,
         "created_at": "2025-01-03T14:20:00Z",
-        "updated_at": "2025-01-13T16:00:00Z"
+        "updated_at": "2025-01-13T16:00:00Z",
+        "internal_notes": ""
     },
     {
         "id": 10,
@@ -117,7 +126,8 @@
         "solution": "1. Right-click on the desktop and select 'Display settings'.\n2. Scroll down and click 'Advanced scaling settings'.\n3. Under 'Custom scaling', ensure it is set to 100% (unless you specifically need a higher value).\n4. Click 'Apply' and sign out/sign back in.\n5. Open the Start Menu and type 'ClearType'.\n6. Click 'Adjust ClearType text'.\n7. Follow the wizard, selecting the samples that look sharpest to you.\n8. Click 'Finish'. Text should now be crisp and clear.",
         "views": 1432,
         "created_at": "2025-01-12T11:45:00Z",
-        "updated_at": "2025-01-15T09:20:00Z"
+        "updated_at": "2025-01-15T09:20:00Z",
+        "internal_notes": ""
     },
     {
         "id": 11,
@@ -129,7 +139,8 @@
         "solution": "1. Open the Deltek Vision login screen.\n2. Click 'Forgot Password?' (if available).\n3. Follow the prompts to reset via email.\n4. If the self-service option is not available, contact the Service Desk.\n5. An IT technician will reset your password and provide temporary credentials.\n6. You will be required to change your password on first login.",
         "views": 756,
         "created_at": "2025-01-13T10:00:00Z",
-        "updated_at": "2025-01-14T15:30:00Z"
+        "updated_at": "2025-01-14T15:30:00Z",
+        "internal_notes": ""
     },
     {
         "id": 12,
@@ -141,7 +152,8 @@
         "solution": "1. In the Teams call window, click the '...' (More options) button.\n2. Select 'Device settings'.\n3. Under 'Speaker', ensure the correct output device is selected (e.g., 'Headset' or 'Laptop Speakers').\n4. Under 'Microphone', ensure the correct input device is selected (e.g., 'Headset Microphone').\n5. Test your audio by speaking into the microphone. You should see the input level indicator move.\n6. Click 'Confirm' to save the settings.\n7. If the issue persists, restart Teams.",
         "views": 1998,
         "created_at": "2025-01-02T08:15:00Z",
-        "updated_at": "2025-01-15T12:40:00Z"
+        "updated_at": "2025-01-15T12:40:00Z",
+        "internal_notes": ""
     },
     {
         "id": 13,
@@ -153,7 +165,8 @@
         "solution": "1. Open the PDF in Adobe Acrobat (not Adobe Reader).\n2. Go to 'View' in the top menu.\n3. Select 'Tools' > 'Comment'.\n4. The comment toolbar will appear on the right side.\n5. If the tools are still grayed out, the PDF may be locked or restricted. Contact the document owner to unlock it.",
         "views": 1223,
         "created_at": "2025-01-10T13:30:00Z",
-        "updated_at": "2025-01-14T10:00:00Z"
+        "updated_at": "2025-01-14T10:00:00Z",
+        "internal_notes": ""
     },
     {
         "id": 14,
@@ -165,7 +178,8 @@
         "solution": "For Google Chrome:\n1. Press Ctrl + Shift + Delete.\n2. Set the time range to 'All time'.\n3. Check 'Cookies and other site data' and 'Cached images and files'.\n4. Click 'Clear data'.\n5. Restart Chrome.\n\nFor Microsoft Edge:\n1. Press Ctrl + Shift + Delete.\n2. Set the time range to 'All time'.\n3. Check 'Cookies and other site data' and 'Cached images and files'.\n4. Click 'Clear now'.\n5. Restart Edge.",
         "views": 2654,
         "created_at": "2025-01-01T07:00:00Z",
-        "updated_at": "2025-01-15T14:10:00Z"
+        "updated_at": "2025-01-15T14:10:00Z",
+        "internal_notes": ""
     },
     {
         "id": 15,
@@ -177,7 +191,8 @@
         "solution": "1. Note the error code displayed on the blue screen (e.g., 'DRIVER_IRQL_NOT_LESS_OR_EQUAL').\n2. After the computer restarts, open the Start Menu and type 'Event Viewer'.\n3. Navigate to 'Windows Logs' > 'System'.\n4. Look for 'Critical' or 'Error' entries around the time of the crash.\n5. Take a screenshot or note the details.\n6. Contact the Service Desk with this information.\n7. IT will investigate driver issues, hardware failures, or software conflicts.\n8. Do not ignore repeated BSODs, as they may indicate failing hardware (RAM, hard drive, etc.).",
         "views": 1567,
         "created_at": "2025-01-08T09:45:00Z",
-        "updated_at": "2025-01-14T11:25:00Z"
+        "updated_at": "2025-01-14T11:25:00Z",
+        "internal_notes": ""
     },
     {
         "id": 16,
@@ -189,7 +204,8 @@
         "solution": "1. Click the OneDrive cloud icon in the system tray.\n2. Click 'Help & Settings' > 'View sync problems'.\n3. Review the list of files that failed to sync.\n4. Common causes:\n   - File name contains invalid characters (e.g., *, :, <, >)\n   - File path is too long (>260 characters)\n   - File is open in another application\n5. Rename or move the problematic files.\n6. Right-click the OneDrive icon and select 'Pause syncing' > 'Resume syncing'.\n7. If the issue persists, click 'Help & Settings' > 'Quit OneDrive', then restart it from the Start Menu.",
         "views": 1789,
         "created_at": "2025-01-05T14:20:00Z",
-        "updated_at": "2025-01-15T10:50:00Z"
+        "updated_at": "2025-01-15T10:50:00Z",
+        "internal_notes": ""
     },
     {
         "id": 17,
@@ -201,7 +217,8 @@
         "solution": "1. Check if the touchpad is disabled. Many laptops have a function key combination to toggle the touchpad (e.g., Fn + F7 or Fn + F9). Look for a touchpad icon on the function keys.\n2. Open the Start Menu and type 'Mouse settings'.\n3. Click 'Additional mouse options'.\n4. Go to the 'Touchpad' or 'Device Settings' tab.\n5. Ensure the touchpad is not disabled.\n6. If the touchpad is still not working, restart the computer.\n7. If the issue persists, the touchpad driver may need to be updated. Contact IT for assistance.",
         "views": 1345,
         "created_at": "2025-01-11T08:30:00Z",
-        "updated_at": "2025-01-14T16:15:00Z"
+        "updated_at": "2025-01-14T16:15:00Z",
+        "internal_notes": ""
     },
     {
         "id": 18,
@@ -213,7 +230,8 @@
         "solution": "1. Press Ctrl + Alt + Delete on your keyboard.\n2. Click 'Change a password'.\n3. Enter your current password.\n4. Enter your new password twice.\n5. Click 'OK'.\n6. Your password has been changed. You will need to use the new password the next time you log in.\n\nPassword Requirements:\n- At least 12 characters long\n- Must contain uppercase, lowercase, numbers, and symbols\n- Cannot be a previously used password",
         "views": 2876,
         "created_at": "2025-01-06T12:00:00Z",
-        "updated_at": "2025-01-15T13:45:00Z"
+        "updated_at": "2025-01-15T13:45:00Z",
+        "internal_notes": ""
     },
     {
         "id": 19,
@@ -225,7 +243,8 @@
         "solution": "1. Go to the company's MFA enrollment portal (provided by IT).\n2. Log in with your network credentials.\n3. Follow the prompts to download the authenticator app (e.g., Microsoft Authenticator, Duo Mobile).\n4. Scan the QR code displayed on the screen with your phone.\n5. Enter the 6-digit code generated by the app to verify setup.\n6. Save backup codes in a secure location.\n7. From now on, you will be prompted to approve logins via the app or enter a code.",
         "views": 2134,
         "created_at": "2025-01-07T10:15:00Z",
-        "updated_at": "2025-01-14T09:50:00Z"
+        "updated_at": "2025-01-14T09:50:00Z",
+        "internal_notes": ""
     },
     {
         "id": 20,
@@ -237,7 +256,8 @@
         "solution": "1. Open the plotter's top cover.\n2. Remove the blue spindle rod from the plotter.\n3. Slide the paper roll onto the spindle (the paper should unroll from the top of the roll).\n4. Insert the spindle back into the plotter, ensuring it clicks into place.\n5. Feed the paper into the slot at the back of the plotter.\n6. Press the 'Load Paper' button on the plotter's control panel.\n7. The plotter will automatically feed the paper and align it.\n8. Close the top cover.\n9. The plotter is now ready to print.",
         "views": 678,
         "created_at": "2025-01-13T11:30:00Z",
-        "updated_at": "2025-01-15T08:00:00Z"
+        "updated_at": "2025-01-15T08:00:00Z",
+        "internal_notes": ""
     },
     {
         "id": 21,
@@ -249,7 +269,8 @@
         "solution": "1. In the 'Toolspace' panel, on the 'Prospector' tab, right-click on 'Data Shortcuts'.\n2. Select 'Set Working Folder...'.\n3. Navigate to and select the correct project folder that contains the _Shortcuts folder for this project.\n4. Right-click on 'Data Shortcuts' again and select 'Validate' to refresh.\n5. If links are still broken, right-click the specific item and choose 'Repair Broken Reference.'",
         "views": 543,
         "created_at": "2025-01-09T14:45:00Z",
-        "updated_at": "2025-01-14T12:30:00Z"
+        "updated_at": "2025-01-14T12:30:00Z",
+        "internal_notes": ""
     },
     {
         "id": 22,
@@ -261,7 +282,8 @@
         "solution": "1. In the 'Prospector' tab, expand 'Surfaces' and locate your surface.\n2. Right-click the surface name and select 'Surface Properties'.\n3. Go to the 'Definition' tab.\n4. Check the 'Build' status. If it says 'Out of Date', click 'Rebuild' to regenerate the surface.\n5. Go to the surface's 'Display' tab (or right-click the surface and choose 'Object Viewer').\n6. Ensure that the 'Contours' style is set to display (check 'Major Contours' and 'Minor Contours' visibility).\n7. If the surface is still not visible, check the layer states and ensure the surface layer is not frozen or off.",
         "views": 789,
         "created_at": "2025-01-14T08:00:00Z",
-        "updated_at": "2025-01-15T11:30:00Z"
+        "updated_at": "2025-01-15T11:30:00Z",
+        "internal_notes": ""
     },
     {
         "id": 23,
@@ -273,7 +295,8 @@
         "solution": "1. Locate the physical buttons on the monitor (usually on the bottom or side edge).\n2. Press the 'Menu' button to open the on-screen display (OSD).\n3. Navigate to 'Brightness' or 'Picture' settings using the arrow buttons.\n4. Adjust the brightness slider to a comfortable level.\n5. Press 'OK' or 'Exit' to save.\n\nAlternatively, for laptops:\n1. Use the function keys (Fn + F5/F6 or dedicated brightness keys) to adjust screen brightness.",
         "views": 1923,
         "created_at": "2025-01-04T09:00:00Z",
-        "updated_at": "2025-01-15T11:40:00Z"
+        "updated_at": "2025-01-15T11:40:00Z",
+        "internal_notes": ""
     },
     {
         "id": 24,
@@ -285,7 +308,8 @@
         "solution": "1. Open the PDF in Bluebeam Revu.\n2. Go to the 'Markups' tab in the top ribbon.\n3. Click 'Flatten All'.\n4. A warning will appear: 'This will merge all markups into the PDF content. This cannot be undone.' Click 'OK'.\n5. The markups are now permanently part of the PDF.\n6. Save the file.",
         "views": 1087,
         "created_at": "2025-01-12T13:15:00Z",
-        "updated_at": "2025-01-14T14:50:00Z"
+        "updated_at": "2025-01-14T14:50:00Z",
+        "internal_notes": ""
     },
     {
         "id": 25,
@@ -297,7 +321,8 @@
         "solution": "1. Open the Excel file.\n2. Go to the 'View' tab in the ribbon.\n3. Click 'Freeze Panes'.\n4. Select 'Unfreeze Panes'.\n5. The rows and columns will now scroll normally.",
         "views": 2301,
         "created_at": "2025-01-03T12:45:00Z",
-        "updated_at": "2025-01-14T15:20:00Z"
+        "updated_at": "2025-01-14T15:20:00Z",
+        "internal_notes": ""
     },
     {
         "id": 26,
@@ -309,7 +334,8 @@
         "solution": "1. Click the WiFi icon in the system tray.\n2. Click 'Network & Internet settings'.\n3. Click 'WiFi' > 'Manage known networks'.\n4. Find the problematic network in the list and click 'Forget'.\n5. Go back to the WiFi list and click the network name.\n6. Click 'Connect' and enter the password when prompted.\n7. The network will reconnect with fresh settings.",
         "views": 1734,
         "created_at": "2025-01-08T14:00:00Z",
-        "updated_at": "2025-01-15T12:10:00Z"
+        "updated_at": "2025-01-15T12:10:00Z",
+        "internal_notes": ""
     },
     {
         "id": 27,
@@ -321,7 +347,8 @@
         "solution": "1. Connect your iPhone to a charger (updates require at least 50% battery).\n2. Connect to WiFi.\n3. Open the 'Settings' app.\n4. Tap 'General' > 'Software Update'.\n5. If an update is available, tap 'Download and Install'.\n6. Enter your passcode if prompted.\n7. Tap 'Agree' to the terms and conditions.\n8. The update will download and install automatically. Your phone will restart.\n9. Do not interrupt the update process.",
         "views": 967,
         "created_at": "2025-01-11T11:00:00Z",
-        "updated_at": "2025-01-14T13:40:00Z"
+        "updated_at": "2025-01-14T13:40:00Z",
+        "internal_notes": ""
     },
     {
         "id": 28,
@@ -333,7 +360,8 @@
         "solution": "1. Do NOT load the family directly.\n2. Open your version of Revit without any project open.\n3. Go to File > Open > Family.\n4. Navigate to the corrupt RFA file and select it.\n5. Crucially, check the 'Audit' box in the open dialog.\n6. Click 'Open.' Revit will audit and repair the file.\n7. Once open, go to Manage > Purge Unused. Purge the file to clean it.\n8. Click 'Save As' and save the family with a new name (e.g., 'Family-Cleaned.rfa').\n9. This new, clean file can now be safely loaded into your project.",
         "views": 634,
         "created_at": "2025-01-13T09:30:00Z",
-        "updated_at": "2025-01-15T10:25:00Z"
+        "updated_at": "2025-01-15T10:25:00Z",
+        "internal_notes": ""
     },
     {
         "id": 29,
@@ -345,7 +373,8 @@
         "solution": "1. Connect the docking station to the laptop using the provided cable (usually USB-C or Thunderbolt).\n2. Connect the first monitor to the docking station using an HDMI or DisplayPort cable.\n3. Connect the second monitor to the docking station using a second video port.\n4. Turn on the monitors.\n5. Right-click on the desktop and select 'Display settings'.\n6. Scroll down and click 'Detect' to force Windows to recognize the monitors.\n7. Arrange the displays by dragging the numbered boxes to match the physical layout on your desk.\n8. Click 'Apply'.",
         "views": 1821,
         "created_at": "2025-01-02T10:45:00Z",
-        "updated_at": "2025-01-14T16:30:00Z"
+        "updated_at": "2025-01-14T16:30:00Z",
+        "internal_notes": ""
     },
     {
         "id": 30,
@@ -357,7 +386,8 @@
         "solution": "1. Contact the Service Desk immediately.\n2. An IT technician will verify your identity (name, employee ID, manager name).\n3. The technician will unlock your account in Active Directory.\n4. You will be able to log in again with your current password.\n5. If you have forgotten your password, the technician will also reset it and provide temporary credentials.\n\nNote: Accounts automatically lock after 5 failed login attempts. This is a security feature.",
         "views": 2543,
         "created_at": "2025-01-06T08:20:00Z",
-        "updated_at": "2025-01-15T14:05:00Z"
+        "updated_at": "2025-01-15T14:05:00Z",
+        "internal_notes": ""
     },
     {
         "id": 31,
@@ -369,7 +399,8 @@
         "solution": "1. Place the document face-down on the scanner glass or face-up in the document feeder.\n2. On the printer's touchscreen, select 'Scan'.\n3. Select 'Scan to Email'.\n4. Enter your email address using the on-screen keyboard.\n5. Adjust scan settings if needed (color, resolution, file format).\n6. Press 'Start' or 'Send'.\n7. The scanned document will be emailed to you as a PDF attachment.\n8. If the 'Scan to Email' function is not working, contact IT to configure your email settings on the printer.",
         "views": 1234,
         "created_at": "2025-01-09T13:00:00Z",
-        "updated_at": "2025-01-14T11:50:00Z"
+        "updated_at": "2025-01-14T11:50:00Z",
+        "internal_notes": ""
     },
     {
         "id": 32,
@@ -381,7 +412,8 @@
         "solution": "1. Turn on the Bluetooth headphones and put them in 'pairing mode' (usually by holding the power button for 5-10 seconds).\n2. On the laptop, click the Windows Start button and go to 'Settings'.\n3. Click 'Devices' > 'Bluetooth & other devices'.\n4. Ensure Bluetooth is turned 'On'.\n5. Click 'Add Bluetooth or other device'.\n6. Select 'Bluetooth'.\n7. Your headphones should appear in the list. Click on them.\n8. Click 'Connect'.\n9. The headphones are now paired and will automatically connect when turned on in the future.",
         "views": 1567,
         "created_at": "2025-01-12T09:15:00Z",
-        "updated_at": "2025-01-15T13:20:00Z"
+        "updated_at": "2025-01-15T13:20:00Z",
+        "internal_notes": ""
     },
     {
         "id": 33,
@@ -393,7 +425,8 @@
         "solution": "1. Restart the computer.\n2. If using a wireless keyboard, check the batteries and ensure the USB receiver is plugged in.\n3. If using a wired keyboard, unplug and replug the USB cable.\n4. Test the keyboard on another computer to determine if it is a hardware issue.\n5. If specific keys are stuck, gently pry off the keycap and clean underneath with compressed air.\n6. If the keyboard is defective, contact IT for a replacement.",
         "views": 1456,
         "created_at": "2025-01-10T10:30:00Z",
-        "updated_at": "2025-01-15T09:15:00Z"
+        "updated_at": "2025-01-15T09:15:00Z",
+        "internal_notes": ""
     },
     {
         "id": 34,
@@ -405,7 +438,8 @@
         "solution": "1. Press Ctrl + 9 on your keyboard. This toggles the command line on and off.\n2. If the command line still does not appear, type COMMANDLINE and press Enter (type it blindly, even though you can't see it).\n3. The command line should reappear.\n4. If the issue persists, go to the 'View' tab > 'Palettes' > check 'Command Line'.",
         "views": 1123,
         "created_at": "2025-01-10T14:20:00Z",
-        "updated_at": "2025-01-15T08:55:00Z"
+        "updated_at": "2025-01-15T08:55:00Z",
+        "internal_notes": ""
     },
     {
         "id": 35,
@@ -417,7 +451,8 @@
         "solution": "1. In the Teams meeting window, locate the control bar at the bottom.\n2. Click the 'Share' button (it looks like an upward arrow coming out of a rectangle).\n3. A menu will appear with options:\n   - Share your entire desktop\n   - Share a specific window\n   - Share a PowerPoint presentation\n4. Select the option you want.\n5. Click 'Share'.\n6. Your screen is now visible to all meeting participants.\n7. To stop sharing, click 'Stop sharing' at the top of the screen.",
         "views": 2198,
         "created_at": "2025-01-07T11:45:00Z",
-        "updated_at": "2025-01-14T15:10:00Z"
+        "updated_at": "2025-01-14T15:10:00Z",
+        "internal_notes": ""
     },
     {
         "id": 36,
@@ -429,7 +464,8 @@
         "solution": "Method 1: Snipping Tool\n1. Press Windows Key + Shift + S.\n2. The screen will dim. Click and drag to select the area you want to capture.\n3. The screenshot is saved to your clipboard. Press Ctrl + V to paste it into an email or document.\n\nMethod 2: Full Screen\n1. Press the 'Print Screen' (PrtScn) key on your keyboard.\n2. Open Paint or Word and press Ctrl + V to paste the screenshot.\n\nMethod 3: Snip & Sketch App\n1. Open the Start Menu and type 'Snip & Sketch'.\n2. Click 'New' and select the area to capture.",
         "views": 3012,
         "created_at": "2025-01-04T13:30:00Z",
-        "updated_at": "2025-01-15T12:45:00Z"
+        "updated_at": "2025-01-15T12:45:00Z",
+        "internal_notes": ""
     },
     {
         "id": 37,
@@ -441,7 +477,8 @@
         "solution": "1. Open Outlook and go to your 'Sent Items' folder.\n2. Double-click the email you want to recall to open it in a new window.\n3. Go to the 'Message' tab in the ribbon.\n4. Click 'Actions' > 'Recall This Message'.\n5. Select one of the options:\n   - Delete unread copies of this message\n   - Delete unread copies and replace with a new message\n6. Click 'OK'.\n\nNote: Recall only works if:\n- The recipient has not opened the email yet\n- Both you and the recipient are on the same Exchange server\n- The recipient is using Outlook (not a mobile app or webmail)",
         "views": 1678,
         "created_at": "2025-01-11T10:00:00Z",
-        "updated_at": "2025-01-14T14:35:00Z"
+        "updated_at": "2025-01-14T14:35:00Z",
+        "internal_notes": ""
     },
     {
         "id": 38,
@@ -453,7 +490,8 @@
         "solution": "1. Locate your modem and router (they may be separate devices or a single combo unit).\n2. Unplug the power cable from the back of the modem.\n3. Wait 30 seconds.\n4. Unplug the power cable from the back of the router.\n5. Wait 30 seconds.\n6. Plug the modem back in and wait for all the lights to stabilize (about 2 minutes).\n7. Plug the router back in and wait for all the lights to stabilize (about 2 minutes).\n8. Try reconnecting to WiFi on your device.\n\nIf the issue persists, contact your internet service provider (ISP).",
         "views": 2401,
         "created_at": "2025-01-03T09:00:00Z",
-        "updated_at": "2025-01-15T11:15:00Z"
+        "updated_at": "2025-01-15T11:15:00Z",
+        "internal_notes": ""
     },
     {
         "id": 39,
@@ -465,7 +503,8 @@
         "solution": "1. Unplug the power adapter from the laptop.\n2. Shut down the laptop completely.\n3. Remove the battery (if removable). If the battery is internal, skip to step 5.\n4. Press and hold the power button for 30 seconds to discharge any residual power.\n5. Reconnect the battery and plug in the power adapter.\n6. Turn on the laptop.\n7. Check if the battery is now charging.\n\nIf the issue persists:\n- The power adapter may be faulty. Test with a different adapter.\n- The battery may be worn out and need replacement.\n- Contact IT for hardware diagnostics.",
         "views": 1912,
         "created_at": "2025-01-08T12:15:00Z",
-        "updated_at": "2025-01-14T09:40:00Z"
+        "updated_at": "2025-01-14T09:40:00Z",
+        "internal_notes": ""
     },
     {
         "id": 40,
@@ -477,7 +516,8 @@
         "solution": "1. Close all files and programs that are using the USB drive.\n2. Click the 'Safely Remove Hardware' icon in the system tray (looks like a USB plug with a green checkmark).\n3. Click the name of the USB drive (e.g., 'Eject USB Mass Storage Device').\n4. Wait for the message 'Safe to Remove Hardware'.\n5. Unplug the USB drive.\n\nNote: If you do not safely eject the drive, you risk data corruption or loss.",
         "views": 1534,
         "created_at": "2025-01-12T14:30:00Z",
-        "updated_at": "2025-01-15T10:05:00Z"
+        "updated_at": "2025-01-15T10:05:00Z",
+        "internal_notes": ""
     },
     {
         "id": 41,
@@ -489,7 +529,8 @@
         "solution": "1. Open the Excel file.\n2. Select the range of data that contains duplicates (or press Ctrl + A to select all).\n3. Go to the 'Data' tab in the ribbon.\n4. Click 'Remove Duplicates'.\n5. In the dialog box, ensure all the columns you want to check are selected.\n6. Click 'OK'.\n7. Excel will display a message showing how many duplicate rows were removed.\n8. Click 'OK' again.\n9. Save the file.",
         "views": 1845,
         "created_at": "2025-01-06T13:45:00Z",
-        "updated_at": "2025-01-14T12:20:00Z"
+        "updated_at": "2025-01-14T12:20:00Z",
+        "internal_notes": ""
     },
     {
         "id": 42,
@@ -501,7 +542,8 @@
         "solution": "1. Open the Windows Start Menu and go to 'Settings'.\n2. Click 'Devices' > 'Printers & scanners'.\n3. Find the printer you want to set as default in the list.\n4. Click on the printer name.\n5. Click 'Manage'.\n6. Click 'Set as default'.\n7. A green checkmark will appear next to the printer.\n8. Close the settings window. All future print jobs will go to this printer unless you manually select a different one.",
         "views": 2067,
         "created_at": "2025-01-09T11:20:00Z",
-        "updated_at": "2025-01-15T13:55:00Z"
+        "updated_at": "2025-01-15T13:55:00Z",
+        "internal_notes": ""
     },
     {
         "id": 43,
@@ -513,7 +555,8 @@
         "solution": "1. Open the PowerPoint presentation.\n2. Go to the slide where you want to insert the video.\n3. Click the 'Insert' tab in the ribbon.\n4. Click 'Video' > 'Video on My PC'.\n5. Browse to the video file on your computer and click 'Insert'.\n6. The video will appear on the slide. Resize and position it as needed.\n7. Click the video to select it, then go to the 'Playback' tab.\n8. Set options like 'Play Automatically' or 'Play on Click'.\n9. Test the video by running the slideshow (press F5).\n\nNote: For best results, use MP4 format. The video file must travel with the PowerPoint file if you share it with others.",
         "views": 1423,
         "created_at": "2025-01-07T14:00:00Z",
-        "updated_at": "2025-01-14T16:25:00Z"
+        "updated_at": "2025-01-14T16:25:00Z",
+        "internal_notes": ""
     },
     {
         "id": 44,
@@ -525,7 +568,8 @@
         "solution": "This will clear all saved passwords for network resources from Windows.\n1. Open the Windows Start Menu and type 'Credential Manager'.\n2. Open the Credential Manager.\n3. Click on 'Windows Credentials'.\n4. Look through the list under 'Generic Credentials' for any saved passwords related to your VPN server address or file server.\n5. Click the arrow to expand the credential, and then click 'Remove'.\n6. Confirm the removal.\n7. Restart the PC. The next time the user connects, they will be prompted to enter their new credentials.",
         "views": 1289,
         "created_at": "2025-01-10T08:45:00Z",
-        "updated_at": "2025-01-15T09:30:00Z"
+        "updated_at": "2025-01-15T09:30:00Z",
+        "internal_notes": ""
     },
     {
         "id": 45,
@@ -537,6 +581,7 @@
         "solution": "1. Close 3ds Max completely.\n2. Open the 3Dconnexion driver control panel (search for '3Dconnexion' in the Start Menu).\n3. Go to the 'Supported Applications' tab.\n4. Ensure '3ds Max' is listed and checked.\n5. If it is not listed, or if the checkbox is grayed out, the driver may need to be reinstalled.\n6. Download the latest 3Dconnexion driver from the manufacturer's website.\n7. Run the installer. During installation, ensure '3ds Max' is selected under 'Supported Applications'.\n8. Restart the computer.\n9. Open 3ds Max. The SpaceMouse should now function normally.",
         "views": 1756,
         "created_at": "2025-01-05T10:30:00Z",
-        "updated_at": "2025-01-14T11:00:00Z"
+        "updated_at": "2025-01-14T11:00:00Z",
+        "internal_notes": ""
     }
 ]

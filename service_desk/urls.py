@@ -21,15 +21,26 @@ urlpatterns = [
     # --- Ticket Survey (CSAT Feedback Portal) ---
     path('survey/<int:ticket_id>/', views.ticket_survey, name='ticket_survey'),
     
+    # --- Management Hub (NEW - Admin Launchpad) ---
+    path('manager/hub/', views.management_hub, name='management_hub'),
+    
     # --- Manager Analytics Dashboard ---
     path('manager/', views.manager_dashboard, name='manager_dashboard'),
     
     # --- CSAT Report ---
     path('manager/csat/', views.csat_report, name='csat_report'),
     
-    # --- Admin Settings (NEW - System Health Configuration) ---
+    # --- Admin Settings (System Health Configuration) ---
     path('manager/settings/', views.admin_settings, name='admin_settings'),
     
     # --- Technician Profile ---
     path('manager/technician/<str:name>/', views.technician_profile, name='technician_profile'),
+    
+    # --- Knowledge Base Manager (NEW - Bulk Edit Table) ---
+    path('manager/kb/', views.kb_manager, name='kb_manager'),
+    
+    # --- Knowledge Base Editor (Manager/Admin Only) ---
+    path('knowledge-base/add/', views.kb_add, name='kb_add'),
+    path('knowledge-base/edit/<int:article_id>/', views.kb_edit, name='kb_edit'),
+    path('knowledge-base/delete/<int:article_id>/', views.kb_delete, name='kb_delete'),
 ]

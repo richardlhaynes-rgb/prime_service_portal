@@ -1,12 +1,13 @@
 import json
 import os
+from datetime import datetime
 from django.conf import settings
 from service_desk.models import Ticket
 
 # --- TOGGLE: Demo Mode vs Live Data ---
 USE_MOCK_DATA = True
 
-# --- FULL STAFF ROSTER DATABASE (REFACTORED WITH URL-SAFE IDS AS KEYS) ---
+# --- FULL STAFF ROSTER DATABASE (WITH CUSTOMER FEEDBACK) ---
 STAFF_ROSTER = {
     "richard_haynes": {
         "id": "richard_haynes",
@@ -16,7 +17,13 @@ STAFF_ROSTER = {
         "email": "richard.haynes@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Richard+Haynes&background=0D8ABC&color=fff",
         "stats": {"open_tickets": 4, "resolved_this_month": 22, "csat_score": "4.9/5", "avg_response": "8 mins"},
-        "recent_activity": ["Ticket #104 Review", "Approved Software Request", "Updated SLA Policy"]
+        "recent_activity": ["Ticket #104 Review", "Approved Software Request", "Updated SLA Policy"],
+        "feedback": [
+            {"date": "Nov 26", "user": "Sarah J.", "rating": 5, "comment": "Richard jumped on a call immediately and fixed the VPN issue. 5/5."},
+            {"date": "Nov 25", "user": "Mike T.", "rating": 5, "comment": "Great communication regarding the outage. Kept everyone informed."},
+            {"date": "Nov 24", "user": "Lisa M.", "rating": 5, "comment": "Very helpful with the new software request. Approved quickly."},
+            {"date": "Nov 23", "user": "Carlos R.", "rating": 4, "comment": "Responded fast to my escalation. Professional service."}
+        ]
     },
     "rob_german": {
         "id": "rob_german",
@@ -26,7 +33,13 @@ STAFF_ROSTER = {
         "email": "rob.german@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Rob+German&background=6B21A8&color=fff",
         "stats": {"open_tickets": 3, "resolved_this_month": 15, "csat_score": "5.0/5", "avg_response": "12 mins"},
-        "recent_activity": ["Server Migration", "Firewall Audit", "Azure Sync Fix"]
+        "recent_activity": ["Server Migration", "Firewall Audit", "Azure Sync Fix"],
+        "feedback": [
+            {"date": "Nov 27", "user": "Executive Team", "rating": 5, "comment": "Server migration was seamless. Great job with minimal downtime."},
+            {"date": "Nov 26", "user": "Mark P.", "rating": 5, "comment": "Rob is a wizard with Azure. Fixed our sync issue in record time."},
+            {"date": "Nov 24", "user": "Jennifer W.", "rating": 5, "comment": "Firewall configuration was perfect. No issues since deployment."},
+            {"date": "Nov 22", "user": "David K.", "rating": 5, "comment": "Always thorough and professional. Highly recommend."}
+        ]
     },
     "chuck_moore": {
         "id": "chuck_moore",
@@ -36,7 +49,13 @@ STAFF_ROSTER = {
         "email": "chuck.moore@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Chuck+Moore&background=059669&color=fff",
         "stats": {"open_tickets": 8, "resolved_this_month": 31, "csat_score": "4.7/5", "avg_response": "10 mins"},
-        "recent_activity": ["Network Troubleshooting", "VPN Config", "Workstation Imaging"]
+        "recent_activity": ["Network Troubleshooting", "VPN Config", "Workstation Imaging"],
+        "feedback": [
+            {"date": "Nov 27", "user": "Amanda P.", "rating": 5, "comment": "Always responsive and knowledgeable. Fixed the badge printer in minutes."},
+            {"date": "Nov 26", "user": "Robert L.", "rating": 5, "comment": "Chuck diagnosed the network issue faster than anyone. Saved the day."},
+            {"date": "Nov 25", "user": "Patricia H.", "rating": 4, "comment": "Great work on the VPN setup. A few minor tweaks needed but overall excellent."},
+            {"date": "Nov 23", "user": "Emily D.", "rating": 5, "comment": "Workstation imaging was done perfectly. New hire was productive immediately."}
+        ]
     },
     "dodi_moore": {
         "id": "dodi_moore",
@@ -46,7 +65,13 @@ STAFF_ROSTER = {
         "email": "dodi.moore@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Dodi+Moore&background=DC2626&color=fff",
         "stats": {"open_tickets": 6, "resolved_this_month": 28, "csat_score": "4.8/5", "avg_response": "9 mins"},
-        "recent_activity": ["Email Migration", "SharePoint Setup", "User Onboarding"]
+        "recent_activity": ["Email Migration", "SharePoint Setup", "User Onboarding"],
+        "feedback": [
+            {"date": "Nov 27", "user": "Lisa M.", "rating": 5, "comment": "Inventory audit was handled very professionally. Everything accounted for."},
+            {"date": "Nov 26", "user": "Carlos R.", "rating": 5, "comment": "Helped me find the missing laptop. Great detective work!"},
+            {"date": "Nov 25", "user": "Sarah J.", "rating": 5, "comment": "Email migration went smoothly. No data loss. Impressive."},
+            {"date": "Nov 24", "user": "Mike T.", "rating": 4, "comment": "SharePoint setup was good but took a bit longer than expected."}
+        ]
     },
     "andrew_vohs": {
         "id": "andrew_vohs",
@@ -56,7 +81,13 @@ STAFF_ROSTER = {
         "email": "andrew.vohs@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Andrew+Vohs&background=0284C7&color=fff",
         "stats": {"open_tickets": 2, "resolved_this_month": 9, "csat_score": "4.9/5", "avg_response": "1 hour"},
-        "recent_activity": ["Database Backup", "GIS Data Sync", "Performance Tuning"]
+        "recent_activity": ["Database Backup", "GIS Data Sync", "Performance Tuning"],
+        "feedback": [
+            {"date": "Nov 27", "user": "Jennifer W.", "rating": 5, "comment": "The new dashboard widgets are fantastic! SQL performance is incredible."},
+            {"date": "Nov 25", "user": "David K.", "rating": 5, "comment": "SQL query optimization saved us hours. Andrew is a genius."},
+            {"date": "Nov 24", "user": "Amanda P.", "rating": 5, "comment": "Database backup schedule is rock solid. Peace of mind."},
+            {"date": "Nov 22", "user": "Robert L.", "rating": 4, "comment": "GIS data sync is working well. Minor lag during peak hours."}
+        ]
     },
     "taylor_blevins": {
         "id": "taylor_blevins",
@@ -66,7 +97,13 @@ STAFF_ROSTER = {
         "email": "taylor.blevins@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Taylor+Blevins&background=D97706&color=fff",
         "stats": {"open_tickets": 10, "resolved_this_month": 38, "csat_score": "4.6/5", "avg_response": "15 mins"},
-        "recent_activity": ["Tier 1 Support", "Printer Setup", "Software Install"]
+        "recent_activity": ["Tier 1 Support", "Printer Setup", "Software Install"],
+        "feedback": [
+            {"date": "Nov 27", "user": "Patricia H.", "rating": 5, "comment": "Super friendly and quick to reply. Fixed my Outlook issue instantly."},
+            {"date": "Nov 26", "user": "Emily D.", "rating": 5, "comment": "Set up my new monitor perfectly. No hassle at all."},
+            {"date": "Nov 25", "user": "Mark P.", "rating": 4, "comment": "Good work on the printer setup. Took a bit longer but thorough."},
+            {"date": "Nov 24", "user": "Lisa M.", "rating": 5, "comment": "Software installation was seamless. Taylor is great to work with."}
+        ]
     },
     "ryan_chitwood": {
         "id": "ryan_chitwood",
@@ -76,7 +113,13 @@ STAFF_ROSTER = {
         "email": "ryan.chitwood@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Ryan+Chitwood&background=16A34A&color=fff",
         "stats": {"open_tickets": 1, "resolved_this_month": 7, "csat_score": "5.0/5", "avg_response": "2 hours"},
-        "recent_activity": ["ArcGIS Pro Install", "Map Server Config", "Data Migration"]
+        "recent_activity": ["ArcGIS Pro Install", "Map Server Config", "Data Migration"],
+        "feedback": [
+            {"date": "Nov 26", "user": "Carlos R.", "rating": 5, "comment": "ArcGIS Pro installation was flawless. Ryan knows this software inside out."},
+            {"date": "Nov 25", "user": "Sarah J.", "rating": 5, "comment": "Map server configuration was perfect. No downtime."},
+            {"date": "Nov 24", "user": "Mike T.", "rating": 5, "comment": "Data migration handled with care. All layers intact."},
+            {"date": "Nov 22", "user": "Jennifer W.", "rating": 5, "comment": "Ryan is the GIS expert we needed. Fantastic support."}
+        ]
     },
     "gary_long": {
         "id": "gary_long",
@@ -86,7 +129,13 @@ STAFF_ROSTER = {
         "email": "gary.long@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Gary+Long&background=4F46E5&color=fff",
         "stats": {"open_tickets": 12, "resolved_this_month": 52, "csat_score": "4.8/5", "avg_response": "7 mins"},
-        "recent_activity": ["Tier 1 Support", "Shipping Equipment", "Computer Build"]
+        "recent_activity": ["Tier 1 Support", "Shipping Equipment", "Computer Build"],
+        "feedback": [
+            {"date": "Nov 27", "user": "David K.", "rating": 5, "comment": "Gary is the best! Fixed my printer in under 5 minutes."},
+            {"date": "Nov 26", "user": "Amanda P.", "rating": 5, "comment": "Quick turnaround on the new workstation build. Runs like a dream."},
+            {"date": "Nov 25", "user": "Robert L.", "rating": 5, "comment": "Gary helped me ship equipment to the remote office. Seamless process."},
+            {"date": "Nov 24", "user": "Patricia H.", "rating": 4, "comment": "Good support but wish the resolution email was more detailed."}
+        ]
     },
     "auto_heal_system": {
         "id": "auto_heal_system",
@@ -96,7 +145,13 @@ STAFF_ROSTER = {
         "email": "automation@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Auto+Heal&background=1F2937&color=fff",
         "stats": {"open_tickets": 0, "resolved_this_month": 142, "csat_score": "N/A", "avg_response": "0 mins"},
-        "recent_activity": ["Password Reset", "Disk Cleanup", "Service Restart"]
+        "recent_activity": ["Password Reset", "Disk Cleanup", "Service Restart"],
+        "feedback": [
+            {"date": "Nov 27", "user": "Emily D.", "rating": 5, "comment": "Password reset was instant. Love this bot!"},
+            {"date": "Nov 26", "user": "Mark P.", "rating": 5, "comment": "Disk cleanup happened automatically. No manual intervention needed."},
+            {"date": "Nov 25", "user": "Lisa M.", "rating": 5, "comment": "Service restart resolved the issue before I even noticed. Amazing."},
+            {"date": "Nov 24", "user": "Carlos R.", "rating": 5, "comment": "Best automation system we've ever had. Saves so much time."}
+        ]
     }
 }
 
@@ -139,51 +194,48 @@ SUBCATEGORY_ICONS = {
     'Licensing & Activation': 'key',
     'Other Design Tools (e.g., Lumion, Enscape, V-Ray)': 'photo',
     'SketchUp': 'cube-transparent',
-
-    # --- Business & Admin Software (5 subcategories) ---
-    'Deltek (Vision, Vantagepoint, etc.)': 'building-office',
-    'Email & Outlook': 'envelope',
-    'File Storage & Sharing': 'cloud',
-    'Microsoft 365 (Office, Teams, OneDrive)': 'squares-2x2',
-    'Web Browsers': 'globe-alt',
-
-    # --- Hardware & Peripherals (5 subcategories) ---
-    'Conference Room AV': 'speaker-wave',
-    'Mobile Devices (iPhones, iPads)': 'device-phone-mobile',
-    'Monitors & Docking Stations': 'tv',
-    'Specialty Peripherals (3Dconnexion mouse, etc.)': 'cursor-arrow-rays',
-    'Workstations (Desktops, Laptops)': 'computer-desktop',
-
-    # --- Internal IT Processes (5 subcategories) ---
-    'Backup & Recovery': 'arrow-path',
-    'New User Onboarding': 'user-plus',
-    'Server Maintenance': 'server',
-    'User Offboarding': 'user-minus',
-    'Vendor Contact List': 'phone',
-
+    
+    # --- Hardware & Peripherals (7 subcategories) ---
+    'Desktops & Workstations': 'computer-desktop',
+    'Docking Stations & Adapters': 'device-tablet',
+    'External Storage Devices': 'circle-stack',
+    'Keyboards & Mice': 'cursor-arrow-rays',
+    'Laptops': 'device-phone-mobile',
+    'Monitors & Displays': 'tv',
+    'Webcams & Headsets': 'camera',
+    
+    # --- Internal IT Processes (3 subcategories) ---
+    'Asset Management': 'clipboard-document-list',
+    'Documentation & Knowledge Base': 'book-open',
+    'Onboarding & Offboarding': 'user-plus',
+    
     # --- Networking & Connectivity (5 subcategories) ---
-    'Internet Outage (Office-specific)': 'wifi',
-    'VPN / Remote Access': 'lock-closed',
-    'VPN Connection Issues': 'shield-exclamation',
-    'Wi-Fi': 'wifi',
-    'Wired / Ethernet': 'arrows-right-left',
-
-    # --- Printing & Plotting (4 subcategories) ---
-    'Desktop Printers & Copiers': 'printer',
-    'Large Format Plotters': 'map',
-    'Print Management Software': 'adjustments-horizontal',
-    'Scan to Email / Scan to Folder': 'document-duplicate',
-
-    # --- User Accounts & Security (4 subcategories) ---
-    'File & Folder Permissions': 'folder-open',
-    'MFA (Multi-Factor Authentication)': 'device-phone-mobile',
-    'Password Resets': 'lock-open',
-    'Security & Phishing': 'shield-check'
+    'Firewall & Security Configurations': 'shield-check',
+    'Internet & Wi-Fi Issues': 'wifi',
+    'Network Performance & Troubleshooting': 'chart-bar',
+    'Remote Access (VPN, RDP)': 'lock-closed',
+    'Server & Infrastructure': 'server',
+    
+    # --- Printing & Plotting (3 subcategories) ---
+    'Large Format Plotters': 'presentation-chart-line',
+    'Print Quality Issues': 'wrench-screwdriver',
+    'Standard Office Printers': 'printer',
+    
+    # --- User Accounts & Security (10 subcategories) ---
+    'Account Lockouts': 'lock-open',
+    'Email & Mailbox Management': 'envelope',
+    'File Shares & Permissions': 'folder',
+    'Group Policy & Domain Issues': 'cog-6-tooth',
+    'Licensing & Software Activation': 'key',
+    'Multi-Factor Authentication (MFA)': 'finger-print',
+    'Password Resets': 'arrow-path',
+    'Single Sign-On (SSO) Issues': 'identification',
+    'User Account Creation & Deletion': 'user-circle',
+    'ViewPoint (Deltek) Access & Permissions': 'building-office'
 }
 
-# Fallback icons for category-level matching
+# Category-level fallback icons (broader categories)
 CATEGORY_ICONS = {
-    'Business & Admin Software': 'building-office',
     'Design Applications': 'cube',
     'Hardware & Peripherals': 'computer-desktop',
     'Internal IT Processes': 'cog',
@@ -194,32 +246,31 @@ CATEGORY_ICONS = {
 
 def _get_icon_for_article(article):
     """
-    STRICT icon lookup using exact string matching.
-    NO fuzzy matching. NO keyword detection.
+    Determines the correct Heroicon name for a KB article based on subcategory.
     
     Args:
-        article: Dictionary with 'subcategory' and 'category' keys
+        article: Dictionary containing 'subcategory' and 'category' keys
     
     Returns:
-        String: Heroicon name (e.g., 'cube', 'envelope', 'computer-desktop')
+        String: Heroicon name (e.g., 'cube', 'envelope', 'printer')
     
-    Logic:
-        1. Try exact subcategory match (highest priority)
-        2. Fallback to category-level icon
-        3. Default to 'document-text' if no match
+    Logic Flow:
+        1. Try exact subcategory match in SUBCATEGORY_ICONS
+        2. Fallback to category-level icon in CATEGORY_ICONS
+        3. Default to 'document-text' if no match found
     """
-    subcategory = article.get('subcategory', '').strip()
-    category = article.get('category', '').strip()
+    subcategory = article.get('subcategory', '')
+    category = article.get('category', '')
     
-    # Step 1: Exact subcategory match (primary lookup)
+    # Step 1: Try exact subcategory match
     if subcategory in SUBCATEGORY_ICONS:
         return SUBCATEGORY_ICONS[subcategory]
     
-    # Step 2: Category-level fallback
+    # Step 2: Fallback to category-level icon
     if category in CATEGORY_ICONS:
         return CATEGORY_ICONS[category]
     
-    # Step 3: Ultimate fallback (should never happen with clean data)
+    # Step 3: Generic fallback
     return 'document-text'
 
 # --- DATA RETRIEVAL FUNCTIONS ---
@@ -420,6 +471,31 @@ def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
                 ]
             }
         
+        # *** CRITICAL: STRICT TIME-BASED ANNOUNCEMENT FILTERING ***
+        announcement = system_health_data.get('announcement')
+        if announcement:
+            start_str = announcement.get('start_datetime')
+            end_str = announcement.get('end_datetime')
+            now = datetime.now()
+            
+            # Parse and Check Start Time
+            if start_str:
+                try:
+                    start_dt = datetime.fromisoformat(start_str)
+                    if now < start_dt:
+                        system_health_data['announcement'] = None  # Too early: Hide it
+                except ValueError:
+                    pass  # Ignore invalid dates
+            
+            # Parse and Check End Time (Only if we haven't already hidden it)
+            if system_health_data.get('announcement') and end_str:
+                try:
+                    end_dt = datetime.fromisoformat(end_str)
+                    if now > end_dt:
+                        system_health_data['announcement'] = None  # Too late: Hide it
+                except ValueError:
+                    pass  # Ignore invalid dates
+        
         # Calculate overall status
         system_health_data['overall_status'] = _calculate_overall_status(system_health_data['vendor_status'])['text']
         system_health_data['overall_color'] = _calculate_overall_status(system_health_data['vendor_status'])['color']
@@ -493,6 +569,7 @@ def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
                 },
                 'sla_breaches': [
                     {'ticket_id': 104, 'title': 'VPN Connection Failure', 'age_hours': 6, 'technician': 'Unassigned'},
+                    {'ticket_id': 98, 'title': 'Laptop Battery Issue', 'age_hours': 4, 'technician': 'Gary Long'},
                     {'ticket_id': 102, 'title': 'VIP Laptop Failure', 'age_hours': 4, 'technician': 'Unassigned'}
                 ],
                 'avg_resolution_time': '1.5 hours',
@@ -679,7 +756,7 @@ def update_system_health(new_data):
     """
     _save_mock_data('system_health.json', new_data)
 
-# --- HELPER FUNCTION: CALCULATE OVERALL STATUS ---
+# --- HELPER: OVERALL STATUS CALCULATOR ---
 def _calculate_overall_status(vendor_list):
     """
     Analyzes vendor status list and returns overall system health.

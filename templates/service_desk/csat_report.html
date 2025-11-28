@@ -3,34 +3,101 @@
 {% block content %}
 <div class="max-w-7xl mx-auto">
     
-    <!-- Header -->
-    <div class="mb-8 flex justify-between items-center">
-        <div>
-            <a href="{% url 'manager_dashboard' %}" class="text-sm text-prime-orange hover:underline mb-2 inline-block">&larr; Back to Dashboard</a>
-            <h2 class="text-3xl font-bold text-prime-navy">Customer Satisfaction Report</h2>
-            <p class="text-gray-600 mt-1">Voice of the Customer</p>
+    <!-- Page Header with Date Range Controls -->
+    <div class="mb-8">
+        <!-- Back Navigation -->
+        <div class="mb-4">
+            <a href="{% url 'manager_dashboard' %}" class="text-sm text-prime-orange hover:underline inline-flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Back to Manager Dashboard
+            </a>
         </div>
-        
-        <!-- Date Range Selector -->
-        <div class="flex items-center gap-3">
-            {% if is_demo_mode %}
-            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">DEMO MODE</span>
-            {% endif %}
-            
-            <div class="relative">
-                <select 
-                    id="date-range-selector"
-                    class="px-4 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange appearance-none bg-white cursor-pointer">
-                    <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
-                    <option value="yesterday" {% if date_range == 'yesterday' %}selected{% endif %}>Yesterday</option>
-                    <option value="7d" {% if date_range == '7d' %}selected{% endif %}>Last 7 Days</option>
-                    <option value="30d" {% if date_range == '30d' %}selected{% endif %}>Last 30 Days</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                    </svg>
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-prime-navy">
+                    {% if technician %}
+                        Customer Satisfaction: <span class="text-prime-orange">{{ technician.name }}</span>
+                    {% else %}
+                        Overall Customer Satisfaction
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600 mt-1">Voice of the Customer</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                {% if is_demo_mode %}
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">DEMO MODE</span>
+                {% endif %}
+
+                <!-- Container A: Date Preset Buttons (Default Visible) -->
+                <div id="date-preset-row" class="flex items-center space-x-2">
+                    <a href="?range=today" 
+                       id="btn-today"
+                       class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                              {% if current_range == 'today' %}text-white bg-prime-orange border border-prime-orange
+                              {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                        Today
+                    </a>
+                    <a href="?range=yesterday" 
+                       id="btn-yesterday"
+                       class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                              {% if current_range == 'yesterday' %}text-white bg-prime-orange border border-prime-orange
+                              {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                        Yesterday
+                    </a>
+                    <a href="?range=7d" 
+                       id="btn-7d"
+                       class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                              {% if current_range == '7d' or not current_range %}text-white bg-prime-orange border border-prime-orange
+                              {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                        Last 7 Days
+                    </a>
+                    <a href="?range=30d" 
+                       id="btn-30d"
+                       class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                              {% if current_range == '30d' %}text-white bg-prime-orange border border-prime-orange
+                              {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                        Last 30 Days
+                    </a>
+                    <button 
+                        id="btn-custom"
+                        onclick="showCustomInputRow()"
+                        class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                               {% if current_range == 'custom' %}text-white bg-prime-orange border border-prime-orange
+                               {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                        Custom Range
+                    </button>
                 </div>
+
+                <!-- Container B: Custom Date Input Row (Default Hidden, Swaps In) -->
+                <form method="GET" id="custom-input-row" class="hidden flex items-center gap-2">
+                    <input type="hidden" name="range" value="custom">
+                    
+                    <span class="text-sm text-gray-600 font-medium">From:</span>
+                    <input type="date" 
+                           name="start" 
+                           class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange" 
+                           required>
+                    
+                    <span class="text-sm text-gray-600 font-medium">To:</span>
+                    <input type="date" 
+                           name="end" 
+                           class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange" 
+                           required>
+                    
+                    <button type="submit" 
+                            class="px-3 py-1 text-sm font-medium text-white bg-prime-orange rounded hover:bg-opacity-90 transition-colors">
+                        Apply
+                    </button>
+                    <button type="button" 
+                            onclick="hideCustomInputRow()"
+                            class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -39,9 +106,10 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         <div class="flex items-center justify-between">
             <div>
-                <h3 class="text-lg font-bold text-prime-navy mb-2">Overall Customer Satisfaction</h3>
+                <h3 class="text-lg font-bold text-prime-navy mb-2">Average Rating</h3>
                 <div class="flex items-center gap-2">
                     <div class="flex items-center gap-1">
+                        <!-- 5 Yellow Stars (Static Display) -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
@@ -71,7 +139,7 @@
     </div>
 
     <!-- Recent Customer Feedback Section -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 class="text-lg font-bold text-prime-navy mb-6 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -79,109 +147,107 @@
             Recent Customer Feedback
         </h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {% for review in recent_feedback %}
-            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100 flex flex-col h-full">
-                <!-- Star Rating -->
-                <div class="flex items-center gap-1 mb-3">
-                    {% if review.rating == 5 %}
-                        <!-- 5 Yellow Stars -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                    {% elif review.rating == 4 %}
-                        <!-- 4 Yellow Stars, 1 Gray Star -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                    {% elif review.rating == 3 %}
-                        <!-- 3 Yellow Stars, 2 Gray Stars -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                    {% else %}
-                        <!-- Fallback: 5 Yellow Stars for any other rating -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                    {% endif %}
-                </div>
+        <!-- Feedback List -->
+        <div class="space-y-4">
+            {% if technician %}
+                <!-- Display Technician-Specific Feedback -->
+                {% for review in technician.feedback %}
+                <div class="bg-gray-50 rounded-lg shadow-sm p-4 border border-gray-100">
+                    <!-- Top Row: User Name + Date -->
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-bold text-gray-900">{{ review.user }}</span>
+                        <span class="text-xs text-gray-500">{{ review.date }}</span>
+                    </div>
 
-                <!-- Comment -->
-                <p class="text-gray-600 italic text-sm mb-4">"{{ review.comment }}"</p>
+                    <!-- Star Rating (Dynamic based on review.rating) -->
+                    <div class="flex items-center gap-1 mb-3">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <!-- Yellow Star (Filled) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            {% else %}
+                                <!-- Gray Star (Empty) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
 
-                <!-- User & Ticket Info (Fixed to Bottom) -->
-                <div class="border-t border-gray-100 pt-3 mt-auto">
-                    <p class="text-sm font-bold text-gray-900">{{ review.user }}</p>
-                    <p class="text-xs text-gray-400 mt-1">{{ review.ticket }}</p>
+                    <!-- Comment Text -->
+                    <p class="text-gray-700 text-sm">"{{ review.comment }}"</p>
                 </div>
-            </div>
-            {% empty %}
-            <div class="col-span-3 text-center text-gray-400 italic py-8">
-                No feedback available for this period.
-            </div>
-            {% endfor %}
+                {% empty %}
+                <div class="text-center text-gray-400 italic py-8">
+                    No feedback available for this technician in this period.
+                </div>
+                {% endfor %}
+
+            {% else %}
+                <!-- Display Global Feedback from stats.recent_feedback -->
+                {% for review in stats.recent_feedback %}
+                <div class="bg-gray-50 rounded-lg shadow-sm p-4 border border-gray-100">
+                    <!-- Top Row: User Name + Ticket Info -->
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="font-bold text-gray-900">{{ review.user }}</span>
+                        <span class="text-xs text-gray-500">{{ review.ticket }}</span>
+                    </div>
+
+                    <!-- Star Rating (Dynamic based on review.rating) -->
+                    <div class="flex items-center gap-1 mb-3">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <!-- Yellow Star (Filled) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            {% else %}
+                                <!-- Gray Star (Empty) -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Comment Text -->
+                    <p class="text-gray-700 text-sm">"{{ review.comment }}"</p>
+                </div>
+                {% empty %}
+                <div class="text-center text-gray-400 italic py-8">
+                    No feedback available for this period.
+                </div>
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
 
 </div>
 
-<!-- Date Range Selector JavaScript -->
+<!-- Swap Mode JavaScript (Identical to Manager Dashboard) -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dropdown = document.getElementById('date-range-selector');
+    // --- SWAP MODE: SHOW CUSTOM INPUT ROW, HIDE PRESET BUTTONS ---
+    function showCustomInputRow() {
+        const presetRow = document.getElementById('date-preset-row');
+        const customRow = document.getElementById('custom-input-row');
+        
+        if (presetRow && customRow) {
+            presetRow.classList.add('hidden');
+            customRow.classList.remove('hidden');
+        }
+    }
 
-    dropdown.addEventListener('change', function() {
-        window.location.href = '?range=' + this.value;
-    });
-});
+    // --- SWAP MODE: HIDE CUSTOM INPUT ROW, SHOW PRESET BUTTONS ---
+    function hideCustomInputRow() {
+        const presetRow = document.getElementById('date-preset-row');
+        const customRow = document.getElementById('custom-input-row');
+        
+        if (presetRow && customRow) {
+            customRow.classList.add('hidden');
+            presetRow.classList.remove('hidden');
+        }
+    }
 </script>
 {% endblock %}

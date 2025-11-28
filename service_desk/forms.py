@@ -1,5 +1,6 @@
 ﻿from django import forms
 from .models import Ticket, Comment
+from knowledge_base.models import Article
 
 INPUT_STYLE = 'w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-transparent'
 
@@ -101,7 +102,7 @@ class VPPermissionsForm(forms.Form):
     user_list = forms.CharField(required=False, label="List of Users (if adding/removing)", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24', 'placeholder': "(Optional) e.g., John Smith, Jane Doe"}))
     summary = forms.CharField(label="Summary of Problem or Request", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please add John Smith to project X"}))
 
-# --- NEW: Ticket Reply Form (Comments Only) ---
+# --- 9. Ticket Reply Form (Comments Only) ---
 class TicketReplyForm(forms.Form):
     comment = forms.CharField(
         label="Add Comment / Reply",
@@ -123,3 +124,144 @@ class TicketReplyForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': INPUT_STYLE})
     )
+
+# --- 10. Knowledge Base Article Form (NEW) ---
+class KBArticleForm(forms.Form):
+    """
+    Form for creating and editing Knowledge Base articles.
+    Used by Manager/Admin users only.
+    """
+    
+    # Category Choices (from Article.Category model)
+    CATEGORY_CHOICES = [
+        ('', '-- Select Category --'),
+        ('Business & Admin Software', 'Business & Admin Software'),
+        ('Design Applications', 'Design Applications'),
+        ('Hardware & Peripherals', 'Hardware & Peripherals'),
+        ('Internal IT Processes', 'Internal IT Processes'),
+        ('Networking & Connectivity', 'Networking & Connectivity'),
+        ('Printing & Plotting', 'Printing & Plotting'),
+        ('User Accounts & Security', 'User Accounts & Security'),
+    ]
+    
+    # Common Subcategory Choices (expandable list)
+    SUBCATEGORY_CHOICES = [
+        ('', '-- Select Subcategory --'),
+        # Design Applications
+        ('Adobe Creative Suite (Photoshop, InDesign)', 'Adobe Creative Suite (Photoshop, InDesign)'),
+        ('Autodesk (AutoCAD, Revit, Civil 3D)', 'Autodesk (AutoCAD, Revit, Civil 3D)'),
+        ('Bluebeam Revu (PDF & Markup)', 'Bluebeam Revu (PDF & Markup)'),
+        ('Licensing & Activation', 'Licensing & Activation'),
+        ('Other Design Tools (e.g., Lumion, Enscape, V-Ray)', 'Other Design Tools (e.g., Lumion, Enscape, V-Ray)'),
+        ('SketchUp', 'SketchUp'),
+        # Business & Admin Software
+        ('Deltek (Vision, Vantagepoint, etc.)', 'Deltek (Vision, Vantagepoint, etc.)'),
+        ('Email & Outlook', 'Email & Outlook'),
+        ('File Storage & Sharing', 'File Storage & Sharing'),
+        ('Microsoft 365 (Office, Teams, OneDrive)', 'Microsoft 365 (Office, Teams, OneDrive)'),
+        ('Web Browsers', 'Web Browsers'),
+        # Hardware & Peripherals
+        ('Conference Room AV', 'Conference Room AV'),
+        ('Mobile Devices (iPhones, iPads)', 'Mobile Devices (iPhones, iPads)'),
+        ('Monitors & Docking Stations', 'Monitors & Docking Stations'),
+        ('Specialty Peripherals (3Dconnexion mouse, etc.)', 'Specialty Peripherals (3Dconnexion mouse, etc.)'),
+        ('Workstations (Desktops, Laptops)', 'Workstations (Desktops, Laptops)'),
+        # Internal IT Processes
+        ('Backup & Recovery', 'Backup & Recovery'),
+        ('New User Onboarding', 'New User Onboarding'),
+        ('Server Maintenance', 'Server Maintenance'),
+        ('User Offboarding', 'User Offboarding'),
+        ('Vendor Contact List', 'Vendor Contact List'),
+        # Networking & Connectivity
+        ('Internet Outage (Office-specific)', 'Internet Outage (Office-specific)'),
+        ('VPN / Remote Access', 'VPN / Remote Access'),
+        ('VPN Connection Issues', 'VPN Connection Issues'),
+        ('Wi-Fi', 'Wi-Fi'),
+        ('Wired / Ethernet', 'Wired / Ethernet'),
+        # Printing & Plotting
+        ('Desktop Printers & Copiers', 'Desktop Printers & Copiers'),
+        ('Large Format Plotters', 'Large Format Plotters'),
+        ('Print Management Software', 'Print Management Software'),
+        ('Scan to Email / Scan to Folder', 'Scan to Email / Scan to Folder'),
+        # User Accounts & Security
+        ('File & Folder Permissions', 'File & Folder Permissions'),
+        ('MFA (Multi-Factor Authentication)', 'MFA (Multi-Factor Authentication)'),
+        ('Password Resets', 'Password Resets'),
+        ('Security & Phishing', 'Security & Phishing'),
+        # Generic fallback
+        ('General', 'General'),
+    ]
+    
+    # Status Choices (from Article.Status model)
+    STATUS_CHOICES = [
+        ('Draft', 'Draft'),
+        ('Pending', 'Pending Approval'),
+        ('Approved', 'Approved'),
+    ]
+    
+    # Form Fields
+    title = forms.CharField(
+        label="Article Title",
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': INPUT_STYLE,
+            'placeholder': 'e.g., "AutoCAD: How to Reset to Default Settings"'
+        })
+    )
+    
+    category = forms.ChoiceField(
+        label="Category",
+        choices=CATEGORY_CHOICES,
+        widget=forms.Select(attrs={'class': INPUT_STYLE})
+    )
+    
+    subcategory = forms.ChoiceField(
+        label="Subcategory",
+        choices=SUBCATEGORY_CHOICES,
+        widget=forms.Select(attrs={'class': INPUT_STYLE})
+    )
+    
+    problem = forms.CharField(
+        label="Issue / Problem Description",
+        widget=forms.Textarea(attrs={
+            'class': INPUT_STYLE,
+            'rows': 4,
+            'placeholder': 'Describe the symptoms or error the user is experiencing...'
+        })
+    )
+    
+    solution = forms.CharField(
+        label="Resolution / Solution Steps",
+        widget=forms.Textarea(attrs={
+            'class': INPUT_STYLE,
+            'rows': 6,
+            'placeholder': 'Provide step-by-step instructions to resolve the issue...\n\n1. First step\n2. Second step\n3. ...'
+        })
+    )
+    
+    internal_notes = forms.CharField(
+        label="Internal IT Notes (Optional)",
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': INPUT_STYLE,
+            'rows': 3,
+            'placeholder': 'Internal technical notes, known bugs, escalation info... (Only visible to Superusers)'
+        })
+    )
+    
+    status = forms.ChoiceField(
+        label="Article Status",
+        choices=STATUS_CHOICES,
+        initial='Draft',
+        widget=forms.Select(attrs={'class': INPUT_STYLE})
+    )
+    
+    def __init__(self, *args, **kwargs):
+        """
+        Custom initialization to allow pre-populating form with existing article data.
+        """
+        initial_data = kwargs.get('initial', {})
+        super().__init__(*args, **kwargs)
+        
+        # If editing an existing article, you can pre-populate fields here
+        # Example: self.fields['category'].initial = initial_data.get('category')

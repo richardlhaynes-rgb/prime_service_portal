@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    
+    <!-- Back Navigation -->
+    <div class="mb-6">
+        <a href="{% url 'management_hub' %}" 
+           class="text-sm text-prime-orange hover:underline flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            <span>Back to Management Hub</span>
+        </a>
+    </div>
+
+    <!-- Page Header with New Article Button -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-prime-navy">Knowledge Base Manager</h1>
+            <p class="text-gray-600 text-sm mt-2">
+                Manage all {{ total_count }} articles | Bulk edit and organization
+            </p>
+        </div>
+        
+        <!-- New Article Button (Large, Orange) -->
+        <a href="{% url 'kb_add' %}" 
+           class="px-6 py-3 bg-prime-orange text-white rounded-md font-bold shadow-sm hover:bg-opacity-90 transition-colors flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            New Article
+        </a>
+    </div>
+
+    <!-- Articles Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        
+        <!-- Table Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-prime-navy flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                All Articles
+            </h3>
+        </div>
+
+        <!-- Table (Responsive) -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            ID
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Title
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Category
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Subcategory
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for article in articles %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <!-- ID -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #{{ article.id }}
+                        </td>
+                        
+                        <!-- Title (Clickable Link) -->
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            <a href="{% url 'article_detail' article.id %}" 
+                               class="font-medium hover:text-prime-orange transition-colors">
+                                {{ article.title }}
+                            </a>
+                        </td>
+                        
+                        <!-- Category -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {{ article.category }}
+                        </td>
+                        
+                        <!-- Subcategory -->
+                        <td class="px-6 py-4 text-sm text-gray-600">
+                            {{ article.subcategory }}
+                        </td>
+                        
+                        <!-- Status Badge -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if article.status == 'Approved' %}bg-green-100 text-green-800
+                                {% elif article.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ article.status }}
+                            </span>
+                        </td>
+                        
+                        <!-- Actions (Edit + Delete) -->
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex items-center justify-end gap-3">
+                                <!-- Edit Button -->
+                                <a href="{% url 'kb_edit' article.id %}" 
+                                   class="text-indigo-600 hover:text-indigo-900 transition-colors flex items-center gap-1"
+                                   title="Edit Article">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                    </svg>
+                                    <span class="hidden md:inline">Edit</span>
+                                </a>
+                                
+                                <!-- Delete Button -->
+                                <a href="{% url 'kb_delete' article.id %}" 
+                                   class="text-red-600 hover:text-red-900 transition-colors flex items-center gap-1"
+                                   title="Delete Article">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="hidden md:inline">Delete</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <!-- Empty State -->
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                            <p class="text-gray-500 font-medium">
+                                No articles found.
+                            </p>
+                            <p class="text-xs text-gray-400 mt-2">
+                                Click the "New Article" button to get started.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Footer Stats -->
+    <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600">
+                <strong>Total Articles:</strong> {{ total_count }}
+            </span>
+            <a href="{% url 'kb_home' %}" 
+               class="text-prime-orange hover:underline font-medium flex items-center gap-1">
+                <span>View Public KB</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

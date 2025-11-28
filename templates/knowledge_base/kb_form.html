@@ -1,0 +1,465 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    
+    <!-- Breadcrumb Navigation -->
+    <div class="mb-6">
+        {% if article %}
+        <a href="{% url 'article_detail' article.id %}" 
+           class="text-sm text-prime-orange hover:underline flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            <span>Back to Article</span>
+        </a>
+        {% else %}
+        <a href="{% url 'kb_home' %}" 
+           class="text-sm text-prime-orange hover:underline flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            <span>Back to Knowledge Base</span>
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-prime-navy">{{ form_title|default:"Knowledge Base Article" }}</h1>
+        <p class="text-gray-600 text-sm mt-2">Create or modify a knowledge base article for the IT team.</p>
+    </div>
+
+    <!-- Form Container -->
+    <form method="post" class="space-y-6" id="kb-form">
+        {% csrf_token %}
+
+        <!-- Card 1: Basic Information -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    Basic Information
+                </h3>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <!-- Title -->
+                <div>
+                    <label class="block text-sm font-semibold text-prime-navy mb-2">
+                        {{ form.title.label }} <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-gray-500 mt-1">
+                        Use clear, descriptive titles like "AutoCAD: Fix Missing Toolbars After Update"
+                    </p>
+                </div>
+
+                <!-- Category & Subcategory Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-semibold text-prime-navy mb-2">
+                            {{ form.category.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ form.category.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Subcategory (Dependent Dropdown) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-prime-navy mb-2">
+                            {{ form.subcategory.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.subcategory }}
+                        {% if form.subcategory.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ form.subcategory.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-semibold text-prime-navy mb-2">
+                        {{ form.status.label }}
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ form.status.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-xs text-gray-500 mt-1">
+                        Set to "Approved" to make this article visible to end users
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Problem Description -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-red-500 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Issue / Problem Description
+                </h3>
+            </div>
+            
+            <div class="p-6">
+                <!-- Fake WYSIWYG Toolbar -->
+                <div class="bg-gray-100 border border-gray-300 rounded-t-md px-3 py-2 flex items-center gap-3">
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                        </svg>
+                    </button>
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Italic">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m-4 4h8M6 16h8" />
+                        </svg>
+                    </button>
+                    <div class="h-4 w-px bg-gray-300"></div>
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Bullet List">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Insert Link">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Textarea -->
+                <div class="relative">
+                    {{ form.problem }}
+                    {% if form.problem.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ form.problem.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <p class="text-xs text-gray-500 mt-2">
+                    Describe the symptoms, error messages, or user-facing issue. Be specific.
+                </p>
+            </div>
+        </div>
+
+        <!-- Card 3: Solution / Resolution -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-green-500 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    Resolution / Solution Steps
+                </h3>
+            </div>
+            
+            <div class="p-6">
+                <!-- Fake WYSIWYG Toolbar -->
+                <div class="bg-gray-100 border border-gray-300 rounded-t-md px-3 py-2 flex items-center gap-3">
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                        </svg>
+                    </button>
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Italic">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m-4 4h8M6 16h8" />
+                        </svg>
+                    </button>
+                    <div class="h-4 w-px bg-gray-300"></div>
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Numbered List">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                    </button>
+                    <button type="button" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="Insert Link">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Textarea -->
+                <div class="relative">
+                    {{ form.solution }}
+                    {% if form.solution.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ form.solution.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <p class="text-xs text-gray-500 mt-2">
+                    Provide step-by-step instructions. Use numbered lists for clarity.
+                </p>
+            </div>
+        </div>
+
+        <!-- Card 4: Internal IT Notes (Yellow Background) -->
+        <div class="bg-yellow-50 rounded-lg shadow-sm border border-yellow-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-yellow-200 bg-yellow-100">
+                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    Internal IT Notes (Private)
+                </h3>
+            </div>
+            
+            <div class="p-6">
+                <!-- Fake WYSIWYG Toolbar (Yellow Theme) -->
+                <div class="bg-yellow-100 border border-yellow-300 rounded-t-md px-3 py-2 flex items-center gap-3">
+                    <button type="button" class="p-1.5 hover:bg-yellow-200 rounded transition-colors" title="Bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z" />
+                        </svg>
+                    </button>
+                    <button type="button" class="p-1.5 hover:bg-yellow-200 rounded transition-colors" title="Italic">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m-4 4h8M6 16h8" />
+                        </svg>
+                    </button>
+                    <div class="h-4 w-px bg-yellow-300"></div>
+                    <button type="button" class="p-1.5 hover:bg-yellow-200 rounded transition-colors" title="Bullet List">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Textarea (Yellow Background) -->
+                <div class="relative">
+                    {{ form.internal_notes }}
+                    {% if form.internal_notes.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ form.internal_notes.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-start gap-2 mt-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    <p class="text-xs text-yellow-800">
+                        <strong>Only visible to Managers/Admins.</strong> Use this field for escalation procedures, known bugs, vendor contact info, or technical notes.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Bar (Bottom) -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <!-- Left: Cancel Link -->
+                <a href="{% if article %}{% url 'article_detail' article.id %}{% else %}{% url 'kb_home' %}{% endif %}" 
+                   class="text-gray-600 hover:text-gray-800 font-medium text-sm flex items-center gap-1 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Cancel
+                </a>
+
+                <!-- Right: Save & Delete Buttons -->
+                <div class="flex items-center gap-3">
+                    <!-- Delete Button (Only show if editing) -->
+                    {% if article %}
+                    <a href="{% url 'kb_delete' article.id %}" 
+                       class="px-6 py-2.5 bg-red-600 text-white rounded-md font-semibold hover:bg-red-700 transition-colors flex items-center gap-2 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                        Delete Article
+                    </a>
+                    {% endif %}
+
+                    <!-- Save Button (Starts Disabled) -->
+                    <button type="submit" 
+                            id="save-btn"
+                            class="px-8 py-2.5 bg-gray-300 text-gray-500 cursor-not-allowed rounded-md font-semibold transition-all duration-200 flex items-center gap-2"
+                            disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        {{ submit_text|default:"Save Article" }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- Style Override: Remove border-radius from textareas to match toolbar -->
+<style>
+    #id_problem,
+    #id_solution,
+    #id_internal_notes {
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+    }
+</style>
+
+<!-- *** INTEGRATED JAVASCRIPT: Dependent Dropdown + Dirty Form Detection *** -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ============================================================
+    // FEATURE 1: DEPENDENT DROPDOWN (Category → Subcategory)
+    // ============================================================
+    
+    const categoryMap = {
+        "Design Applications": [
+            "Adobe Creative Suite (Photoshop, InDesign)",
+            "Autodesk (AutoCAD, Revit, Civil 3D)",
+            "Bluebeam Revu (PDF & Markup)",
+            "Licensing & Activation",
+            "Other Design Tools (e.g., Lumion, Enscape, V-Ray)",
+            "SketchUp"
+        ],
+        "Business & Admin Software": [
+            "Deltek (Vision, Vantagepoint, etc.)",
+            "Email & Outlook",
+            "File Storage & Sharing",
+            "Microsoft 365 (Office, Teams, OneDrive)",
+            "Web Browsers"
+        ],
+        "Hardware & Peripherals": [
+            "Conference Room AV",
+            "Mobile Devices (iPhones, iPads)",
+            "Monitors & Docking Stations",
+            "Specialty Peripherals (3Dconnexion mouse, etc.)",
+            "Workstations (Desktops, Laptops)"
+        ],
+        "Internal IT Processes": [
+            "Backup & Recovery",
+            "New User Onboarding",
+            "Server Maintenance",
+            "User Offboarding",
+            "Vendor Contact List"
+        ],
+        "Networking & Connectivity": [
+            "Internet Outage (Office-specific)",
+            "VPN / Remote Access",
+            "VPN Connection Issues",
+            "Wi-Fi",
+            "Wired / Ethernet"
+        ],
+        "Printing & Plotting": [
+            "Desktop Printers & Copiers",
+            "Large Format Plotters",
+            "Print Management Software",
+            "Scan to Email / Scan to Folder"
+        ],
+        "User Accounts & Security": [
+            "File & Folder Permissions",
+            "MFA (Multi-Factor Authentication)",
+            "Password Resets",
+            "Security & Phishing"
+        ]
+    };
+
+    // Get form elements
+    const categorySelect = document.getElementById('id_category');
+    const subcategorySelect = document.getElementById('id_subcategory');
+
+    // Store the initial subcategory value (for edit mode)
+    const initialSubcategory = subcategorySelect.value;
+
+    // Function to populate subcategory dropdown
+    function updateSubcategories() {
+        const selectedCategory = categorySelect.value;
+        
+        // Clear existing options (except the placeholder)
+        subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+        
+        // If a valid category is selected
+        if (selectedCategory && categoryMap[selectedCategory]) {
+            const subcategories = categoryMap[selectedCategory];
+            
+            // Populate with relevant subcategories
+            subcategories.forEach(function(subcategory) {
+                const option = document.createElement('option');
+                option.value = subcategory;
+                option.textContent = subcategory;
+                
+                // Re-select the initial value if we're in edit mode
+                if (subcategory === initialSubcategory) {
+                    option.selected = true;
+                }
+                
+                subcategorySelect.appendChild(option);
+            });
+        }
+    }
+
+    // Event listener: Update subcategories when category changes
+    categorySelect.addEventListener('change', updateSubcategories);
+
+    // Run on page load (to handle edit mode pre-population)
+    updateSubcategories();
+
+    
+    // ============================================================
+    // FEATURE 2: DIRTY FORM DETECTION (Smart Save Button)
+    // ============================================================
+    
+    const form = document.getElementById('kb-form');
+    const saveButton = document.getElementById('save-btn');
+    
+    // Capture initial form state on page load
+    const initialFormData = new FormData(form);
+    const initialValues = {};
+    
+    for (let [key, value] of initialFormData.entries()) {
+        initialValues[key] = value;
+    }
+    
+    // Function to check if form has changed
+    function checkFormChanged() {
+        const currentFormData = new FormData(form);
+        let hasChanged = false;
+        
+        // Check each field against initial state
+        for (let [key, value] of currentFormData.entries()) {
+            if (initialValues[key] !== value) {
+                hasChanged = true;
+                break;
+            }
+        }
+        
+        // Also check if any fields were removed (edge case)
+        for (let key in initialValues) {
+            if (!currentFormData.has(key)) {
+                hasChanged = true;
+                break;
+            }
+        }
+        
+        // Update button state
+        if (hasChanged) {
+            // Enable button with orange styling
+            saveButton.disabled = false;
+            saveButton.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+            saveButton.classList.add('bg-prime-orange', 'text-white', 'hover:bg-orange-600', 'shadow-md', 'transform', 'hover:-translate-y-0.5');
+        } else {
+            // Disable button with gray styling
+            saveButton.disabled = true;
+            saveButton.classList.remove('bg-prime-orange', 'text-white', 'hover:bg-orange-600', 'shadow-md', 'transform', 'hover:-translate-y-0.5');
+            saveButton.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        }
+    }
+    
+    // Listen for changes on all form inputs
+    form.addEventListener('input', checkFormChanged);
+    form.addEventListener('change', checkFormChanged);
+});
+</script>
+{% endblock %}

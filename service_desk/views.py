@@ -1,16 +1,17 @@
 ﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
 from .forms import (
     ApplicationIssueForm, EmailMailboxForm, HardwareIssueForm, PrinterScannerForm,
     SoftwareInstallForm, GeneralQuestionForm, VPResetForm, VPPermissionsForm,
-    TicketReplyForm
+    TicketReplyForm, KBArticleForm
 )
 from .models import Ticket, Comment
 from services import ticket_service
 
 # --- USER DASHBOARD ---
+@login_required
 def dashboard(request):
     """
     Main Dashboard: Shows user's tickets with sorting capability.
@@ -47,7 +48,7 @@ def service_catalog(request):
     """
     Displays the 8-card Service Catalog grid.
     """
-    return render(request, 'service_catalog.html')
+    return render(request, 'service_desk/service_catalog.html')
 
 # --- TICKET SUBMISSION FORMS ---
 def report_application_issue(request):
@@ -79,8 +80,8 @@ def report_email_issue(request):
         form = EmailMailboxForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            title = f'[Portal] Email Request: {data["request_type"]}'
-            desc = f'USER REPORT:\n-----------------\nType: {data["request_type"]}\nMailbox: {data["mailbox_name"] or "N/A"}\nSummary: {data["summary"]}\n\nDETAILS:\n{data["description"]}'
+            title = f'[Portal] Email: {data["issue_type"]}'
+            desc = f'USER REPORT:\n-----------------\nIssue Type: {data["issue_type"]}\nEmail: {data["email_address"]}\n\nDETAILS:\n{data["description"]}'
             Ticket.objects.create(
                 title=title,
                 description=desc,
@@ -93,7 +94,7 @@ def report_email_issue(request):
             return redirect('dashboard')
     else:
         form = EmailMailboxForm()
-    return render(request, 'service_desk/forms/email_issue.html', {'form': form})
+    return render(request, 'service_desk/forms/email_mailbox.html', {'form': form})
 
 def report_hardware_issue(request):
     if request.method == 'POST':
@@ -121,8 +122,8 @@ def report_printer_issue(request):
         form = PrinterScannerForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            title = f'[Portal] Printer Issue at {data["printer_location"]}'
-            desc = f'USER REPORT:\n-----------------\nLocation: {data["printer_location"]}\nComputer: {data["computer_name"] or "N/A"}\n\nDETAILS:\n{data["description"]}'
+            title = f'[Portal] Printer: {data["printer_location"]}'
+            desc = f'USER REPORT:\n-----------------\nLocation: {data["printer_location"]}\nComputer: {data["computer_name"] or "Primary"}\n\nDETAILS:\n{data["description"]}'
             Ticket.objects.create(
                 title=title,
                 description=desc,
@@ -146,7 +147,7 @@ def report_software_install(request):
             if data['request_for'] == 'Another User':
                 user_display = f'Another User ({data["target_user"]})'
             title = f'[Portal] Software Request: {data["software_name"]}'
-            desc = f'USER REPORT:\n-----------------\nSoftware: {data["software_name"]}\nVersion: {data["version_needed"] or "Latest"}\nRequest For: {user_display}\nComputer: {data["computer_name"]}\n\nJUSTIFICATION:\n{data["justification"]}\n\nLICENSE:\n{data["license_info"] or "None"}'
+            desc = f'USER REPORT:\n-----------------\nSoftware: {data["software_name"]}\nRequest For: {user_display}\nComputer: {data["computer_name"]}\n\nJUSTIFICATION:\n{data["justification"]}\n\nLICENSE:\n{data["license_info"] or "None"}'
             Ticket.objects.create(
                 title=title,
                 description=desc,
@@ -228,6 +229,7 @@ def report_vp_permissions(request):
     return render(request, 'service_desk/forms/vp_permissions.html', {'form': form})
 
 # --- TICKET DETAIL VIEW ---
+@login_required
 def ticket_detail(request, ticket_id):
     """
     Displays a single ticket with comments and allows user to reply.
@@ -289,7 +291,7 @@ def ticket_detail(request, ticket_id):
                 
                 return redirect('ticket_detail', ticket_id=ticket.id)
         else:
-            form = TicketReplyForm(initial={'priority': ticket.priority})
+            form = TicketReplyForm()
     
     return render(request, 'service_desk/ticket_detail.html', {
         'ticket': ticket,
@@ -334,6 +336,16 @@ def ticket_survey(request, ticket_id):
         'is_demo_mode': is_demo_mode
     })
 
+# --- MANAGEMENT HUB (Admin Launchpad) ---
+@user_passes_test(lambda u: u.is_superuser)
+def management_hub(request):
+    """
+    Management Hub: Central landing page for all admin tools.
+    Provides quick access to Analytics, System Health, and KB Manager.
+    Only accessible to superusers.
+    """
+    return render(request, 'service_desk/management_hub.html')
+
 # --- MANAGER ANALYTICS DASHBOARD ---
 @login_required
 def manager_dashboard(request):
@@ -345,12 +357,12 @@ def manager_dashboard(request):
         messages.error(request, "Access Denied: Manager-level permissions required.")
         return redirect('dashboard')
     
-    # Get date range from query parameters
+    # Get date range from query parameters (default: last 7 days)
     date_range = request.GET.get('range', '7d')
     start_date = request.GET.get('start')
     end_date = request.GET.get('end')
     
-    # Fetch analytics data
+    # Fetch analytics data from Service Layer
     analytics = ticket_service.get_dashboard_stats(
         date_range=date_range,
         start_date=start_date,
@@ -358,9 +370,10 @@ def manager_dashboard(request):
     )
     
     return render(request, 'service_desk/manager_dashboard.html', {
-        'stats': analytics,
         'analytics': analytics,
-        'current_range': date_range
+        'current_range': date_range,
+        'start_date': start_date,
+        'end_date': end_date
     })
 
 # --- CSAT REPORT ---
@@ -374,8 +387,30 @@ def csat_report(request):
         messages.error(request, "Access Denied: Manager-level permissions required.")
         return redirect('dashboard')
     
+    # Mock CSAT data (Demo Mode placeholder)
+    csat_data = {
+        'average_rating': 4.7,
+        'total_responses': 42,
+        'rating_breakdown': {
+            '5': 28,
+            '4': 10,
+            '3': 3,
+            '2': 1,
+            '1': 0
+        },
+        'recent_feedback': [
+            {'ticket_id': 101, 'rating': 5, 'comment': 'Great support! Resolved quickly.'},
+            {'ticket_id': 102, 'rating': 4, 'comment': 'Good service but took a while.'},
+            {'ticket_id': 103, 'rating': 5, 'comment': 'Excellent technician.'}
+        ]
+    }
+    
+    # Check if we're in Demo Mode
+    is_demo_mode = ticket_service.USE_MOCK_DATA
+    
     return render(request, 'service_desk/csat_report.html', {
-        'feedback_data': []  # Future: Populate from database
+        'csat_data': csat_data,
+        'is_demo_mode': is_demo_mode
     })
 
 # --- ADMIN SETTINGS (System Health Configuration) ---
@@ -383,6 +418,7 @@ def csat_report(request):
 def admin_settings(request):
     """
     Admin Settings: Configure System Health announcements and vendor status.
+    NOW INCLUDES: Scheduled announcement start/end datetime fields.
     """
     # Check if user has permission
     if not request.user.is_superuser:
@@ -397,15 +433,19 @@ def admin_settings(request):
         announcement_title = request.POST.get('announcement_title')
         announcement_message = request.POST.get('announcement_message')
         announcement_type = request.POST.get('announcement_type')
+        announcement_date = request.POST.get('announcement_date')
+        
+        # *** NEW: Extract scheduled datetime fields ***
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
         
         # Build vendor status list
         vendor_status = []
-        vendor_names = request.POST.getlist('vendor_name[]')
-        vendor_statuses = request.POST.getlist('vendor_status[]')
-        
-        for name, status in zip(vendor_names, vendor_statuses):
-            if name:  # Only add non-empty entries
-                vendor_status.append({'name': name, 'status': status})
+        for i in range(10):  # Support up to 10 vendors (expandable)
+            vendor_name = request.POST.get(f'vendor_name_{i}')
+            vendor_status_value = request.POST.get(f'vendor_status_{i}')
+            if vendor_name:
+                vendor_status.append({'name': vendor_name, 'status': vendor_status_value})
         
         # Save to JSON file
         new_health_data = {
@@ -413,17 +453,19 @@ def admin_settings(request):
                 'title': announcement_title,
                 'message': announcement_message,
                 'type': announcement_type,
-                'date': 'Today'
+                'date': announcement_date or 'Today',
+                'start_datetime': start_time,  # ← NEW
+                'end_datetime': end_time        # ← NEW
             },
             'vendor_status': vendor_status
         }
         
         ticket_service.update_system_health(new_health_data)
-        messages.success(request, "System Health settings updated successfully!")
+        messages.success(request, "✅ System Health settings updated successfully!")
         return redirect('admin_settings')
     
     return render(request, 'service_desk/admin_settings.html', {
-        'current_health': current_health
+        'system_health': current_health
     })
 
 # --- TECHNICIAN PROFILE ---
@@ -431,22 +473,174 @@ def admin_settings(request):
 def technician_profile(request, name):
     """
     Displays detailed profile for a specific technician.
-    
-    Args:
-        name: URL-safe ID of the technician (e.g., 'richard_haynes')
     """
     # Check if user has permission
     if not request.user.is_superuser:
         messages.error(request, "Access Denied: Manager-level permissions required.")
         return redirect('dashboard')
     
-    # Fetch technician data using the service layer
-    tech_data = ticket_service.get_technician_details(name)
+    # Fetch technician data from Service Layer
+    technician = ticket_service.get_technician_details(name)
     
-    if not tech_data:
-        messages.error(request, f"Technician profile not found: {name}")
+    if not technician:
+        messages.error(request, "Technician not found.")
         return redirect('manager_dashboard')
     
     return render(request, 'service_desk/technician_profile.html', {
-        'technician': tech_data
+        'technician': technician
+    })
+
+# --- KNOWLEDGE BASE MANAGER (Bulk Edit Table) ---
+@login_required
+def kb_manager(request):
+    """
+    Knowledge Base Manager: Bulk edit table for all KB articles.
+    Provides quick overview and batch management capabilities.
+    Only accessible to superusers.
+    """
+    # Check permission
+    if not request.user.is_superuser:
+        messages.error(request, "Access Denied: Manager-level permissions required.")
+        return redirect('kb_home')
+    
+    # Fetch all articles from service layer
+    all_articles = ticket_service.get_knowledge_base_articles()
+    
+    # Sort by most recently updated
+    all_articles = sorted(
+        all_articles,
+        key=lambda x: x.get('updated_at', ''),
+        reverse=True
+    )
+    
+    return render(request, 'knowledge_base/kb_manager.html', {
+        'articles': all_articles,
+        'total_count': len(all_articles)
+    })
+
+# --- KNOWLEDGE BASE EDITOR VIEWS ---
+
+@login_required
+def kb_add(request):
+    """
+    Add New KB Article: Create a new knowledge base article.
+    Only accessible to superusers (Managers).
+    """
+    # Check permission
+    if not request.user.is_superuser:
+        messages.error(request, "Access Denied: Manager-level permissions required.")
+        return redirect('kb_home')
+    
+    if request.method == 'POST':
+        form = KBArticleForm(request.POST)
+        if form.is_valid():
+            # Extract cleaned data
+            article_data = form.cleaned_data
+            
+            # Call service layer to create article
+            new_article = ticket_service.create_kb_article(article_data)
+            
+            if new_article:
+                messages.success(request, f"✅ Article Created: {article_data['title']}")
+                return redirect('kb_home')
+            else:
+                messages.error(request, "❌ Failed to create article. Please try again.")
+        else:
+            messages.error(request, "Please fix the errors below.")
+    else:
+        form = KBArticleForm()
+    
+    return render(request, 'knowledge_base/kb_form.html', {
+        'form': form,
+        'form_title': 'Add New Article',
+        'submit_text': 'Create Article'
+    })
+
+@login_required
+def kb_edit(request, article_id):
+    """
+    Edit Existing KB Article: Update an existing knowledge base article.
+    Only accessible to superusers (Managers).
+    """
+    # Check permission
+    if not request.user.is_superuser:
+        messages.error(request, "Access Denied: Manager-level permissions required.")
+        return redirect('kb_home')
+    
+    # Fetch existing article data
+    articles = ticket_service.get_knowledge_base_articles()
+    article = next((a for a in articles if a['id'] == article_id), None)
+    
+    if not article:
+        messages.error(request, "Article not found.")
+        return redirect('kb_home')
+    
+    if request.method == 'POST':
+        form = KBArticleForm(request.POST)
+        if form.is_valid():
+            # Extract cleaned data
+            updated_data = form.cleaned_data
+            
+            # Call service layer to update article
+            success = ticket_service.update_kb_article(article_id, updated_data)
+            
+            if success:
+                messages.success(request, f"✅ Article Updated: {updated_data['title']}")
+                return redirect('article_detail', pk=article_id)
+            else:
+                messages.error(request, "❌ Failed to update article. Please try again.")
+        else:
+            messages.error(request, "Please fix the errors below.")
+    else:
+        # Pre-fill form with existing article data
+        initial_data = {
+            'title': article.get('title', ''),
+            'category': article.get('category', ''),
+            'subcategory': article.get('subcategory', ''),
+            'problem': article.get('problem', ''),
+            'solution': article.get('solution', ''),
+            'internal_notes': article.get('internal_notes', ''),
+            'status': article.get('status', 'Draft')
+        }
+        form = KBArticleForm(initial=initial_data)
+    
+    return render(request, 'knowledge_base/kb_form.html', {
+        'form': form,
+        'form_title': f'Edit Article: {article["title"]}',
+        'submit_text': 'Save Changes',
+        'article': article
+    })
+
+@login_required
+def kb_delete(request, article_id):
+    """
+    Delete KB Article: Remove an existing knowledge base article.
+    Only accessible to superusers (Managers).
+    """
+    # Check permission
+    if not request.user.is_superuser:
+        messages.error(request, "Access Denied: Manager-level permissions required.")
+        return redirect('kb_home')
+    
+    if request.method == 'POST':
+        # Call service layer to delete article
+        success = ticket_service.delete_kb_article(article_id)
+        
+        if success:
+            messages.success(request, "✅ Article deleted successfully.")
+        else:
+            messages.error(request, "❌ Failed to delete article.")
+        
+        return redirect('kb_manager')
+    
+    # If GET request, show confirmation page
+    articles = ticket_service.get_knowledge_base_articles()
+    article = next((a for a in articles if a['id'] == article_id), None)
+    
+    if not article:
+        messages.error(request, "Article not found.")
+        return redirect('kb_manager')
+    
+    return render(request, 'knowledge_base/kb_delete_confirm.html', {
+        'article': article
     })
