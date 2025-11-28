@@ -35,18 +35,18 @@ STAFF_ROSTER = {
         "location": "Columbus, OH",
         "email": "chuck.moore@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Chuck+Moore&background=059669&color=fff",
-        "stats": {"open_tickets": 5, "resolved_this_month": 28, "csat_score": "4.8/5", "avg_response": "15 mins"},
-        "recent_activity": ["Onboarding New Hires", "Door Badge System", "Tier 3 Escalation"]
+        "stats": {"open_tickets": 8, "resolved_this_month": 31, "csat_score": "4.7/5", "avg_response": "10 mins"},
+        "recent_activity": ["Network Troubleshooting", "VPN Config", "Workstation Imaging"]
     },
-    "ryan_chitwood": {
-        "id": "ryan_chitwood",
-        "name": "Ryan Chitwood",
-        "role": "Applications Integrations Developer",
-        "location": "Baltimore, MD",
-        "email": "ryan.chitwood@primeeng.com",
-        "avatar": "https://ui-avatars.com/api/?name=Ryan+Chitwood&background=EA580C&color=fff",
-        "stats": {"open_tickets": 7, "resolved_this_month": 12, "csat_score": "5.0/5", "avg_response": "45 mins"},
-        "recent_activity": ["API Integration", "SQL Query Optimization", "Dashboard Widget Fix"]
+    "dodi_moore": {
+        "id": "dodi_moore",
+        "name": "Dodi Moore",
+        "role": "Systems Administrator",
+        "location": "Columbus, OH",
+        "email": "dodi.moore@primeeng.com",
+        "avatar": "https://ui-avatars.com/api/?name=Dodi+Moore&background=DC2626&color=fff",
+        "stats": {"open_tickets": 6, "resolved_this_month": 28, "csat_score": "4.8/5", "avg_response": "9 mins"},
+        "recent_activity": ["Email Migration", "SharePoint Setup", "User Onboarding"]
     },
     "andrew_vohs": {
         "id": "andrew_vohs",
@@ -65,18 +65,18 @@ STAFF_ROSTER = {
         "location": "Baltimore, MD",
         "email": "taylor.blevins@primeeng.com",
         "avatar": "https://ui-avatars.com/api/?name=Taylor+Blevins&background=D97706&color=fff",
-        "stats": {"open_tickets": 6, "resolved_this_month": 35, "csat_score": "4.7/5", "avg_response": "5 mins"},
-        "recent_activity": ["Password Reset", "New Monitor Setup", "KnowB4 Training"]
+        "stats": {"open_tickets": 10, "resolved_this_month": 38, "csat_score": "4.6/5", "avg_response": "15 mins"},
+        "recent_activity": ["Tier 1 Support", "Printer Setup", "Software Install"]
     },
-    "dodi_moore": {
-        "id": "dodi_moore",
-        "name": "Dodi Moore",
-        "role": "Systems Analyst II",
-        "location": "Columbus, OH",
-        "email": "dodi.moore@primeeng.com",
-        "avatar": "https://ui-avatars.com/api/?name=Dodi+Moore&background=E11D48&color=fff",
-        "stats": {"open_tickets": 8, "resolved_this_month": 40, "csat_score": "4.9/5", "avg_response": "6 mins"},
-        "recent_activity": ["Workstation Setup", "Purchasing Review", "Inventory Audit"]
+    "ryan_chitwood": {
+        "id": "ryan_chitwood",
+        "name": "Ryan Chitwood",
+        "role": "GIS Administrator",
+        "location": "Remote",
+        "email": "ryan.chitwood@primeeng.com",
+        "avatar": "https://ui-avatars.com/api/?name=Ryan+Chitwood&background=16A34A&color=fff",
+        "stats": {"open_tickets": 1, "resolved_this_month": 7, "csat_score": "5.0/5", "avg_response": "2 hours"},
+        "recent_activity": ["ArcGIS Pro Install", "Map Server Config", "Data Migration"]
     },
     "gary_long": {
         "id": "gary_long",
@@ -129,37 +129,98 @@ def _save_mock_data(filename, data):
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-# --- HELPER: KB Icon Mapper ---
+# --- STRICT ICON LOOKUP TABLES (ZERO GUESSING) ---
+# Master lookup for all 34 ConnectWise subcategories
+SUBCATEGORY_ICONS = {
+    # --- Design Applications (6 subcategories) ---
+    'Adobe Creative Suite (Photoshop, InDesign)': 'swatch',
+    'Autodesk (AutoCAD, Revit, Civil 3D)': 'cube',
+    'Bluebeam Revu (PDF & Markup)': 'document-magnifying-glass',
+    'Licensing & Activation': 'key',
+    'Other Design Tools (e.g., Lumion, Enscape, V-Ray)': 'photo',
+    'SketchUp': 'cube-transparent',
+
+    # --- Business & Admin Software (5 subcategories) ---
+    'Deltek (Vision, Vantagepoint, etc.)': 'building-office',
+    'Email & Outlook': 'envelope',
+    'File Storage & Sharing': 'cloud',
+    'Microsoft 365 (Office, Teams, OneDrive)': 'squares-2x2',
+    'Web Browsers': 'globe-alt',
+
+    # --- Hardware & Peripherals (5 subcategories) ---
+    'Conference Room AV': 'speaker-wave',
+    'Mobile Devices (iPhones, iPads)': 'device-phone-mobile',
+    'Monitors & Docking Stations': 'tv',
+    'Specialty Peripherals (3Dconnexion mouse, etc.)': 'cursor-arrow-rays',
+    'Workstations (Desktops, Laptops)': 'computer-desktop',
+
+    # --- Internal IT Processes (5 subcategories) ---
+    'Backup & Recovery': 'arrow-path',
+    'New User Onboarding': 'user-plus',
+    'Server Maintenance': 'server',
+    'User Offboarding': 'user-minus',
+    'Vendor Contact List': 'phone',
+
+    # --- Networking & Connectivity (5 subcategories) ---
+    'Internet Outage (Office-specific)': 'wifi',
+    'VPN / Remote Access': 'lock-closed',
+    'VPN Connection Issues': 'shield-exclamation',
+    'Wi-Fi': 'wifi',
+    'Wired / Ethernet': 'arrows-right-left',
+
+    # --- Printing & Plotting (4 subcategories) ---
+    'Desktop Printers & Copiers': 'printer',
+    'Large Format Plotters': 'map',
+    'Print Management Software': 'adjustments-horizontal',
+    'Scan to Email / Scan to Folder': 'document-duplicate',
+
+    # --- User Accounts & Security (4 subcategories) ---
+    'File & Folder Permissions': 'folder-open',
+    'MFA (Multi-Factor Authentication)': 'device-phone-mobile',
+    'Password Resets': 'lock-open',
+    'Security & Phishing': 'shield-check'
+}
+
+# Fallback icons for category-level matching
+CATEGORY_ICONS = {
+    'Business & Admin Software': 'building-office',
+    'Design Applications': 'cube',
+    'Hardware & Peripherals': 'computer-desktop',
+    'Internal IT Processes': 'cog',
+    'Networking & Connectivity': 'globe-alt',
+    'Printing & Plotting': 'printer',
+    'User Accounts & Security': 'shield-check'
+}
+
 def _get_icon_for_article(article):
     """
-    Maps Knowledge Base subcategory to Heroicon name.
+    STRICT icon lookup using exact string matching.
+    NO fuzzy matching. NO keyword detection.
     
     Args:
-        article: Dictionary with 'subcategory' key
+        article: Dictionary with 'subcategory' and 'category' keys
     
     Returns:
         String: Heroicon name (e.g., 'cube', 'envelope', 'computer-desktop')
+    
+    Logic:
+        1. Try exact subcategory match (highest priority)
+        2. Fallback to category-level icon
+        3. Default to 'document-text' if no match
     """
-    subcategory = article.get('subcategory', '')
+    subcategory = article.get('subcategory', '').strip()
+    category = article.get('category', '').strip()
     
-    # Icon mapping based on subcategory
-    icon_map = {
-        'Autodesk': 'cube',
-        'Deltek': 'building-office',
-        'Microsoft 365': 'squares-2x2',
-        'Email & Outlook': 'envelope',
-        'File Storage': 'cloud',
-        'Web Browsers': 'globe-alt',
-        'Workstations': 'computer-desktop',
-        'Monitors & Docks': 'tv',
-        'Mobile Devices': 'device-phone-mobile',
-        'VPN / Remote Access': 'lock-closed',
-        'Conference Room AV': 'speaker-wave',
-        'Specialty Peripherals': 'cursor-arrow-rays'
-    }
+    # Step 1: Exact subcategory match (primary lookup)
+    if subcategory in SUBCATEGORY_ICONS:
+        return SUBCATEGORY_ICONS[subcategory]
     
-    # Return mapped icon or default
-    return icon_map.get(subcategory, 'document-text')
+    # Step 2: Category-level fallback
+    if category in CATEGORY_ICONS:
+        return CATEGORY_ICONS[category]
+    
+    # Step 3: Ultimate fallback (should never happen with clean data)
+    return 'document-text'
 
 # --- DATA RETRIEVAL FUNCTIONS ---
 def get_all_tickets(user=None):
@@ -390,15 +451,15 @@ def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
                     'data': [112, 125, 98, 135, 105]
                 },
                 'sla_breaches': [
-                    {'ticket_id': 1489, 'title': 'VPN Connection Failure', 'age_hours': 48, 'technician': 'Unassigned'},
-                    {'ticket_id': 1502, 'title': 'Laptop Battery Not Charging', 'age_hours': 36, 'technician': 'Gary Long'},
-                    {'ticket_id': 1517, 'title': 'Outlook Crashing on Launch', 'age_hours': 32, 'technician': 'Taylor Blevins'}
+                    {'ticket_id': 1489, 'title': 'VPN Access Request', 'age_hours': 72, 'technician': 'Unassigned'},
+                    {'ticket_id': 1476, 'title': 'Email Migration Needed', 'age_hours': 56, 'technician': 'Ryan Chitwood'},
+                    {'ticket_id': 1502, 'title': 'Laptop Replacement Pending', 'age_hours': 48, 'technician': 'Chuck Moore'}
                 ],
-                'avg_resolution_time': '5.8 hours',
-                'first_response_time': '15 minutes',
+                'avg_resolution_time': '6.2 hours',
+                'first_response_time': '18 minutes',
                 'avg_resolution_time_by_member': {
-                    'labels': ['Gary Long', 'Taylor Blevins', 'Dodi Moore', 'Chuck Moore', 'Rob German', 'Auto-Heal System'],
-                    'data': [7.2, 5.8, 6.5, 4.9, 6.3, 0.1]
+                    'labels': ['Richard Haynes', 'Gary Long', 'Taylor Blevins', 'Chuck Moore', 'Dodi Moore'],
+                    'data': [5.8, 4.2, 6.5, 7.1, 5.5]
                 },
                 'recent_feedback': [
                     {'user': 'Sarah J.', 'ticket': '#1489 - VPN Connection', 'rating': 5, 'comment': 'Richard fixed this in 2 minutes. Amazing response time!'},
@@ -414,7 +475,7 @@ def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
                 'total_tickets': 15,
                 'volume_by_status': {
                     'labels': ['Open', 'In Progress', 'Resolved', 'Closed'],
-                    'data': [2, 1, 8, 4]
+                    'data': [3, 2, 8, 2]
                 },
                 'resolved_by_member': {
                     'Richard Haynes': 3,
@@ -599,17 +660,26 @@ def get_dashboard_stats(date_range='7d', start_date=None, end_date=None):
 # --- TECHNICIAN PROFILE ---
 def get_technician_details(tech_id):
     """
-    Retrieves detailed profile information for a specific technician.
+    Retrieves detailed profile for a specific technician.
     
     Args:
-        tech_id: URL-safe ID of the technician (e.g., 'richard_haynes')
+        tech_id: URL-safe technician ID (e.g., 'richard_haynes')
     
     Returns:
-        Dictionary with technician details or None if not found
+        Dictionary with technician profile data or None if not found
     """
     return STAFF_ROSTER.get(tech_id)
 
-# --- HELPER: Calculate Overall System Status ---
+def update_system_health(new_data):
+    """
+    Updates system health data in the JSON file.
+    
+    Args:
+        new_data: Dictionary containing updated announcement and vendor status
+    """
+    _save_mock_data('system_health.json', new_data)
+
+# --- HELPER FUNCTION: CALCULATE OVERALL STATUS ---
 def _calculate_overall_status(vendor_list):
     """
     Analyzes vendor status list and returns overall system health.
@@ -642,13 +712,3 @@ def _calculate_overall_status(vendor_list):
             'text': 'All Systems Operational',
             'color': 'text-green-600'
         }
-
-# --- ADMIN: Update System Health ---
-def update_system_health(new_data):
-    """
-    Saves updated system health data to JSON file.
-    
-    Args:
-        new_data: Dictionary with 'announcement' and 'vendor_status' keys
-    """
-    _save_mock_data('system_health.json', new_data)
