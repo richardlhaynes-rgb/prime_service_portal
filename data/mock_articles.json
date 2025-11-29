@@ -560,28 +560,20 @@
     },
     {
         "id": 44,
-        "title": "VPN: How to Clear Cached Credentials",
-        "category": "Networking & Connectivity",
-        "subcategory": "VPN Connection Issues",
-        "status": "Approved",
-        "problem": "A user's VPN (or a mapped network drive) fails to connect, or it won't accept their new password. It keeps trying to log in with their old, 'cached' credentials.",
-        "solution": "This will clear all saved passwords for network resources from Windows.\n1. Open the Windows Start Menu and type 'Credential Manager'.\n2. Open the Credential Manager.\n3. Click on 'Windows Credentials'.\n4. Look through the list under 'Generic Credentials' for any saved passwords related to your VPN server address or file server.\n5. Click the arrow to expand the credential, and then click 'Remove'.\n6. Confirm the removal.\n7. Restart the PC. The next time the user connects, they will be prompted to enter their new credentials.",
-        "views": 1289,
-        "created_at": "2025-01-10T08:45:00Z",
-        "updated_at": "2025-01-15T09:30:00Z",
-        "internal_notes": ""
+        "title": "Conference Room AV: Teams Room Touch Panel Not Responding",
+        "category": "Hardware & Peripherals",
+        "subcategory": "Conference Room AV",
+        "status": "Draft",
+        "problem": "The Teams Room touch panel is frozen or not registering taps during meetings.",
+        "solution": "1. Hold the power toggle on the side for 10 seconds.\n2. Wait for the reboot sequence.\n3. Rejoin the meeting.\n4. If issue persists, unplug and reseat the PoE cable.\n5. Escalate if multiple rooms affected."
     },
     {
         "id": 45,
-        "title": "3D Mouse: 3Dconnexion SpaceMouse Not Working in 3ds Max",
+        "title": "3D Mouse: Driver Installation & Calibration Issues",
         "category": "Hardware & Peripherals",
-        "subcategory": "Specialty Peripherals (3Dconnexion mouse, etc.)",
-        "status": "Approved",
-        "problem": "A user's 3Dconnexion SpaceMouse (3D puck) works on the desktop but does not function (or stops working) inside 3ds Max. This means the specific add-in for 3ds Max is missing, disabled, or corrupt. This often happens after a 3ds Max update.",
-        "solution": "1. Close 3ds Max completely.\n2. Open the 3Dconnexion driver control panel (search for '3Dconnexion' in the Start Menu).\n3. Go to the 'Supported Applications' tab.\n4. Ensure '3ds Max' is listed and checked.\n5. If it is not listed, or if the checkbox is grayed out, the driver may need to be reinstalled.\n6. Download the latest 3Dconnexion driver from the manufacturer's website.\n7. Run the installer. During installation, ensure '3ds Max' is selected under 'Supported Applications'.\n8. Restart the computer.\n9. Open 3ds Max. The SpaceMouse should now function normally.",
-        "views": 1756,
-        "created_at": "2025-01-05T10:30:00Z",
-        "updated_at": "2025-01-14T11:00:00Z",
-        "internal_notes": ""
+        "subcategory": "Specialty Peripherals",
+        "status": "Pending Approval",
+        "problem": "3DConnexion device not detected in Revit or Inventor after installation.",
+        "solution": "1. Download latest driver from 3DConnexion site.\n2. Install with admin rights.\n3. Open 3DConnexion Settings and run calibration.\n4. Enable plugin in target application.\n5. Test rotation and pan functions."
     }
 ]

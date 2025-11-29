@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.0] - 2025-11-28 - **The Feature Complete Update**
 
+### 🎨 Visual Refinements
+* **Tables:** Enforced "Center-Center" alignment for Icon columns on both User Dashboard and KB Manager tables.
+* **KB Manager:** Fixed Toolbar vertical padding (`py-3`) and element height (`py-1.5`) for perfect symmetry.
+* **Icons:** Replaced generic "Browse KB" icon with "Book Open" outline; fixed "stretched" status circles.
+* **Navigation:** Removed redundant "Settings Gear" from Manager Dashboard header.
+
 ### 🚀 New Features
 
 #### **Knowledge Base Editor (Full CRUD)**

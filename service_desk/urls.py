@@ -21,13 +21,16 @@ urlpatterns = [
     # --- Ticket Survey (CSAT Feedback Portal) ---
     path('survey/<int:ticket_id>/', views.ticket_survey, name='ticket_survey'),
     
-    # --- Management Hub (NEW - Admin Launchpad) ---
+    # --- Management Hub (Admin Launchpad) ---
     path('manager/hub/', views.management_hub, name='management_hub'),
     
     # --- Manager Analytics Dashboard ---
     path('manager/', views.manager_dashboard, name='manager_dashboard'),
     
-    # --- CSAT Report ---
+    # --- CSAT Report (Technician-Specific) ---
+    path('manager/csat/<str:tech_id>/', views.csat_report, name='csat_report_tech'),
+    
+    # --- CSAT Report (Global) ---
     path('manager/csat/', views.csat_report, name='csat_report'),
     
     # --- Admin Settings (System Health Configuration) ---
@@ -36,10 +39,10 @@ urlpatterns = [
     # --- Technician Profile ---
     path('manager/technician/<str:name>/', views.technician_profile, name='technician_profile'),
     
-    # --- Knowledge Base Manager (NEW - Bulk Edit Table) ---
+    # --- Knowledge Base Manager (Bulk Edit) ---
     path('manager/kb/', views.kb_manager, name='kb_manager'),
     
-    # --- Knowledge Base Editor (Manager/Admin Only) ---
+    # --- Knowledge Base Editor (Add/Edit/Delete) ---
     path('knowledge-base/add/', views.kb_add, name='kb_add'),
     path('knowledge-base/edit/<int:article_id>/', views.kb_edit, name='kb_edit'),
     path('knowledge-base/delete/<int:article_id>/', views.kb_delete, name='kb_delete'),
