@@ -24,7 +24,7 @@
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" />
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                     </svg>
                     Announcement Banner Configuration
                 </h3>
@@ -32,6 +32,24 @@
             </div>
 
             <div class="p-6 space-y-6">
+                <!-- NEW: Quick Select Template -->
+                <div>
+                    <label for="announcement_quick_select" class="block text-sm font-medium text-prime-navy mb-2">
+                        Quick Select Template
+                    </label>
+                    <select 
+                        id="announcement_quick_select" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
+                        <option value="">Select a preset...</option>
+                        <option value="operational">All Systems Operational</option>
+                        <option value="maintenance">Scheduled Maintenance</option>
+                        <option value="outage">Service Outage</option>
+                        <option value="vpn">VPN/Network Issues</option>
+                        <option value="security">Security Alert</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Choose a preset to auto-fill the fields below.</p>
+                </div>
+
                 <!-- Announcement Title -->
                 <div>
                     <label for="announcement_title" class="block text-sm font-medium text-prime-navy mb-2">
@@ -94,18 +112,20 @@
                     </div>
                 </div>
 
-                <!-- Helper Note -->
-                <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
-                    <div class="flex items-start gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                        </svg>
-                        <div>
-                            <p class="text-sm font-semibold text-blue-900">Scheduling Tips</p>
-                            <p class="text-xs text-blue-700 mt-1">
-                                <strong>Leave blank to display immediately.</strong> If you set both dates, the banner will only appear within that time window. 
-                                Use this for planned maintenance windows or time-sensitive alerts.
-                            </p>
+                <!-- Scheduling Tips (Full-Width) -->
+                <div class="col-span-1 md:col-span-2">
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+                        <div class="flex items-start gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-blue-900">Scheduling Tips</p>
+                                <p class="text-xs text-blue-700 mt-1">
+                                    <strong>Leave blank to display immediately.</strong> If you set both dates, the banner will only appear within that time window. 
+                                    Use this for planned maintenance windows or time-sensitive alerts.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -267,6 +287,73 @@ document.addEventListener('DOMContentLoaded', function() {
     // Listen for changes on all form inputs
     form.addEventListener('input', checkFormChanged);
     form.addEventListener('change', checkFormChanged);
+});
+</script>
+
+<!-- NEW: Quick Select Presets Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const presetSelect = document.getElementById('announcement_quick_select');
+    const titleInput = document.getElementById('announcement_title');
+    const messageInput = document.getElementById('announcement_message');
+    const typeSelect = document.getElementById('announcement_type');
+
+    const presets = {
+        operational: {
+            title: 'All Systems Operational',
+            message: 'No known issues at this time.',
+            type: 'info'
+        },
+        maintenance: {
+            title: 'Upcoming Maintenance Window',
+            message: 'Maintenance is scheduled for [Date] from [Start] to [End]. Services may be intermittent.',
+            type: 'warning'
+        },
+        outage: {
+            title: 'Service Interruption',
+            message: 'We are currently experiencing issues with [Service Name]. IT is investigating.',
+            type: 'critical'
+        },
+        vpn: {
+            title: 'VPN Connectivity Issues',
+            message: 'Users may experience slowness or disconnections with the VPN. We are working on a fix.',
+            type: 'warning'
+        },
+        security: {
+            title: 'Security Alert',
+            message: 'Please be aware of a suspicious email circulating. Do not click links from unknown sources.',
+            type: 'critical'
+        }
+    };
+
+    presetSelect.addEventListener('change', function() {
+        const key = presetSelect.value;
+        if (!key || !presets[key]) return;
+
+        const preset = presets[key];
+        titleInput.value = preset.title;
+        messageInput.value = preset.message;
+
+        // Map "warning" to existing scheme ('alert')
+        let mappedType = preset.type;
+        if (preset.type === 'warning') {
+            mappedType = 'alert';
+        }
+
+        const options = Array.from(typeSelect.options).map(o => o.value);
+        if (options.includes(mappedType)) {
+            typeSelect.value = mappedType;
+        } else if (options.includes('info') && preset.type === 'info') {
+            typeSelect.value = 'info';
+        } else if (options.includes('critical') && preset.type === 'critical') {
+            typeSelect.value = 'critical';
+        }
+
+        // Trigger change/input events to update Dirty Form state
+        titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+        messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+        typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 });
 </script>
 {% endblock %}

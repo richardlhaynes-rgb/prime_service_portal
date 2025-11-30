@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+
+    <!-- Page Header: Title Left, Timezone + Search Right -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <!-- Left: Title & Subtitle -->
+        <div>
+            <h1 class="text-2xl font-bold text-prime-navy">System Activity Logs</h1>
+            <p class="text-gray-600 text-sm mt-1">Audit trail of administrative actions</p>
+        </div>
+
+        <!-- Right: Toolbar (Timezone + Search) -->
+        <div class="flex items-center gap-3 mt-4 md:mt-0">
+            <!-- Timezone Selector (GET form) -->
+            <form method="get" class="flex items-center">
+                <!-- Preserve search & sort -->
+                <input type="hidden" name="q" value="{{ search_query|default:'' }}">
+                <input type="hidden" name="sort" value="{{ current_sort|default:'-timestamp' }}">
+                <label for="timezone" class="sr-only">Timezone</label>
+                <select
+                    id="timezone"
+                    name="timezone"
+                    onchange="this.form.submit()"
+                    class="px-2 py-2 text-sm border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange text-gray-800"
+                >
+                    {% for tz_id, tz_label in na_timezones %}
+                        <option value="{{ tz_id }}" {% if selected_tz == tz_id %}selected{% endif %}>
+                            {{ tz_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            <!-- Search Form -->
+            <form method="get" class="flex items-center gap-2">
+                <input type="hidden" name="sort" value="{{ current_sort|default:'-timestamp' }}">
+                <input type="hidden" name="timezone" value="{{ selected_tz|default:'America/New_York' }}">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query|default:'' }}"
+                    placeholder="Search logs..."
+                    class="w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange text-sm"
+                />
+                <button type="submit" class="bg-prime-orange text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors">
+                    Search
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-6 4h6m-6 4h6M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z"/>
+            </svg>
+            <h3 class="text-lg font-semibold text-prime-navy">Recent Activity</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <!-- Date/Time -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'timestamp' %}-timestamp{% else %}timestamp{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_tz %}&timezone={{ selected_tz|urlencode }}{% endif %}" class="inline-flex items-center gap-1 hover:text-prime-orange">
+                                Date/Time ({{ selected_tz|slice:"8:" }})
+                                {% if current_sort == 'timestamp' %}&uarr;{% elif current_sort == '-timestamp' %}&darr;{% endif %}
+                            </a>
+                        </th>
+                        <!-- User -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'user' %}-user{% else %}user{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_tz %}&timezone={{ selected_tz|urlencode }}{% endif %}" class="inline-flex items-center gap-1 hover:text-prime-orange">
+                                User
+                                {% if current_sort == 'user' %}&uarr;{% elif current_sort == '-user' %}&darr;{% endif %}
+                            </a>
+                        </th>
+                        <!-- Action -->
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <a href="?sort={% if current_sort == 'action' %}-action{% else %}action{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_tz %}&timezone={{ selected_tz|urlencode }}{% endif %}" class="inline-flex items-center justify-center gap-1 hover:text-prime-orange">
+                                Action
+                                {% if current_sort == 'action' %}&uarr;{% elif current_sort == '-action' %}&darr;{% endif %}
+                            </a>
+                        </th>
+                        <!-- Target -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Target</th>
+                        <!-- Details -->
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Details</th>
+                    </tr>
+                </thead>
+
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for log in logs %}
+                    <tr class="group hover:bg-gray-50 transition duration-150">
+                        <!-- Date -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-mono text-xs text-gray-700">
+                                {{ log.dt_obj|date:"n/j/Y g:i A" }}
+                            </span>
+                        </td>
+                        <!-- User -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-semibold text-gray-900">{{ log.user }}</span>
+                        </td>
+                        <!-- Action Icon -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex justify-center w-full">
+                                {% with action_lower=log.action|lower %}
+                                    {% if 'update' in action_lower or 'edit' in action_lower %}
+                                        <span class="h-8 w-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center" title="{{ log.action }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                        </span>
+                                    {% elif 'create' in action_lower or 'add' in action_lower %}
+                                        <span class="h-8 w-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center" title="{{ log.action }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </span>
+                                    {% elif 'delete' in action_lower %}
+                                        <span class="h-8 w-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center" title="{{ log.action }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </span>
+                                    {% elif 'login' in action_lower %}
+                                        <span class="h-8 w-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center" title="{{ log.action }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                            </svg>
+                                        </span>
+                                    {% else %}
+                                        <span class="h-8 w-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center" title="{{ log.action }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </span>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </td>
+                        <!-- Target -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900">{{ log.target }}</span>
+                        </td>
+                        <!-- Details -->
+                        <td class="px-6 py-4">
+                            <span class="text-sm text-gray-700">{{ log.details }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3l-2-2H9L7 5H4a2 2 0 00-2 2v6m18 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4m18 0H2m18 0l-3-3H7l-3 3" />
+                                </svg>
+                                <p class="font-medium">No system activity recorded yet.</p>
+                                <p class="text-xs text-gray-400 mt-1">Admin actions will appear here.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -20,37 +20,68 @@
         </div>
 
         <!-- Date Range Controls -->
-        <div class="flex items-center gap-2">
-            <a href="?range=today"
-               class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-                      {% if current_range == 'today' %}text-white bg-prime-orange border border-prime-orange
-                      {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
-                Today
-            </a>
-            <a href="?range=yesterday"
-               class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-                      {% if current_range == 'yesterday' %}text-white bg-prime-orange border border-prime-orange
-                      {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
-                Yesterday
-            </a>
-            <a href="?range=7d"
-               class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-                      {% if current_range == '7d' %}text-white bg-prime-orange border border-prime-orange
-                      {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
-                Last 7 Days
-            </a>
-            <a href="?range=30d"
-               class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-                      {% if current_range == '30d' %}text-white bg-prime-orange border border-prime-orange
-                      {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
-                Last 30 Days
-            </a>
-            <a href="?range=custom"
-               class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-                      {% if current_range == 'custom' %}text-white bg-prime-orange border border-prime-orange
-                      {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
-                Custom
-            </a>
+        <div class="flex flex-col items-end gap-2">
+            <!-- Preset Buttons Row -->
+            <div id="date-preset-row" class="flex items-center gap-2">
+                <a href="?range=today"
+                   class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                          {% if current_range == 'today' %}text-white bg-prime-orange border border-prime-orange
+                          {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                    Today
+                </a>
+                <a href="?range=yesterday"
+                   class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                          {% if current_range == 'yesterday' %}text-white bg-prime-orange border border-prime-orange
+                          {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                    Yesterday
+                </a>
+                <a href="?range=7d"
+                   class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                          {% if current_range == '7d' %}text-white bg-prime-orange border border-prime-orange
+                          {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                    Last 7 Days
+                </a>
+                <a href="?range=30d"
+                   class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                          {% if current_range == '30d' %}text-white bg-prime-orange border border-prime-orange
+                          {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                    Last 30 Days
+                </a>
+                <button type="button"
+                        onclick="toggleCustomRange(true)"
+                        class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                               {% if current_range == 'custom' %}text-white bg-prime-orange border border-prime-orange
+                               {% else %}text-gray-700 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                    Custom Range
+                </button>
+            </div>
+
+            <!-- Custom Input Row (Hidden by default) -->
+            <form method="GET" id="custom-input-row" class="hidden flex items-center gap-2">
+                <input type="hidden" name="range" value="custom">
+                
+                <span class="text-sm text-gray-600 font-medium">From:</span>
+                <input type="date" 
+                       name="start" 
+                       class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange" 
+                       required>
+                
+                <span class="text-sm text-gray-600 font-medium">To:</span>
+                <input type="date" 
+                       name="end" 
+                       class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange" 
+                       required>
+                
+                <button type="submit" 
+                        class="px-3 py-1 text-sm font-medium text-white bg-prime-orange rounded hover:bg-opacity-90 transition-colors">
+                    Apply
+                </button>
+                <button type="button" 
+                        onclick="toggleCustomRange(false)"
+                        class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+            </form>
         </div>
     </div>
 
@@ -75,13 +106,13 @@
         <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-prime-navy">Customer Feedback</h3>
             <span class="text-xs px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                {{ feedback_data|length }} items
+                {{ feedback|length }} items
             </span>
         </div>
 
-        {% if feedback_data %}
+        {% if feedback %}
         <ul class="divide-y divide-gray-200">
-            {% for fb in feedback_data %}
+            {% for fb in feedback %}
             <li class="p-6 flex items-start gap-4">
                 <!-- Avatar (initials fallback) -->
                 <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
@@ -153,4 +184,40 @@
     </div>
 
 </div>
+
+<!-- Swap Mode Script: Toggle between preset buttons and custom date inputs -->
+<script>
+    function toggleCustomRange(forceShow) {
+        const presetRow = document.getElementById('date-preset-row');
+        const customRow = document.getElementById('custom-input-row');
+        if (!presetRow || !customRow) return;
+
+        if (forceShow === true) {
+            presetRow.classList.add('hidden');
+            customRow.classList.remove('hidden');
+        } else if (forceShow === false) {
+            customRow.classList.add('hidden');
+            presetRow.classList.remove('hidden');
+        } else {
+            // Toggle mode if no explicit flag passed
+            const showingCustom = !customRow.classList.contains('hidden');
+            if (showingCustom) {
+                customRow.classList.add('hidden');
+                presetRow.classList.remove('hidden');
+            } else {
+                presetRow.classList.add('hidden');
+                customRow.classList.remove('hidden');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // If current_range is 'custom', show the custom input row on load
+        const currentRange = "{{ current_range|default:'7d' }}";
+        if (currentRange === 'custom') {
+            toggleCustomRange(true);
+        }
+    });
+</script>
+
 {% endblock %}

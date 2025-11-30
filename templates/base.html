@@ -5,14 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PRIME Service Portal</title>
-    
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% static 'images/logo_color.png' %}">
-    
-    <!-- Tailwind CSS (The Design Engine) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- PRIME Brand Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -33,36 +27,21 @@
 <body class="bg-gray-50 font-sans text-slate-800 flex flex-col min-h-screen">
 
     <!-- Header -->
-    <header class="bg-prime-navy text-white shadow-md">
+    <header class="bg-prime-navy text-white shadow-md relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            
-            <!-- Logo & Title -->
             <div class="flex items-center gap-3">
                 <a href="{% url 'dashboard' %}" class="flex items-center hover:opacity-90 transition">
-                    <img 
-                        src="{% static 'images/logo_white.png' %}" 
-                        alt="PRIME AE" 
-                        class="h-12 w-auto object-contain">
+                    <img src="{% static 'images/logo_white.png' %}" alt="PRIME AE" class="h-12 w-auto object-contain">
                 </a>
-                
-                <!-- Separator -->
                 <div class="h-8 w-px bg-indigo-400/50"></div>
-                
-                <!-- App Title -->
                 <span class="text-white text-xl font-medium tracking-tight">Service Portal</span>
             </div>
 
-            <!-- Navigation & User Profile -->
             <div class="flex items-center gap-6">
-                <!-- Nav Links -->
                 <nav class="hidden md:flex gap-6">
                     <a href="{% url 'dashboard' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">My Dashboard</a>
-                    
                     <a href="{% url 'service_catalog' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">Catalog</a>
-                    
                     <a href="{% url 'kb_home' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors">Knowledge Base</a>
-                    
-                    <!-- Admin Link (Superusers Only) - UPDATED TO MANAGEMENT HUB -->
                     {% if user.is_superuser %}
                     <a href="{% url 'management_hub' %}" class="text-sm font-medium text-gray-200 hover:text-white transition-colors flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,41 +53,69 @@
                     {% endif %}
                 </nav>
 
-                <!-- User Profile -->
-                <div class="flex items-center gap-4 border-l border-blue-900 pl-6">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-medium leading-none">Richard Haynes</p>
-                        <p class="text-xs text-gray-300 mt-1">Service Desk Manager</p>
+                <!-- User Menu -->
+                <div class="relative">
+                    <button onclick="toggleUserMenu()" class="h-10 w-10 rounded-full bg-prime-orange border-2 border-white shadow-sm cursor-pointer hover:ring-2 hover:ring-gray-200 transition-all flex items-center justify-center text-white font-bold text-sm">
+                        {{ user.username|slice:":1"|upper }}
+                    </button>
+
+                    <div id="user-menu-flyout" class="hidden absolute top-16 right-0 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden transition ease-out duration-100">
+                        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                            <p class="text-sm font-bold text-gray-900 truncate">
+                                {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
+                            </p>
+                            <p class="text-xs text-gray-500 font-medium">Service Desk Manager</p>
+                            <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+                        </div>
+                        <div class="p-2">
+                            <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span>My Profile</span>
+                                <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Roadmap</span>
+                            </a>
+                            <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                <span>Change Password</span>
+                                <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Roadmap</span>
+                            </a>
+                            <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                </svg>
+                                <span>Preferences</span>
+                                <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Roadmap</span>
+                            </a>
+                        </div>
+                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors rounded-b-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Sign out
+                        </a>
                     </div>
-                    <div class="h-8 w-8 rounded-full bg-prime-orange border-2 border-white shadow-sm"></div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Injector -->
+    <!-- Main -->
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- Global System Health Bar (ENHANCED WITH INTERACTIVE UX) -->
         {% if system_health %}
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 flex items-center justify-between relative">
-            
-            <!-- Left Side: Announcement (ENHANCED WITH EXPAND BUTTON) -->
             <div class="flex items-center gap-3 flex-grow relative">
-                <!-- Megaphone Icon -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 
                     {% if system_health.announcement.type == 'info' %}text-blue-600
                     {% elif system_health.announcement.type == 'alert' %}text-yellow-600
                     {% elif system_health.announcement.type == 'maintenance' %}text-orange-600
                     {% elif system_health.announcement.type == 'critical' %}text-red-600
-                    {% else %}text-green-600{% endif %}" 
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {% else %}text-green-600{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                 </svg>
-                
-                <!-- Announcement Container (ENHANCED - EXPANDABLE) -->
                 <div class="flex-grow">
-                    <!-- Collapsed View (Default) -->
                     <div id="announcement-collapsed" class="block">
                         {% if system_health.announcement %}
                         <p class="text-sm text-gray-800">
@@ -118,13 +125,8 @@
                         {% else %}
                         <p class="text-sm text-gray-500 italic">No announcements at this time.</p>
                         {% endif %}
-                        
-                        <!-- Expand Button (Only if truncated) -->
                         {% if system_health.announcement and system_health.announcement.message|length > 100 %}
-                        <button 
-                            id="expand-announcement-btn" 
-                            class="mt-2 text-xs text-prime-orange hover:underline flex items-center gap-1 font-semibold"
-                            onclick="toggleAnnouncement()">
+                        <button id="expand-announcement-btn" class="mt-2 text-xs text-prime-orange hover:underline flex items-center gap-1 font-semibold" onclick="toggleAnnouncement()">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
@@ -132,15 +134,11 @@
                         </button>
                         {% endif %}
                     </div>
-
-                    <!-- Expanded View (Hidden by Default) -->
                     <div id="announcement-expanded" class="hidden">
                         {% if system_health.announcement %}
                         <div class="flex justify-between items-start mb-3">
                             <h4 class="text-lg font-bold text-prime-navy">{{ system_health.announcement.title }}</h4>
-                            <button 
-                                onclick="toggleAnnouncement()" 
-                                class="text-gray-400 hover:text-gray-600 transition">
+                            <button onclick="toggleAnnouncement()" class="text-gray-400 hover:text-gray-600 transition">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -153,18 +151,15 @@
                 </div>
             </div>
 
-            <!-- Right Side: Service Status (ENHANCED WITH DROPDOWN) -->
-            <details class="relative ml-6">
-                <summary class="flex items-center gap-2 cursor-pointer list-none hover:opacity-80 transition">
-                    <!-- Status Badge -->
+            <!-- Service Status (Custom Dropdown Trigger) -->
+            <div class="relative ml-6">
+                <button id="status-btn" type="button" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition px-2 py-1 rounded-md">
                     <span class="px-3 py-1 rounded-full text-xs font-semibold border 
                         {{ system_health.overall_color }} 
                         {% if system_health.overall_color == 'text-green-600' %}bg-green-50 border-green-200
                         {% elif system_health.overall_color == 'text-yellow-600' %}bg-yellow-50 border-yellow-200
                         {% elif system_health.overall_color == 'text-red-600' %}bg-red-50 border-red-200
                         {% else %}bg-gray-50 border-gray-200{% endif %}">
-                        
-                        <!-- Icon (Color-Coded by Status) -->
                         {% if system_health.overall_color == 'text-green-600' %}
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline-block mr-1">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -178,35 +173,26 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                         </svg>
                         {% endif %}
-                        
                         {{ system_health.overall_status }}
                     </span>
-                    
-                    <!-- Chevron Down -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg id="status-arrow" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 transition-transform duration-150" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
-                </summary>
-
-                <!-- Dropdown Panel -->
-                <div class="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+                </button>
+                <div id="status-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                     <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                         <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wide">Service Status Details</h4>
                     </div>
-                    
                     <div class="max-h-80 overflow-y-auto">
                         {% for vendor in system_health.vendor_status %}
                         <div class="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-medium text-gray-800">{{ vendor.name }}</span>
                                 <div class="flex items-center gap-2">
-                                    <!-- Status Dot -->
                                     <span class="h-2.5 w-2.5 rounded-full 
                                         {% if vendor.status == 'Operational' %}bg-green-500
                                         {% elif vendor.status == 'Degraded Performance' %}bg-yellow-500
-                                        {% else %}bg-red-500{% endif %}">
-                                    </span>
-                                    <!-- Status Text -->
+                                        {% else %}bg-red-500{% endif %}"></span>
                                     <span class="text-xs font-semibold 
                                         {% if vendor.status == 'Operational' %}text-green-700
                                         {% elif vendor.status == 'Degraded Performance' %}text-yellow-700
@@ -223,15 +209,11 @@
                         {% endfor %}
                     </div>
                 </div>
-            </details>
-
+            </div>
         </div>
         {% endif %}
-        
-        <!-- Page-Specific Content Injector -->
-        {% block content %}
-        <!-- Individual pages (Dashboard, Forms, Catalog, KB) will inject their content here -->
-        {% endblock %}
+
+        {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
@@ -241,21 +223,54 @@
         </div>
     </footer>
 
-    <!-- JavaScript for Announcement Expand/Collapse -->
+    <form id="logout-form" action="{% url 'logout' %}" method="post" style="display:none;">
+        {% csrf_token %}
+    </form>
+
+    <!-- Scripts -->
     <script>
         function toggleAnnouncement() {
             const collapsed = document.getElementById('announcement-collapsed');
             const expanded = document.getElementById('announcement-expanded');
-            
             if (collapsed.classList.contains('hidden')) {
-                // Show collapsed, hide expanded
                 collapsed.classList.remove('hidden');
                 expanded.classList.add('hidden');
             } else {
-                // Show expanded, hide collapsed
                 collapsed.classList.add('hidden');
                 expanded.classList.remove('hidden');
             }
+        }
+        function toggleUserMenu() {
+            const flyout = document.getElementById('user-menu-flyout');
+            flyout.classList.toggle('hidden');
+        }
+        document.addEventListener('click', function(e) {
+            const flyout = document.getElementById('user-menu-flyout');
+            const trigger = e.target.closest('button[onclick="toggleUserMenu()"]');
+            if (!trigger && flyout && !flyout.contains(e.target)) {
+                flyout.classList.add('hidden');
+            }
+        });
+
+        // Service Status Dropdown Outside Click Logic
+        const statusBtn = document.getElementById('status-btn');
+        const statusDropdown = document.getElementById('status-dropdown');
+        const statusArrow = document.getElementById('status-arrow');
+
+        if (statusBtn && statusDropdown) {
+            statusBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                statusDropdown.classList.toggle('hidden');
+                statusArrow.classList.toggle('rotate-180');
+            });
+            document.addEventListener('click', (e) => {
+                if (!statusDropdown.classList.contains('hidden')) {
+                    if (!statusDropdown.contains(e.target) && !statusBtn.contains(e.target)) {
+                        statusDropdown.classList.add('hidden');
+                        statusArrow.classList.remove('rotate-180');
+                    }
+                }
+            });
         }
     </script>
 </body>
