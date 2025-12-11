@@ -1,169 +1,166 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
-    <!-- Back Navigation -->
-    <div class="mb-6">
-        <a href="{% url 'management_hub' %}" 
-           class="text-sm text-prime-orange hover:underline flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-            </svg>
-            <span>Back to Management Hub</span>
+    <a href="{% url 'management_hub' %}" class="text-sm text-prime-orange hover:text-orange-700 font-medium mb-4 inline-block">
+        &larr; Back to Management Hub
+    </a>
+
+    <h1 class="text-3xl font-bold text-prime-navy mb-1">Knowledge Base Manager</h1>
+    <p class="text-gray-600 mb-6">Manage all {{ total_count }} articles | Bulk edit and organization</p>
+
+    <!-- Toolbar 1: Left (Buttons) and Right (Columns + Filter + Search) -->
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm px-6 py-3 flex justify-between items-center mb-2">
+        
+        <!-- LEFT GROUP: Buttons -->
+        <div class="flex items-center gap-2">
+            <a href="{% url 'kb_add' %}" class="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-prime-orange hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-prime-orange">
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                New Article
+            </a>
+            <a href="{% url 'kb_home' %}" target="_blank" class="inline-flex items-center px-4 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-prime-orange">
+                <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                View Public KB
+            </a>
+        </div>
+
+        <!-- RIGHT GROUP: Columns + Filter + Search (GET form) -->
+        <form method="get" class="flex items-center gap-2 relative">
+            <!-- Columns Button + Dropdown -->
+            <div class="relative">
+                <button type="button"
+                        id="columns-btn"
+                        onclick="toggleColumnMenu()"
+                        class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow-sm focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 12h12M3 18h6" />
+                    </svg>
+                    Columns
+                    <svg xmlns="http://www.w3.org/2000/svg" id="columns-caret" class="h-4 w-4 ml-1 text-gray-400 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.084l3.71-3.853a.75.75 0 111.08 1.04l-4.24 4.4a.75.75 0 01-1.08 0l-4.24-4.4a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div id="columns-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                    <div class="py-2">
+                        <label class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 text-prime-orange" checked onchange="toggleColumn('col-id')">
+                            <span class="text-sm text-gray-700">ID</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 text-prime-orange" checked onchange="toggleColumn('col-title')">
+                            <span class="text-sm text-gray-700">Title</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 text-prime-orange" checked onchange="toggleColumn('col-category')">
+                            <span class="text-sm text-gray-700">Category</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 text-prime-orange" onchange="toggleColumn('col-sub')">
+                            <span class="text-sm text-gray-700">Subcategory</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 text-prime-orange" checked onchange="toggleColumn('col-status')">
+                            <span class="text-sm text-gray-700">Status</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer">
+                            <input type="checkbox" class="h-4 w-4 text-prime-orange" checked onchange="toggleColumn('col-actions')">
+                            <span class="text-sm text-gray-700">Actions</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <select name="category" onchange="filterCategory(this)" class="w-72 block pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-prime-orange focus:border-prime-orange rounded-md">
+                <option value="All">Filter: All Categories</option>
+                <option value="Design Applications" {% if current_category == 'Design Applications' %}selected{% endif %}>Design Applications</option>
+                <option value="Business & Admin Software" {% if current_category == 'Business & Admin Software' %}selected{% endif %}>Business & Admin Software</option>
+                <option value="Hardware & Peripherals" {% if current_category == 'Hardware & Peripherals' %}selected{% endif %}>Hardware & Peripherals</option>
+                <option value="Internal IT Processes" {% if current_category == 'Internal IT Processes' %}selected{% endif %}>Internal IT Processes</option>
+                <option value="Networking & Connectivity" {% if current_category == 'Networking & Connectivity' %}selected{% endif %}>Networking & Connectivity</option>
+                <option value="Printing & Plotting" {% if current_category == 'Printing & Plotting' %}selected{% endif %}>Printing & Plotting</option>
+                <option value="User Accounts & Security" {% if current_category == 'User Accounts & Security' %}selected{% endif %}>User Accounts & Security</option>
+            </select>
+
+            <div class="relative rounded-md shadow-sm w-72">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <input type="text" name="q" value="{{ search_query }}" class="focus:ring-prime-orange focus:border-prime-orange block w-full pl-10 text-sm border-gray-300 rounded-md py-1.5" placeholder="Search articles...">
+            </div>
+        </form>
+    </div>
+
+    <!-- CLICKABLE Stats Sub-Header Row -->
+    <div class="flex items-center px-2 mb-2 text-xs font-medium text-gray-500">
+        <a href="?status=" class="hover:text-prime-orange transition-colors {% if not current_status %}text-prime-orange font-bold underline{% endif %}">
+            Total: <span class="text-gray-900">{{ total_count }}</span>
+        </a>
+        <span class="mx-2">|</span>
+        <a href="?status=Draft" class="hover:text-prime-orange transition-colors {% if current_status == 'Draft' %}text-prime-orange font-bold underline{% endif %}">
+            Drafts: <span class="text-gray-900">{{ draft_count }}</span>
+        </a>
+        <span class="mx-2">|</span>
+        <a href="?status=Pending Approval" class="hover:text-prime-orange transition-colors {% if current_status == 'Pending Approval' %}text-prime-orange font-bold underline{% endif %}">
+            Pending: <span class="text-gray-900">{{ pending_count }}</span>
         </a>
     </div>
 
-    <!-- Page Title -->
-    <div class="mb-4">
-        <h1 class="text-3xl font-bold text-prime-navy">Knowledge Base Manager</h1>
-        <p class="text-gray-600 text-sm mt-2">
-            Manage all {{ total_count }} articles | Bulk edit and organization
-        </p>
-    </div>
-
-    <!-- Toolbar (Equal vertical padding: px-6 py-3) -->
-    <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-3">
-        <div class="flex items-center w-full">
-            <!-- Left: Buttons -->
-            <div class="flex items-center gap-2">
-                <a href="{% url 'kb_add' %}" 
-                   class="px-4 py-2 bg-prime-orange text-white rounded-md text-sm font-semibold shadow-sm hover:bg-opacity-90 transition-colors flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
-                    New Article
-                </a>
-                <a href="{% url 'kb_home' %}" 
-                   class="px-4 py-2 bg-white border border-gray-200 rounded-md text-sm font-medium flex items-center gap-2 hover:border-prime-orange hover:text-prime-orange transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    View Public KB
-                </a>
-            </div>
-
-            <!-- Center: Stats -->
-            <div class="flex-1 text-center px-4">
-                <p class="text-xs font-medium text-gray-600">
-                    Total: {{ total_count }} | Drafts: {{ draft_count|default:"0" }} | Pending: {{ pending_count|default:"0" }}
-                </p>
-            </div>
-
-            <!-- Right: Filter + Search -->
-            <form method="get" action="." class="flex items-center gap-2">
-                <input type="hidden" name="sort" value="{{ current_sort|default:'-id' }}">
-                
-                <!-- Category Filter -->
-                <div class="w-72">
-                    <label for="category-filter" class="sr-only">Filter: Category</label>
-                    <select id="category-filter" name="category"
-                            onchange="this.form.submit()"
-                            class="w-72 text-sm bg-white border border-gray-300 rounded-md px-3 py-1.5 focus:ring-2 focus:ring-prime-orange focus:border-prime-orange text-gray-800">
-                        <option value="">Filter: All Categories</option>
-                        <option value="Business & Admin Software" {% if current_category == 'Business & Admin Software' %}selected{% endif %}>Business & Admin Software</option>
-                        <option value="Design Applications" {% if current_category == 'Design Applications' %}selected{% endif %}>Design Applications</option>
-                        <option value="Hardware & Peripherals" {% if current_category == 'Hardware & Peripherals' %}selected{% endif %}>Hardware & Peripherals</option>
-                        <option value="Internal IT Processes" {% if current_category == 'Internal IT Processes' %}selected{% endif %}>Internal IT Processes</option>
-                        <option value="Networking & Connectivity" {% if current_category == 'Networking & Connectivity' %}selected{% endif %}>Networking & Connectivity</option>
-                        <option value="Printing & Plotting" {% if current_category == 'Printing & Plotting' %}selected{% endif %}>Printing & Plotting</option>
-                        <option value="User Accounts & Security" {% if current_category == 'User Accounts & Security' %}selected{% endif %}>User Accounts & Security</option>
-                    </select>
-                </div>
-
-                <!-- Search -->
-                <div class="relative w-72">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input 
-                        type="text" 
-                        name="q" 
-                        value="{{ search_query|default:'' }}" 
-                        placeholder="Search articles..." 
-                        class="w-72 pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange text-sm text-gray-800" />
-                </div>
-                <button type="submit" class="hidden">Apply</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Bulk Action Toolbar (Hidden by default) -->
-    <div id="bulk-toolbar" class="mb-4 bg-prime-orange rounded-lg shadow-sm border border-orange-600 px-6 py-3 hidden">
-        <div class="flex items-center justify-between">
-            <!-- Left: Selection Count -->
-            <div class="text-white font-semibold text-sm">
+    <!-- Single POST form wrapping Bulk Toolbar + Table -->
+    <form id="bulk-form" method="post" action="{% url 'kb_bulk_action' %}">
+        {% csrf_token %}
+        
+        <!-- Bulk Action Toolbar -->
+        <div id="bulk-toolbar" class="hidden bg-prime-orange bg-opacity-10 border border-prime-orange rounded-lg p-3 mb-4 flex items-center justify-between transition-all duration-300">
+            <div class="flex items-center gap-2 text-prime-orange font-bold px-2">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <span id="selected-count">0</span> article(s) selected
             </div>
-            
-            <!-- Right: Action Dropdown + Apply Button -->
-            <form method="post" action="{% url 'kb_bulk_action' %}" onsubmit="return confirmBulkAction()" class="flex items-center gap-2">
-                {% csrf_token %}
-                
-                <!-- Hidden input to store selected IDs -->
-                <input type="hidden" name="selected_ids" id="selected_ids_input">
-                
-                <!-- Bulk Action Dropdown -->
-                <select name="bulk_action" id="bulk_action" required
-                        class="text-sm bg-white border border-gray-300 rounded-md px-3 py-1.5 text-gray-800 focus:ring-2 focus:ring-white">
+            <div class="flex items-center gap-3">
+                <select name="bulk_action" class="block w-64 pl-3 pr-10 py-1.5 text-base border-gray-300 focus:outline-none focus:ring-prime-orange focus:border-prime-orange sm:text-sm rounded-md">
                     <option value="">-- Select Action --</option>
                     <option value="approve">Set to Approved</option>
                     <option value="draft">Set to Draft</option>
                     <option value="pending">Set to Pending Approval</option>
-                    <option value="delete" class="text-red-600 font-bold">❌ Delete Selected</option>
+                    <option value="delete" class="text-red-600 font-bold">Delete Selected</option>
                 </select>
-                
-                <!-- Apply Button -->
-                <button type="submit" 
-                        class="px-4 py-1.5 bg-white text-prime-orange rounded-md text-sm font-bold hover:bg-gray-100 transition-colors">
+                <button type="button" onclick="confirmBulkAction()" class="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-prime-orange hover:bg-orange-700 focus:outline-none">
                     Apply
                 </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Articles Table (Wrapped in Form) -->
-    <form id="bulk-form">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-lg font-semibold text-prime-navy flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    All Articles
-                </h3>
             </div>
+        </div>
 
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <!-- Checkbox Column -->
-                            <th scope="col" class="px-6 py-3 text-center">
-                                <input type="checkbox" id="select-all" onclick="toggleSelectAll()"
-                                       class="h-4 w-4 rounded border-gray-300 text-prime-orange focus:ring-prime-orange">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                                <input type="checkbox" id="select-all" onclick="toggleSelectAll()" class="focus:ring-prime-orange h-4 w-4 text-prime-orange border-gray-300 rounded">
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <a href="?sort=id" class="flex items-center hover:text-prime-orange">ID</a>
+                            <th scope="col" class="col-id px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <a href="?sort={% if current_sort == 'id' %}-id{% else %}id{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">ID</a>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <a href="?sort=title" class="flex items-center hover:text-prime-orange">Title</a>
+                            <th scope="col" class="col-title px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <a href="?sort={% if current_sort == 'title' %}-title{% else %}title{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">Title</a>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <a href="?sort=category" class="flex items-center hover:text-prime-orange">Category</a>
+                            <th scope="col" class="col-category px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <a href="?sort={% if current_sort == 'category' %}-category{% else %}category{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">Category</a>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <a href="?sort=subcategory" class="flex items-center hover:text-prime-orange">Subcategory</a>
+                            <th scope="col" class="col-sub hidden px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <a href="?sort={% if current_sort == 'subcategory' %}-subcategory{% else %}subcategory{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">Subcategory</a>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <a href="?sort=status" class="flex items-center justify-center hover:text-prime-orange">Status</a>
+                            <th scope="col" class="col-status px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
+                                <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="group flex items-center gap-1 justify-center hover:text-prime-orange">Status</a>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                <a href="?sort=updated_at" class="flex items-center justify-center hover:text-prime-orange">Last Updated</a>
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            <th scope="col" class="col-actions px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">
                                 Actions
                             </th>
                         </tr>
@@ -171,85 +168,55 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         {% for article in articles %}
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <!-- Checkbox -->
-                            <td class="px-6 py-4 text-center">
-                                <input type="checkbox" name="selected_articles" value="{{ article.id }}"
-                                       class="article-checkbox h-4 w-4 rounded border-gray-300 text-prime-orange focus:ring-prime-orange"
-                                       onchange="updateToolbar()">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <input type="checkbox" name="selected_ids" value="{{ article.id }}" class="article-checkbox focus:ring-prime-orange h-4 w-4 text-prime-orange border-gray-300 rounded" onclick="updateToolbar()">
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{{ article.id }}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-900">
-                                <a href="{% url 'article_detail' article.id %}" 
-                                   class="font-medium hover:text-prime-orange transition-colors">
-                                    {{ article.title }}
+                            <td class="col-id px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">#{{ article.id }}</td>
+                            <!-- Title column: now links to Edit page -->
+                            <td class="col-title px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-xs">
+                                <a href="{% url 'kb_edit' article.id %}" class="hover:text-prime-orange hover:underline transition-colors block">
+                                    {{ article.title|truncatechars:60 }}
                                 </a>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                {{ article.category }}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">
-                                {{ article.subcategory }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex justify-center">
+                            <td class="col-category px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-[150px]">{{ article.category }}</td>
+                            <td class="col-sub hidden px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-[150px]">{{ article.subcategory|default:"-" }}</td>
+                            
+                            <td class="col-status px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex justify-center w-full">
                                     {% if article.status == 'Approved' %}
                                         <span title="Approved" class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                            </svg>
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                                         </span>
-                                    {% elif article.status == 'Pending Approval' %}
+                                    {% elif article.status == 'Pending Approval' or article.status == 'Pending' %}
                                         <span title="Pending Approval" class="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         </span>
                                     {% else %}
                                         <span title="Draft" class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14" />
-                                            </svg>
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
                                         </span>
                                     {% endif %}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                {{ article.updated_at|slice:":10" }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="{% url 'kb_edit' article.id %}"
-                                       title="Edit Article"
-                                       class="h-8 w-8 rounded-full bg-indigo-50 hover:bg-indigo-100 flex items-center justify-center text-indigo-600 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.651-1.651a2.25 2.25 0 113.182 3.182L12.75 15.963a4.5 4.5 0 01-1.591 1.02L9 17.25l.267-2.159a4.5 4.5 0 011.02-1.591L16.862 4.487z" />
-                                        </svg>
+
+                            <td class="col-actions px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex items-center justify-center gap-2 w-full">
+                                    <a href="{% url 'kb_edit' article.id %}" title="Edit Article" class="h-8 w-8 rounded-full bg-indigo-50 hover:bg-indigo-100 flex items-center justify-center text-indigo-600 transition-colors">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                     </a>
-                                    <a href="{% url 'kb_delete' article.id %}"
-                                       title="Delete Article"
-                                       class="h-8 w-8 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-9 0l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12" />
-                                        </svg>
-                                    </a>
+                                    <button type="button" onclick="openSingleDeleteModal('{{ article.id }}')" title="Delete Article" class="h-8 w-8 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 transition-colors">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
-                                <div class="max-w-md mx-auto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                    </svg>
-                                    <p class="text-gray-600 font-medium">
-                                        No articles found.
-                                    </p>
-                                    <p class="text-xs text-gray-400 mt-2">
-                                        Click the "New Article" button to get started.
-                                    </p>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    <h3 class="text-lg font-medium text-gray-900">No articles found.</h3>
+                                    <p class="text-gray-500 text-sm mt-1">Click the "New Article" button to get started.</p>
                                 </div>
                             </td>
                         </tr>
@@ -260,111 +227,146 @@
         </div>
     </form>
 
-    <!-- Footer Stats -->
-    <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <div class="flex items-center justify-between text-sm">
-            <span class="text-gray-600">
-                <strong>Total Articles:</strong> {{ total_count }}
-            </span>
-            <a href="{% url 'kb_home' %}" 
-               class="text-prime-orange hover:underline font-medium flex items-center gap-1">
-                <span>View Public KB</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </a>
-        </div>
-    </div>
-
 </div>
 
-<!-- *** JAVASCRIPT: Bulk Selection Logic *** -->
+<!-- Hidden Single Delete Form -->
+<form id="single-delete-form" method="post" class="hidden">
+    {% csrf_token %}
+</form>
+
+<!-- Shared Modal (used for Bulk confirm and Single delete) -->
+<div id="bulk-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="relative p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div id="modal-icon-bg" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg id="modal-icon" class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900">Confirm Action</h3>
+            <div class="mt-2 px-7 py-3">
+                <p id="modal-message" class="text-sm text-gray-500">Are you sure?</p>
+            </div>
+            <div class="flex justify-center gap-4 mt-4">
+                <button id="modal-confirm-btn" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none transition-colors">Confirm</button>
+                <button onclick="closeBulkModal()" class="px-4 py-2 bg-white text-gray-700 text-base font-medium rounded-md w-full shadow-sm border border-gray-300 hover:bg-gray-50 focus:outline-none transition-colors">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // Update toolbar visibility and count
+    // --- 1. Search & Category Filter Logic ---
+    function filterCategory(selectElement) {
+        const form = selectElement.form;
+        const searchInput = form.querySelector('input[name="q"]');
+        if (searchInput) searchInput.value = "";
+        form.submit();
+    }
+
+    // --- 2. Checkbox Logic (Bulk Select) ---
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.article-checkbox');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateToolbar();
+    }
+
     function updateToolbar() {
-        const checkboxes = document.querySelectorAll('.article-checkbox:checked');
+        const count = document.querySelectorAll('.article-checkbox:checked').length;
         const toolbar = document.getElementById('bulk-toolbar');
-        const countSpan = document.getElementById('selected-count');
-        
-        if (checkboxes.length > 0) {
+        const countText = document.getElementById('selected-count');
+        countText.innerText = count;
+        if (count > 0) {
             toolbar.classList.remove('hidden');
-            countSpan.textContent = checkboxes.length;
+            toolbar.classList.add('flex');
         } else {
             toolbar.classList.add('hidden');
+            toolbar.classList.remove('flex');
         }
     }
-    
-    // Toggle all checkboxes
-    window.toggleSelectAll = function() {
-        const selectAllBox = document.getElementById('select-all');
-        const checkboxes = document.querySelectorAll('.article-checkbox');
-        
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = selectAllBox.checked;
-        });
-        
-        updateToolbar();
-    };
-    
-    // Confirmation dialog before bulk action
-    window.confirmBulkAction = function() {
-        const checkboxes = document.querySelectorAll('.article-checkbox:checked');
-        const action = document.getElementById('bulk_action').value;
-        const count = checkboxes.length;
-        
-        if (count === 0) {
-            alert('Please select at least one article.');
-            return false;
-        }
-        
-        if (!action) {
-            alert('Please select an action.');
-            return false;
-        }
-        
-        // Collect selected IDs
-        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
-        
-        // Confirmation messages
-        let message = '';
-        if (action === 'delete') {
-            message = `⚠️ WARNING: You are about to DELETE ${count} article(s).\n\nThis action CANNOT be undone.\n\nAre you sure?`;
-        } else {
-            const actionText = {
-                'approve': 'Approved',
-                'draft': 'Draft',
-                'pending': 'Pending Approval'
-            }[action];
-            message = `Are you sure you want to set ${count} article(s) to "${actionText}"?`;
-        }
-        
-        if (!confirm(message)) {
-            return false;
-        }
-        
-        // Add selected IDs as hidden form fields
-        const form = document.querySelector('form[action*="kb_bulk_action"]');
-        
-        // Remove old hidden inputs (if any)
-        form.querySelectorAll('input[name="selected_articles"]').forEach(input => input.remove());
-        
-        // Add new hidden inputs
-        selectedIds.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'selected_articles';
-            input.value = id;
-            form.appendChild(input);
-        });
-        
-        return true;
-    };
-    
-    // Expose updateToolbar to global scope
-    window.updateToolbar = updateToolbar;
-});
-</script>
 
+    // --- 3. Modal & Action Logic ---
+    const modal = document.getElementById('bulk-modal');
+    const title = document.getElementById('modal-title');
+    const msg = document.getElementById('modal-message');
+    const btn = document.getElementById('modal-confirm-btn');
+    const iconBg = document.getElementById('modal-icon-bg');
+    const icon = document.getElementById('modal-icon');
+
+    function confirmBulkAction() {
+        const actionSelect = document.querySelector('select[name="bulk_action"]');
+        const action = actionSelect.value;
+        const count = document.querySelectorAll('.article-checkbox:checked').length;
+        if (!action) return alert("Please select an action.");
+        if (count === 0) return alert("Please select items.");
+        btn.onclick = function() { document.getElementById('bulk-form').submit(); };
+        styleModal(action, count);
+        modal.classList.remove('hidden');
+    }
+
+    function openSingleDeleteModal(articleId) {
+        const form = document.getElementById('single-delete-form');
+        form.action = "{% url 'kb_delete' 0 %}".replace('0', articleId);
+        btn.onclick = function() { form.submit(); };
+        styleModal('delete', 1);
+        modal.classList.remove('hidden');
+    }
+
+    function styleModal(action, count) {
+        if (action === 'delete') {
+            title.innerText = "Delete Articles?";
+            msg.innerText = `Permanently DELETE ${count} article(s)? This cannot be undone.`;
+            btn.className = "px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700";
+            iconBg.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4";
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>';
+        } else {
+            title.innerText = "Update Status?";
+            msg.innerText = `Set ${count} article(s) to "${action.toUpperCase()}"?`;
+            btn.className = "px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700";
+            iconBg.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 mb-4";
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+        }
+    }
+
+    function closeBulkModal() {
+        modal.classList.add('hidden');
+    }
+
+    // --- 4. Column Toggle Menu ---
+    function toggleColumnMenu() {
+        const menu = document.getElementById('columns-menu');
+        const caret = document.getElementById('columns-caret');
+        menu.classList.toggle('hidden');
+        if (caret) caret.classList.toggle('rotate-180');
+    }
+
+    function toggleColumn(className) {
+        document.querySelectorAll('.' + className).forEach(el => {
+            el.classList.toggle('hidden');
+        });
+    }
+
+    // Close column menu when clicking outside or pressing Escape
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('columns-menu');
+        const btn = document.getElementById('columns-btn');
+        if (!menu) return;
+        if (!menu.classList.contains('hidden')) {
+            if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.add('hidden');
+                const caret = document.getElementById('columns-caret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const menu = document.getElementById('columns-menu');
+            if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                const caret = document.getElementById('columns-caret');
+                if (caret) caret.classList.remove('rotate-180');
+            }
+        }
+    });
+</script>
 {% endblock %}

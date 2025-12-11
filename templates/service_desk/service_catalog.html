@@ -7,103 +7,121 @@
         <p class="text-gray-600 mt-2">Select a category below to submit a request.</p>
     </div>
 
+    <!-- Recommended Solutions (Quick Links) -->
+    {% if recommended_articles %}
+    <div class="bg-blue-50 dark:bg-gray-800 border-l-4 border-prime-orange p-4 rounded-r-lg mb-8">
+        <h4 class="text-prime-navy uppercase text-xs tracking-wider mb-3 font-bold">Recommended for you:</h4>
+        <div class="flex flex-col md:flex-row gap-4">
+            {% for article in recommended_articles %}
+            <a href="{% url 'article_detail' article.id %}"
+               class="bg-white dark:bg-gray-900 shadow-sm rounded-md px-3 py-2 flex items-center gap-2 hover:shadow transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-prime-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2h3l2-2h3a2 2 0 002-2V6a2 2 0 00-2-2h-3z" />
+                </svg>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-prime-orange">{{ article.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Service Catalog Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
         <!-- Card 1: Application Issue -->
-        <a href="{% url 'report_app_issue' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-red-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_app_issue' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-red-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: Exclamation Circle -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">Application Issue</h4>
-            <p class="text-xs text-gray-500 mt-2">Report errors or crashes in Bluebeam, CAD, or Office.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">Application Issue</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Report errors or crashes in Bluebeam, CAD, or Office.</p>
         </a>
 
         <!-- Card 2: Email & Mailbox -->
-        <a href="{% url 'report_email_issue' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-blue-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_email_issue' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-blue-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: Envelope -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">Email & Mailbox</h4>
-            <p class="text-xs text-gray-500 mt-2">Outlook issues, spam filters, or distribution lists.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">Email & Mailbox</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Outlook issues, spam filters, or distribution lists.</p>
         </a>
 
         <!-- Card 3: Hardware Issue -->
-        <a href="{% url 'report_hardware_issue' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-gray-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_hardware_issue' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-gray-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: Computer Desktop -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m-9 0V18a2.25 2.25 0 002.25 2.25h3a2.25 2.25 0 002.25-2.25v-.75m-6 0l2.25-1.357 3.795 1.015c.86.23 1.75-.436 1.75-1.322V4.893c0-1.036-.975-1.813-1.993-1.586l-4.793 1.066a3.375 3.375 0 00-2.632 2.632L6.26 11.37a1.125 1.125 0 00.34 1.09l4.25 3.75z" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">Hardware Issue</h4>
-            <p class="text-xs text-gray-500 mt-2">Broken laptop, monitor, docking station, or peripherals.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">Hardware Issue</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Broken laptop, monitor, docking station, or peripherals.</p>
         </a>
 
         <!-- Card 4: Printer & Scanner -->
-        <a href="{% url 'report_printer_issue' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-indigo-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_printer_issue' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-indigo-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: Printer -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">Printers & Scanners</h4>
-            <p class="text-xs text-gray-500 mt-2">PaperCut issues, toner requests, or connection errors.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">Printers & Scanners</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">PaperCut issues, toner requests, or connection errors.</p>
         </a>
 
         <!-- Card 5: Software Install -->
-        <a href="{% url 'report_software_install' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-green-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_software_install' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-green-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: Download -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">Software Install</h4>
-            <p class="text-xs text-gray-500 mt-2">Request new software, license keys, or upgrades.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">Software Install</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Request new software, license keys, or upgrades.</p>
         </a>
 
         <!-- Card 6: General Question -->
-        <a href="{% url 'report_general_question' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-purple-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_general_question' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-purple-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: Chat Bubble -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">General Question</h4>
-            <p class="text-xs text-gray-500 mt-2">Not sure where to categorize? Ask here.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">General Question</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Not sure where to categorize? Ask here.</p>
         </a>
 
         <!-- Card 7: Deltek VP Reset -->
-        <a href="{% url 'report_vp_reset' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-orange-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_vp_reset' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-orange-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: Key -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">Deltek VP Reset</h4>
-            <p class="text-xs text-gray-500 mt-2">Reset your Deltek Vantagepoint password.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">VP Reset</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Account or password reset for Deltek VP.</p>
         </a>
 
         <!-- Card 8: VP Permissions -->
-        <a href="{% url 'report_vp_permissions' %}" class="group block p-6 bg-white rounded-lg shadow-sm border border-gray-100 border-l-4 border-l-teal-500 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-            <div class="h-10 w-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
+        <a href="{% url 'report_vp_permissions' %}" class="group block p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 border-l-4 border-l-teal-500 hover:shadow-md dark:hover:bg-gray-700 transition-shadow duration-200 cursor-pointer">
+            <div class="h-10 w-10 rounded-full bg-teal-50 dark:bg-teal-900/20 text-teal-600 flex items-center justify-center mb-4 group-hover:bg-prime-orange group-hover:text-white transition-colors">
                 <!-- Icon: User Group -->
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 011.129-1.261A5.987 5.987 0 0112 12.75a5.987 5.987 0 014.941 2.572M10.5 8.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                 </svg>
             </div>
-            <h4 class="font-bold text-prime-navy group-hover:text-prime-orange transition-colors">VP Permissions</h4>
-            <p class="text-xs text-gray-500 mt-2">Request access changes or report VP errors.</p>
+            <h4 class="font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">VP Permissions</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Request access changes or report VP errors.</p>
         </a>
 
     </div>

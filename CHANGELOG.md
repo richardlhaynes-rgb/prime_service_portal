@@ -6,6 +6,34 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [0.8.0] - 2025-12-09 (Admin Power Tools)
+
+### 🚀 New Features
+- **User Management Suite:** Complete admin interface to Add, Edit, Search, and Delete users.
+- **Taxonomy Manager:** Split-pane interface in Site Configuration to dynamically add/delete KB Categories and Subcategories.
+- **Audit Trail:** Added "Created By," "Modified By," and "Accessed" history tracking to User Profiles using Django LogEntry.
+- **Smart User Forms:** Auto-generating usernames, "Suggest Strong Password" generator, and Native Browser Validation bubbles.
+
+### 🎨 UI & UX Polish
+- **Phantom Actions:** Table action buttons (Edit/Delete) remain hidden until row hover to reduce visual clutter.
+- **Iconography:** Replaced text pills with intuitive Heroicons for User Roles (Shield/Briefcase) and Status (Check/Ban).
+- **Settings Layout:** Refactored Site Configuration into a Sidebar/Tabbed interface for better scalability.
+- **Unified Avatar UI:** Standardized the "Hero Header" profile photo uploader across My Profile and Edit User screens.
+- **Flush Alignment:** Corrected vertical rhythm and panel alignment on configuration pages.
+
+### ⚙️ Backend & Architecture
+- **Database Normalization:** Migrated KB Categories from hardcoded text strings to relational `KBCategory` models (Bridge Strategy).
+- **Self-Healing Data:** Implemented logic to auto-create missing `UserProfile` rows for legacy accounts on save.
+- **Security:** Added `autocomplete="new-password"` attributes to admin forms to prevent browser autofill.
+- **Routing:** Restored missing authentication routes (`login`) to prevent redirect loops.
+
+### 🐛 Fixes
+- Fixed `RelatedObjectDoesNotExist` crash when uploading avatars for older user accounts.
+- Resolved "Table already exists" conflicts during taxonomy migration.
+- Fixed layout alignment issues where setting panels were not flush with the sidebar.
+
+---
+
 ## [0.7.0] - 2025-11-29 (System Logs & Final Polish)
 
 ### 🚀 New Features

@@ -12,30 +12,30 @@
     </div>
 
     <!-- Form Card -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <form method="post" class="space-y-6">
             {% csrf_token %}
 
             <!-- Software Name -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.software_name.label }} <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.software_name.label }} <span class="text-red-500">*</span></label>
                 {{ form.software_name }}
             </div>
 
             <!-- Justification -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.justification.label }} <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.justification.label }} <span class="text-red-500">*</span></label>
                 {{ form.justification }}
             </div>
 
             <!-- Radio Buttons: Myself vs Another User -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-2">{{ form.request_for.label }}</label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-2">{{ form.request_for.label }}</label>
                 <div class="flex gap-6">
                     {% for radio in form.request_for %}
                     <div class="flex items-center">
                         {{ radio.tag }}
-                        <label for="{{ radio.id_for_label }}" class="ml-2 text-gray-700 text-sm">{{ radio.choice_label }}</label>
+                        <label for="{{ radio.id_for_label }}" class="ml-2 text-gray-700 dark:text-gray-300 text-sm">{{ radio.choice_label }}</label>
                     </div>
                     {% endfor %}
                 </div>

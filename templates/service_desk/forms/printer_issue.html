@@ -12,30 +12,30 @@
     </div>
 
     <!-- Form Card -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <form method="post" class="space-y-6">
             {% csrf_token %}
 
             <!-- Location -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.printer_location.label }} <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.printer_location.label }} <span class="text-red-500">*</span></label>
                 {{ form.printer_location }}
             </div>
 
             <!-- Description -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.description.label }} <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.description.label }} <span class="text-red-500">*</span></label>
                 {{ form.description }}
             </div>
 
             <!-- Affected Computer -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.computer_name.label }}</label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.computer_name.label }}</label>
                 {{ form.computer_name }}
             </div>
 
             <!-- Submit Button -->
-            <div class="pt-4 border-t border-gray-100 flex justify-end">
+            <div class="pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
                 <button type="submit" class="bg-prime-navy text-white px-6 py-2 rounded-md font-semibold hover:bg-opacity-90 transition shadow-sm">
                     Submit Ticket
                 </button>

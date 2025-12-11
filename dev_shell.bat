@@ -1,5 +1,9 @@
 @echo off
 TITLE PRIME Service Portal - Dev Shell
+color 0A
+mode con: cols=140 lines=40
+cls
+
 echo ==========================================
 echo   Environment Activated. Ready to Code.
 echo ==========================================

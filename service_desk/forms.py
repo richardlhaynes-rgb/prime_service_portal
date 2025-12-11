@@ -1,8 +1,24 @@
 ﻿from django import forms
-from .models import Ticket, Comment
+from .models import Ticket, Comment, GlobalSettings, UserProfile
 from knowledge_base.models import Article
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm  # Shared auth forms
+from django.contrib.auth.models import User, Group  # User + Groups for checkbox list
 
-INPUT_STYLE = 'w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-transparent'
+INPUT_STYLE = 'w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400'
+
+# Shared Tailwind widget helpers for user forms
+USER_TEXT_WIDGET = forms.TextInput(attrs={
+    'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
+})
+USER_EMAIL_WIDGET = forms.EmailInput(attrs={
+    'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
+})
+USER_CHECKBOX_WIDGET = forms.CheckboxInput(attrs={
+    'class': 'h-5 w-5 text-prime-orange border-gray-300 rounded focus:ring-prime-orange'
+})
+USER_GROUPS_WIDGET = forms.CheckboxSelectMultiple(attrs={
+    'class': 'space-y-2'
+})
 
 # --- 1. Application Issue Form ---
 class ApplicationIssueForm(forms.Form):
@@ -265,3 +281,168 @@ class KBArticleForm(forms.Form):
         
         # If editing an existing article, you can pre-populate fields here
         # Example: self.fields['category'].initial = initial_data.get('category')
+
+# --- 11. Global Settings Form (Admin Configuration) ---
+class GlobalSettingsForm(forms.ModelForm):
+    """
+    ModelForm for editing global site configuration.
+    Used by superusers in the admin settings interface.
+    """
+    
+    class Meta:
+        model = GlobalSettings
+        fields = [
+            'maintenance_mode',
+            'use_mock_data',
+            'kb_recommendation_logic',
+            'support_phone',
+            'support_email',
+            'support_hours',
+        ]
+        
+        # Apply Tailwind CSS styling to all form widgets
+        widgets = {
+            'maintenance_mode': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-prime-orange focus:ring-prime-orange border-gray-300 rounded'
+            }),
+            'use_mock_data': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-prime-orange focus:ring-prime-orange border-gray-300 rounded'
+            }),
+            'kb_recommendation_logic': forms.Select(attrs={
+                'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
+            }),
+            'support_phone': forms.TextInput(attrs={
+                'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white',
+                'placeholder': '859-977-9641'
+            }),
+            'support_email': forms.EmailInput(attrs={
+                'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white',
+                'placeholder': 'support@primeeng.com'
+            }),
+            'support_hours': forms.TextInput(attrs={
+                'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white',
+                'placeholder': 'Mon-Fri, 8:00 AM - 5:00 PM EST'
+            }),
+        }
+        
+        # Custom labels and help text
+        labels = {
+            'maintenance_mode': 'Enable Maintenance Mode',
+            'use_mock_data': 'Use Demo/Mock Data',
+            'kb_recommendation_logic': 'KB Article Sorting Logic',
+            'support_phone': 'Support Phone Number',
+            'support_email': 'Support Email Address',
+            'support_hours': 'Support Hours',
+        }
+        
+        help_texts = {
+            'maintenance_mode': 'When enabled, non-admin users will see a maintenance page',
+            'use_mock_data': 'Toggle between live ConnectWise data and demo JSON data',
+            'kb_recommendation_logic': 'How KB articles are sorted on the homepage',
+            'support_phone': 'Primary contact number displayed to users',
+            'support_email': 'Primary support email displayed to users',
+            'support_hours': 'Business hours displayed to users',
+        }
+
+# --- 12. Custom User Creation Form ---
+class CustomUserCreationForm(UserCreationForm):
+    password1 = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'autocomplete': 'new-password'
+        })
+    )
+    password2 = forms.CharField(
+        label="Password confirmation",
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'autocomplete': 'new-password'
+        })
+    )
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'is_staff',
+            'is_superuser',
+            'is_active',
+            'groups',
+        )
+        widgets = {
+            'username': USER_TEXT_WIDGET,
+            'first_name': USER_TEXT_WIDGET,
+            'last_name': USER_TEXT_WIDGET,
+            'email': USER_EMAIL_WIDGET,
+            'is_staff': USER_CHECKBOX_WIDGET,
+            'is_superuser': USER_CHECKBOX_WIDGET,
+            'is_active': USER_CHECKBOX_WIDGET,
+            'groups': USER_GROUPS_WIDGET,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ensure groups are loaded for checkbox list
+        self.fields['groups'].queryset = Group.objects.all()
+
+
+# --- 13. Custom User Change Form (Admin Replacement) ---
+class CustomUserChangeForm(UserChangeForm):
+    password = None  # Hide password hash display
+    
+    # Add avatar field (Manual handling for UserProfile)
+    avatar = forms.ImageField(
+        required=False, 
+        widget=forms.FileInput(attrs={'class': 'hidden', 'id': 'file-upload'})
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'is_staff',
+            'is_superuser',
+            'is_active',
+            'groups',
+        )
+        widgets = {
+            'username': USER_TEXT_WIDGET,
+            'first_name': USER_TEXT_WIDGET,
+            'last_name': USER_TEXT_WIDGET,
+            'email': USER_EMAIL_WIDGET,
+            'is_staff': USER_CHECKBOX_WIDGET,
+            'is_superuser': USER_CHECKBOX_WIDGET,
+            'is_active': USER_CHECKBOX_WIDGET,
+            'groups': USER_GROUPS_WIDGET,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['groups'].queryset = Group.objects.all()
+        
+        # Pre-fill avatar from UserProfile
+        if self.instance.pk:
+            try:
+                if hasattr(self.instance, 'profile') and self.instance.profile.avatar:
+                    self.initial['avatar'] = self.instance.profile.avatar
+            except Exception:
+                pass
+    
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        # Handle Avatar Save
+        avatar = self.cleaned_data.get('avatar')
+        if avatar:
+            # Import here to avoid circular dependency if needed, or rely on top-level import
+            from .models import UserProfile
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            profile.avatar = avatar
+            profile.save()
+        return user

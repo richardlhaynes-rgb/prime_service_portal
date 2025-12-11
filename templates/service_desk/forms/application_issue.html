@@ -12,47 +12,34 @@
     </div>
 
     <!-- Form Card -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <form method="post" enctype="multipart/form-data" class="space-y-6">
             {% csrf_token %}
-
-            <!-- Application Dropdown -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.application_name.label }}</label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.application_name.label }}</label>
                 {{ form.application_name }}
             </div>
-
-            <!-- Other App (Hidden by default) -->
             <div id="other-app-container" class="hidden transition-all duration-300 ease-in-out">
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.other_application.label }}</label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.other_application.label }}</label>
                 {{ form.other_application }}
             </div>
-
-            <!-- Computer Name -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.computer_name.label }}</label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.computer_name.label }}</label>
                 {{ form.computer_name }}
             </div>
-
-            <!-- Summary -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.summary.label }} <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.summary.label }} <span class="text-red-500">*</span></label>
                 {{ form.summary }}
-                <p class="text-xs text-gray-400 mt-1">Ex: Revit crashing when opening file</p>
+                <p class="text-xs text-gray-400 dark:text-gray-400 mt-1">Ex: Revit crashing when opening file</p>
             </div>
-
-            <!-- Description -->
             <div>
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.description.label }} <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.description.label }} <span class="text-red-500">*</span></label>
                 {{ form.description }}
             </div>
-
-            <!-- File Upload -->
-            <div class="p-4 bg-gray-50 rounded-md border border-dashed border-gray-300">
-                <label class="block text-sm font-medium text-prime-navy mb-1">{{ form.screenshot.label }}</label>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-dashed border-gray-300 dark:border-gray-600">
+                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-1">{{ form.screenshot.label }}</label>
                 {{ form.screenshot }}
             </div>
-
             <!-- Submit Button -->
             <div class="pt-4 border-t border-gray-100 flex justify-end">
                 <button type="submit" class="bg-prime-navy text-white px-6 py-2 rounded-md font-semibold hover:bg-opacity-90 transition shadow-sm">

@@ -1,82 +1,103 @@
-import re
 import os
+import re
+import json
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from knowledge_base.models import Article
 
 class Command(BaseCommand):
-    help = 'Imports KB articles from kb_source.md and wipes existing data'
+    help = 'Imports KB articles from kb_source.txt, populates internal_notes, and regenerates mock_articles.json'
 
-    def handle(self, *args, **kwargs):
-        file_path = os.path.join(settings.BASE_DIR, 'kb_source.md')
+    SOURCE_FILENAME = os.path.join(settings.BASE_DIR, 'data', 'kb_source.txt')
+    OUTPUT_JSON = os.path.join(settings.BASE_DIR, 'data', 'mock_articles.json')
 
-        if not os.path.exists(file_path):
-            self.stdout.write(self.style.ERROR(f"File not found: {file_path}"))
+    ARTICLE_REGEX = re.compile(
+        r'(?:Category:\s*(?P<category>.+?)\r?\n)?'
+        r'(?:Subcategory:\s*(?P<subcategory>.+?)\r?\n)?'
+        r'Article\s+(?P<number>\d+)\r?\n'
+        r'KB Title:\s*(?P<title>.+?)\r?\n'
+        r'Problem:\s*(?P<problem>.*?)(?=\r?\nSolution:)'
+        r'\r?\nSolution:\s*(?P<solution>.*?)(?:\r?\nSource \(for internal reference\):\s*(?P<source>.+))?'
+        r'(?=\r?\nCategory:|\r?\nSubcategory:|\r?\nArticle\s+\d+|\Z)',
+        re.DOTALL
+    )
+
+    def handle(self, *args, **options):
+        if not os.path.exists(self.SOURCE_FILENAME):
+            self.stdout.write(self.style.ERROR(f"File not found: {self.SOURCE_FILENAME}"))
             return
 
-        # 1. WIPE EXISTING DATA
         self.stdout.write(self.style.WARNING("Wiping existing Knowledge Base articles..."))
         Article.objects.all().delete()
-        self.stdout.write(self.style.SUCCESS("Old data deleted."))
+        self.stdout.write(self.style.SUCCESS("Existing KB data cleared."))
 
-        # 2. READ FILE
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(self.SOURCE_FILENAME, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # 3. PARSE
-        # Split by "Article X" header
-        raw_articles = re.split(r'Article \d+', content)
-        count = 0
+        matches = list(self.ARTICLE_REGEX.finditer(content))
+        self.stdout.write(self.style.NOTICE(f"Found {len(matches)} article blocks."))
 
-        for raw in raw_articles:
-            if not raw.strip():
-                continue
+        articles_json = []
+        created_count = 0
 
-            # Regex to find specific fields
-            title_match = re.search(r'KB Title:\s*(.*?)\n', raw)
-            problem_match = re.search(r'Problem:\s*(.*?)(?=Solution:)', raw, re.DOTALL)
-            solution_match = re.search(r'Solution:\s*(.*?)(?=Source|Article|$)', raw, re.DOTALL)
+        for m in matches:
+            raw_category = (m.group('category') or '').strip()
+            raw_subcategory = (m.group('subcategory') or '').strip()
+            title = m.group('title').strip()
+            problem = self._clean_multiline(m.group('problem'))
+            solution = self._clean_multiline(m.group('solution'))
+            source = (m.group('source') or '').strip()
 
-            if title_match:
-                title = title_match.group(1).strip()
-                # Default to empty strings if not found
-                problem = problem_match.group(1).strip() if problem_match else "No description provided."
-                solution = solution_match.group(1).strip() if solution_match else "No solution provided."
+            # Fallbacks
+            category = raw_category if raw_category else 'Internal IT Processes'
+            subcategory = raw_subcategory if raw_subcategory else 'General'
 
-                # --- Auto-Categorizer ---
-                category = Article.Category.INTERNAL_PROCESS # Default
-                subcategory = "General"
-                t_lower = title.lower()
+            # internal_notes populated from Source line
+            internal_notes = source
 
-                if any(x in t_lower for x in ['autocad', 'revit', 'bluebeam', 'civil 3d', '3ds max', 'sketchup', 'navisworks']):
-                    category = Article.Category.DESIGN_APPS
-                    subcategory = "Design Software"
-                elif any(x in t_lower for x in ['outlook', 'excel', 'word', 'teams', 'onedrive', 'office', 'powerpoint']):
-                    category = Article.Category.BUSINESS_ADMIN
-                    subcategory = "Microsoft 365"
-                elif any(x in t_lower for x in ['printer', 'plotter', 'scanner', 'xerox', 'papercut']):
-                    category = Article.Category.PRINTING
-                    subcategory = "Printing & Plotting"
-                elif any(x in t_lower for x in ['vpn', 'wifi', 'internet', 'network', 'forticlient']):
-                    category = Article.Category.NETWORKING
-                    subcategory = "Network Access"
-                elif any(x in t_lower for x in ['laptop', 'monitor', 'dock', 'mouse', 'keyboard', 'screen']):
-                    category = Article.Category.HARDWARE
-                    subcategory = "Hardware"
-                elif any(x in t_lower for x in ['password', 'mfa', 'login', 'account']):
-                    category = Article.Category.SECURITY
-                    subcategory = "Account Security"
+            # Create DB record (status defaults to Approved)
+            article_obj = Article.objects.create(
+                title=title,
+                category=category,
+                subcategory=subcategory,
+                problem=problem,
+                solution=solution,
+                internal_notes=internal_notes,
+                status=Article.Status.APPROVED
+            )
+            created_count += 1
 
-                # Create Article
-                Article.objects.create(
-                    title=title,
-                    problem=problem,
-                    solution=solution,
-                    category=category,
-                    subcategory=subcategory,
-                    status=Article.Status.APPROVED
-                )
-                self.stdout.write(f"Imported: {title}")
-                count += 1
+            articles_json.append({
+                "id": article_obj.id,
+                "title": title,
+                "category": category,
+                "subcategory": subcategory,
+                "status": "Approved",
+                "problem": problem,
+                "solution": solution,
+                "internal_notes": internal_notes,
+                "views": 0,
+                "helpful_votes": 0,
+                "created_at": article_obj.created_at.isoformat(),
+                "updated_at": article_obj.updated_at.isoformat()
+            })
 
-        self.stdout.write(self.style.SUCCESS(f"Successfully imported {count} articles!"))
+            self.stdout.write(self.style.SUCCESS(f"Imported: {title}"))
+
+        # Regenerate mock_articles.json
+        with open(self.OUTPUT_JSON, 'w', encoding='utf-8') as jf:
+            json.dump(articles_json, jf, indent=4, ensure_ascii=False)
+
+        self.stdout.write(self.style.SUCCESS(
+            f"Completed import. Created {created_count} articles. "
+            f"Regenerated JSON: {self.OUTPUT_JSON}"
+        ))
+
+    @staticmethod
+    def _clean_multiline(text):
+        if not text:
+            return ''
+        # Strip leading/trailing whitespace, normalize Windows line endings
+        cleaned = text.replace('\r\n', '\n').strip()
+        # Remove any trailing blank lines
+        return re.sub(r'\n{3,}', '\n\n', cleaned)

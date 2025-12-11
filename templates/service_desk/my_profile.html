@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-6">
+        <h2 class="text-3xl font-bold text-prime-navy dark:text-white">My Profile</h2>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Update your personal information and avatar.</p>
+    </div>
+
+    <!-- Profile Form Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        
+        <!-- Avatar Section (Top) -->
+        <div class="flex items-center gap-6 mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
+            <!-- Current Avatar (Circle) -->
+            <div class="flex-shrink-0">
+                {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" 
+                         class="h-24 w-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-600 shadow-md">
+                {% else %}
+                    <div class="h-24 w-24 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-3xl border-4 border-gray-200 dark:border-gray-600 shadow-md">
+                        {{ user.first_name|first }}{{ user.last_name|first }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Avatar Upload (Stacked) -->
+            <div class="flex-grow">
+                <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Profile Picture</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Upload a new photo (max 300x300 pixels, auto-resized)</p>
+                <form method="post" enctype="multipart/form-data" id="avatar-form">
+                    {% csrf_token %}
+                    <div class="flex items-center gap-3">
+                        <input type="file" name="avatar" id="avatar-input" accept="image/*" 
+                               class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-orange-600 cursor-pointer">
+                        <button type="submit" 
+                                class="px-4 py-2 bg-prime-navy text-white text-sm font-semibold rounded-md hover:bg-opacity-90 transition shadow-sm">
+                            Upload
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Profile Form -->
+        <form method="post" id="profile-form" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Username Field (Read-Only) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Username <span class="text-gray-500 font-normal text-xs">(System Login ID)</span>
+                </label>
+                <input type="text" value="{{ user.username }}" readonly disabled 
+                       class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
+                
+                <!-- Help Text with Asterisk -->
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <span class="text-red-500 font-bold">*</span> This is your system login credential and cannot be changed.
+                </p>
+            </div>
+
+            <!-- First Name -->
+            <div>
+                <label for="first_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    First Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="first_name" id="first_name" value="{{ user.first_name }}" required
+                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                       placeholder="Enter your first name">
+            </div>
+
+            <!-- Last Name -->
+            <div>
+                <label for="last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Last Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="last_name" id="last_name" value="{{ user.last_name }}" required
+                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                       placeholder="Enter your last name">
+            </div>
+
+            <!-- Email Address -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Email Address <span class="text-red-500">*</span>
+                </label>
+                <input type="email" name="email" id="email" value="{{ user.email }}" required
+                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                       placeholder="your.email@primeeng.com">
+            </div>
+
+            <!-- Submit Button (Sticky Footer) -->
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Ready to save changes?</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Updates will be reflected immediately.</p>
+                </div>
+                <button type="submit" id="save-btn" disabled
+                        class="bg-gray-400 cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- Dirty Form Detection Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('profile-form');
+    const saveBtn = document.getElementById('save-btn');
+    
+    if (!form || !saveBtn) return;
+
+    // Capture initial values (only editable fields)
+    const firstNameInput = document.getElementById('first_name');
+    const lastNameInput = document.getElementById('last_name');
+    const emailInput = document.getElementById('email');
+
+    const initialValues = {
+        first_name: firstNameInput.value.trim(),
+        last_name: lastNameInput.value.trim(),
+        email: emailInput.value.trim()
+    };
+
+    // Function to check if form has changed
+    function checkFormChanged() {
+        const currentValues = {
+            first_name: firstNameInput.value.trim(),
+            last_name: lastNameInput.value.trim(),
+            email: emailInput.value.trim()
+        };
+
+        const hasChanged = (
+            currentValues.first_name !== initialValues.first_name ||
+            currentValues.last_name !== initialValues.last_name ||
+            currentValues.email !== initialValues.email
+        );
+
+        if (hasChanged) {
+            // Enable button (orange styling)
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            saveBtn.classList.add('bg-prime-orange', 'hover:bg-orange-600', 'cursor-pointer');
+        } else {
+            // Disable button (gray styling)
+            saveBtn.disabled = true;
+            saveBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            saveBtn.classList.remove('bg-prime-orange', 'hover:bg-orange-600', 'cursor-pointer');
+        }
+    }
+
+    // Listen for input changes on editable fields
+    firstNameInput.addEventListener('input', checkFormChanged);
+    lastNameInput.addEventListener('input', checkFormChanged);
+    emailInput.addEventListener('input', checkFormChanged);
+});
+</script>
+
+{% endblock %}

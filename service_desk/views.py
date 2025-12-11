@@ -6,12 +6,17 @@ from django.utils import timezone
 from .forms import (
     ApplicationIssueForm, EmailMailboxForm, HardwareIssueForm, PrinterScannerForm,
     SoftwareInstallForm, GeneralQuestionForm, VPResetForm, VPPermissionsForm,
-    TicketReplyForm, KBArticleForm
+    TicketReplyForm, KBArticleForm, GlobalSettingsForm, CustomUserCreationForm, CustomUserChangeForm
 )
-from .models import Ticket, Comment
+from .models import Ticket, Comment, GlobalSettings
 from services import ticket_service
 from datetime import datetime
 import pytz
+import random
+from django.contrib.auth.models import User
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+from django.contrib.contenttypes.models import ContentType
+from knowledge_base.models import KBCategory, KBSubcategory
 
 # --- USER DASHBOARD ---
 @login_required
@@ -52,7 +57,23 @@ def dashboard(request):
 # --- SERVICE CATALOG ---
 @login_required
 def service_catalog(request):
-    return render(request, 'service_desk/service_catalog.html')
+    settings = GlobalSettings.load()
+
+    articles = ticket_service.get_knowledge_base_articles()
+    recommended_articles = []
+
+    if articles:
+        strategy = settings.kb_recommendation_logic
+        if strategy == 'random':
+            recommended_articles = random.sample(articles, k=min(3, len(articles)))
+        elif strategy == 'views':
+            recommended_articles = sorted(articles, key=lambda a: a.get('views', 0), reverse=True)[:3]
+        else:  # 'updated' or fallback
+            recommended_articles = sorted(articles, key=lambda a: a.get('updated_at', ''), reverse=True)[:3]
+
+    return render(request, 'service_desk/service_catalog.html', {
+        'recommended_articles': recommended_articles
+    })
 
 
 # --- TICKET SUBMISSION FORMS ---
@@ -421,15 +442,27 @@ def article_detail(request, article_id):
 # --- KB MANAGER (ADMIN TABLE) ---
 @user_passes_test(lambda u: u.is_superuser)
 def kb_manager(request):
-    search_query = request.GET.get('q', '')
-    category_filter = request.GET.get('category', '')
-    sort_by = request.GET.get('sort', '-id')
+    """
+    Knowledge Base Manager view (Admin only).
 
+    Adds status filtering while keeping top-level stats (total, drafts, pending)
+    based on the entire dataset, regardless of active filters.
+    """
+    # 1. Get Params
+    search_query = request.GET.get('q', '').strip()
+    category_filter = request.GET.get('category', '').strip()
+    sort_by = request.GET.get('sort', 'id').strip()  # CHANGED: default oldest first
+    status_filter = request.GET.get('status', '').strip()
+
+    # 2. Fetch All Articles (unfiltered)
     all_articles = ticket_service.get_knowledge_base_articles()
+
+    # 3. Calculate Global Stats (before any filtering)
     total_count = len(all_articles)
     draft_count = sum(1 for a in all_articles if a.get('status') == 'Draft')
-    pending_count = sum(1 for a in all_articles if a.get('status') == 'Pending Approval')
+    pending_count = sum(1 for a in all_articles if a.get('status') in ['Pending Approval', 'Pending'])
 
+    # 4. Filter Pipeline
     filtered_articles = all_articles
     if search_query:
         q = search_query.lower()
@@ -441,10 +474,17 @@ def kb_manager(request):
             or q in a.get('category', '').lower()
             or q in a.get('subcategory', '').lower()
         ]
-
     if category_filter and category_filter != 'All':
         filtered_articles = [a for a in filtered_articles if a.get('category') == category_filter]
+    if status_filter:
+        if status_filter == 'Draft':
+            filtered_articles = [a for a in filtered_articles if a.get('status') == 'Draft']
+        elif status_filter in ['Pending', 'Pending Approval']:
+            filtered_articles = [a for a in filtered_articles if a.get('status') in ['Pending Approval', 'Pending']]
+        elif status_filter == 'Approved':
+            filtered_articles = [a for a in filtered_articles if a.get('status') == 'Approved']
 
+    # 5. Sorting
     reverse = False
     sort_field = sort_by
     if sort_by.startswith('-'):
@@ -462,6 +502,7 @@ def kb_manager(request):
 
     filtered_articles = sorted(filtered_articles, key=sort_key, reverse=reverse)
 
+    # 6. Context
     return render(request, 'knowledge_base/kb_manager.html', {
         'articles': filtered_articles,
         'total_count': total_count,
@@ -469,7 +510,8 @@ def kb_manager(request):
         'pending_count': pending_count,
         'search_query': search_query,
         'current_category': category_filter,
-        'current_sort': sort_by
+        'current_sort': sort_by,
+        'current_status': status_filter
     })
 
 
@@ -484,7 +526,12 @@ def kb_add(request):
             return redirect('kb_manager')
     else:
         form = KBArticleForm()
-    return render(request, 'knowledge_base/kb_add.html', {'form': form})
+    # Use the shared form template
+    return render(request, 'knowledge_base/kb_form.html', {
+        'form': form,
+        'title': 'Create Knowledge Base Article',
+        'submit_text': 'Create Article'
+    })
 
 
 # --- KB EDIT ---
@@ -512,7 +559,9 @@ def kb_edit(request, article_id):
             'internal_notes': article.get('internal_notes', '')
         }
         form = KBArticleForm(initial=initial_data)
-    return render(request, 'knowledge_base/kb_edit.html', {'form': form, 'article': article})
+    
+    # Critical Update: Render the shared form template
+    return render(request, 'knowledge_base/kb_form.html', {'form': form, 'article': article})
 
 
 # --- KB DELETE ---
@@ -640,3 +689,341 @@ def system_logs(request):
         'na_timezones': NA_TIMEZONES,
         'selected_tz': selected_tz_name
     })
+
+
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+
+@login_required
+def my_profile(request):
+    """
+    Allows the logged-in user to update their profile (first name, last name, email, and avatar).
+    """
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        
+        # Handle avatar upload
+        avatar = request.FILES.get('avatar')
+
+        user = request.user
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.save()
+
+        # Update UserProfile with avatar if provided
+        if avatar:
+            user.profile.avatar = avatar
+            user.profile.save()
+            messages.success(request, "Profile updated successfully with new avatar.")
+        else:
+            messages.success(request, "Profile updated successfully.")
+        
+        return redirect('my_profile')
+
+    return render(request, 'service_desk/my_profile.html')
+
+
+# --- SITE CONFIGURATION (ADMIN ONLY) ---
+@user_passes_test(lambda u: u.is_superuser)
+def site_configuration(request):
+    """
+    Admin-only view for editing global site configuration.
+    
+    This view allows superusers to manage:
+        - Feature toggles (maintenance mode, demo mode)
+        - KB article recommendation logic
+        - Support contact information
+    
+    The GlobalSettings model is a singleton (always pk=1), ensuring
+    only one configuration exists across the entire site.
+    
+    Access: Superuser only
+    URL: /service-desk/settings/site/
+    Template: service_desk/site_configuration.html
+    """
+    # Load the singleton GlobalSettings instance
+    config = GlobalSettings.load()
+    
+    if request.method == 'POST':
+        # Bind form to existing instance with POST data
+        form = GlobalSettingsForm(request.POST, instance=config)
+        
+        if form.is_valid():
+            # Save the configuration
+            form.save()
+            
+            # Log the action to system logs (FIXED: 4 arguments only)
+            ticket_service.log_system_event(
+                user=request.user.username,
+                action='Updated Site Configuration',
+                target='Global Settings',
+                details='Updated global configuration toggles'
+            )
+            
+            # Show success message
+            messages.success(request, '✅ Site configuration updated successfully!')
+            
+            # Redirect to prevent form resubmission
+            return redirect('site_configuration')
+    else:
+        # GET request: Display form with current config
+        form = GlobalSettingsForm(instance=config)
+    
+    # *** NEW: Fetch KB Categories with Subcategories ***
+    categories = KBCategory.objects.prefetch_related('subcategories').order_by('sort_order', 'name')
+    
+    return render(request, 'service_desk/site_configuration.html', {
+        'form': form,
+        'config': config,
+        'categories': categories,  # <--- Added
+    })
+
+
+# --- USER MANAGEMENT (Admin Only) ---
+@user_passes_test(lambda u: u.is_superuser)
+def user_management(request):
+    """
+    List all users with optional search filtering and column sorting.
+    
+    Supports:
+        - Search by username, name, or email
+        - Sortable columns: Name, Email, Role, Status, Join Date
+        - Preserves search query during sort operations
+    
+    URL Parameters:
+        ?q=<search_term>         - Search filter
+        ?sort=<column>           - Column to sort by (name, email, role, status, date_joined)
+        ?direction=<asc|desc>    - Sort direction
+    """
+    # 1. Get Params
+    search_query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'date_joined')  # Default to newest first
+    direction = request.GET.get('direction', 'desc')
+
+    # 2. Base Query
+    users = User.objects.select_related('profile').all()
+
+    # 3. Apply Search (Keep existing logic)
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    # 4. Sorting Map
+    # Maps URL params to database fields
+    sort_map = {
+        'name': 'first_name',       # Sort by First Name
+        'email': 'email',           # Sort by Email
+        'role': 'is_superuser',     # Sort by Admin status (Superuser > Staff > User)
+        'status': 'is_active',      # Sort by Active status
+        'date_joined': 'date_joined'
+    }
+    
+    # Get db field, default to date_joined if invalid
+    db_field = sort_map.get(sort_by, 'date_joined')
+    
+    # Apply direction
+    if direction == 'desc':
+        db_field = '-' + db_field
+    
+    # Apply ordering (secondary sort by date_joined ensures stable lists)
+    users = users.order_by(db_field, '-date_joined')
+
+    return render(request, 'service_desk/user_management_list.html', {
+        'users': users,
+        'search_query': search_query,
+        'current_sort': sort_by,
+        'current_direction': direction,
+    })
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_add(request):
+    """
+    Create a new user account and log the action in Django History.
+    """
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            new_user = form.save()
+            
+            # --- AUDIT LOGGING ---
+            # Record "Who created this?"
+            try:
+                LogEntry.objects.log_action(
+                    user_id=request.user.id,
+                    content_type_id=ContentType.objects.get_for_model(User).pk,
+                    object_id=new_user.id,
+                    object_repr=new_user.username,
+                    action_flag=ADDITION,
+                    change_message="Created via Service Portal"
+                )
+            except Exception as e:
+                print(f"Audit Error: {e}")
+            # ---------------------
+
+            messages.success(request, '✅ User created successfully!')
+            return redirect('user_management')
+    else:
+        form = CustomUserCreationForm()
+
+    return render(request, 'service_desk/user_form.html', {
+        'form': form,
+        'title': 'Add New User',
+    })
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def user_edit(request, user_id):
+    """
+    Edit user with full audit history (Created By / Modified By).
+    """
+    user_obj = get_object_or_404(User, id=user_id)
+
+    # Delete flow
+    if request.method == 'POST' and 'delete_user' in request.POST:
+        username = user_obj.username
+        
+        # Log deletion before object is gone
+        try:
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=ContentType.objects.get_for_model(User).pk,
+                object_id=user_obj.id,
+                object_repr=username,
+                action_flag=DELETION,
+                change_message="Deleted via Service Portal"
+            )
+        except: pass
+
+        user_obj.delete()
+        messages.success(request, f'✅ User "{username}" has been deleted.')
+        return redirect('user_management')
+
+    # Edit flow
+    if request.method == 'POST':
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=user_obj)
+        if form.is_valid():
+            form.save()
+
+            # Log modification
+            try:
+                LogEntry.objects.log_action(
+                    user_id=request.user.id,
+                    content_type_id=ContentType.objects.get_for_model(User).pk,
+                    object_id=user_obj.id,
+                    object_repr=user_obj.username,
+                    action_flag=CHANGE,
+                    change_message="Updated via Service Portal"
+                )
+            except: pass
+
+            messages.success(request, f'✅ User "{user_obj.username}" updated successfully!')
+            return redirect('user_management')
+    else:
+        form = CustomUserChangeForm(instance=user_obj)
+
+    # --- Fetch Audit History ---
+    try:
+        user_ctype = ContentType.objects.get_for_model(User)
+        logs = LogEntry.objects.filter(
+            content_type=user_ctype,
+            object_id=str(user_obj.id)
+        ).select_related('user')
+
+        # 1. Created By (First ADDITION action)
+        creation_log = logs.filter(action_flag=ADDITION).order_by('action_time').first()
+        created_by = creation_log.user if creation_log else None
+
+        # 2. Modified By (Most recent CHANGE action)
+        modification_log = logs.filter(action_flag=CHANGE).order_by('-action_time').first()
+        modified_by = modification_log.user if modification_log else None
+        modified_at = modification_log.action_time if modification_log else None
+    except Exception:
+        created_by = None
+        modified_by = None
+        modified_at = None
+
+    return render(request, 'service_desk/user_form.html', {
+        'form': form,
+        'title': 'Edit User',
+        'user_obj': user_obj,
+        'audit_created_by': created_by,
+        'audit_modified_by': modified_by,
+        'audit_modified_at': modified_at
+    })
+
+
+# --- KB CATEGORY ADD ---
+@user_passes_test(lambda u: u.is_superuser)
+def kb_category_add(request):
+    """Add new KB Category"""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            KBCategory.objects.create(name=name)
+            messages.success(request, f"✅ Category '{name}' created.")
+        else:
+            messages.error(request, "Category name is required.")
+    return redirect('site_configuration')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def kb_category_delete(request, category_id):
+    """Delete KB Category (reassigns orphaned articles to 'Uncategorized')"""
+    if request.method == 'POST':
+        try:
+            cat = KBCategory.objects.get(id=category_id)
+            
+            # Safety Check: Reassign articles if any exist
+            if cat.articles.exists():
+                fallback, created = KBCategory.objects.get_or_create(
+                    name='Uncategorized',
+                    defaults={'sort_order': 999}
+                )
+                cat.articles.update(category_fk=fallback)  # Using correct FK field
+                messages.warning(request, f"⚠️ Reassigned {cat.articles.count()} articles to 'Uncategorized'.")
+            
+            cat.delete()
+            messages.success(request, f"✅ Category '{cat.name}' deleted.")
+        except KBCategory.DoesNotExist:
+            messages.error(request, "Category not found.")
+    return redirect('site_configuration')
+
+
+# --- KB SUBCATEGORY ADD ---
+@user_passes_test(lambda u: u.is_superuser)
+def kb_subcategory_add(request):
+    """Add new Subcategory to a Category"""
+    if request.method == 'POST':
+        parent_id = request.POST.get('parent_id')
+        name = request.POST.get('name')
+        
+        if parent_id and name:
+            try:
+                parent = KBCategory.objects.get(id=parent_id)
+                KBSubcategory.objects.create(parent=parent, name=name)
+                messages.success(request, f"✅ Subcategory '{name}' added to '{parent.name}'.")
+            except KBCategory.DoesNotExist:
+                messages.error(request, "Parent category not found.")
+        else:
+            messages.error(request, "Parent category and name are required.")
+    return redirect('site_configuration')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def kb_subcategory_delete(request, subcategory_id):
+    """Delete Subcategory"""
+    if request.method == 'POST':
+        try:
+            subcat = KBSubcategory.objects.get(id=subcategory_id)
+            subcat.delete()
+            messages.success(request, f"✅ Subcategory '{subcat.name}' deleted.")
+        except KBSubcategory.DoesNotExist:
+            messages.error(request, "Subcategory not found.")
+    return redirect('site_configuration')

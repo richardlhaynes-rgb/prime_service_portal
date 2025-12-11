@@ -1,7 +1,12 @@
 ﻿from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
+    # --- Authentication ---
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='dashboard'), name='logout'),
+
     # --- User-Facing Ticket Submission Forms ---
     path('report/application/', views.report_application_issue, name='report_app_issue'),
     path('report/email/', views.report_email_issue, name='report_email_issue'),
@@ -38,6 +43,21 @@ urlpatterns = [
     path('knowledge-base/delete/<int:article_id>/', views.kb_delete, name='kb_delete'),
     path('knowledge-base/bulk/', views.kb_bulk_action, name='kb_bulk_action'),
 
-    # --- System Logs (NEW) ---
+    # --- System Logs ---
     path('manager/logs/', views.system_logs, name='system_logs'),
+    path('profile/settings/', views.my_profile, name='my_profile'),
+    
+    # --- Site Configuration (Admin Settings) ---
+    path('settings/site/', views.site_configuration, name='site_configuration'),
+    
+    # --- KB Taxonomy Manager ---
+    path('manager/settings/kb/category/add/', views.kb_category_add, name='kb_category_add'),
+    path('manager/settings/kb/category/delete/<int:category_id>/', views.kb_category_delete, name='kb_category_delete'),
+    path('manager/settings/kb/subcategory/add/', views.kb_subcategory_add, name='kb_subcategory_add'),
+    path('manager/settings/kb/subcategory/delete/<int:subcategory_id>/', views.kb_subcategory_delete, name='kb_subcategory_delete'),
+    
+    # --- Custom User Management ---
+    path('manager/users/', views.user_management, name='user_management'),
+    path('manager/users/add/', views.user_add, name='user_add'),
+    path('manager/users/edit/<int:user_id>/', views.user_edit, name='user_edit'),
 ]

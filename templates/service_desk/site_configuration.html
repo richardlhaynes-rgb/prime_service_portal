@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+        <a href="{% url 'management_hub' %}" class="text-sm text-prime-orange hover:underline flex items-center gap-1 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            <span>Back to Management Hub</span>
+        </a>
+        <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Site Configuration</h1>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Manage global settings and knowledge base taxonomy</p>
+    </div>
+
+    <!-- Main Layout: Sidebar + Content (items-start = flush alignment) -->
+    <div class="flex flex-col md:flex-row gap-6 items-start">
+        
+        <!-- ==================== SIDEBAR ==================== -->
+        <div class="w-full md:w-64 flex-shrink-0 sticky top-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="font-bold text-prime-navy dark:text-white text-sm uppercase tracking-wide">Settings Menu</h3>
+                </div>
+                <nav class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700">
+                    <button 
+                        onclick="switchTab('general', this)" 
+                        class="tab-btn active text-left px-4 py-3 text-sm font-medium border-l-4 border-prime-orange bg-blue-50 dark:bg-blue-900/20 text-prime-navy dark:text-white hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                        data-tab="general">
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>General Settings</span>
+                        </div>
+                    </button>
+                    <button 
+                        onclick="switchTab('taxonomy', this)" 
+                        class="tab-btn text-left px-4 py-3 text-sm font-medium border-l-4 border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-l-gray-300 transition-colors"
+                        data-tab="taxonomy">
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span>KB Taxonomy</span>
+                        </div>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- ==================== CONTENT AREA ==================== -->
+        <div class="flex-1 min-w-0">
+            
+            <!-- ========== PANEL 1: GENERAL SETTINGS ========== -->
+            <div id="panel-general" class="panel-content">
+                <!-- Form with flex-col gap-6 to prevent hidden inputs from adding top margin -->
+                <form method="post" class="flex flex-col gap-6" id="settings-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="save_settings" value="1">
+
+                    <!-- Card 1: System Behavior -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                            <h3 class="text-lg font-bold text-prime-navy dark:text-white flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                System Behavior
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Control application-wide feature toggles</p>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <!-- Maintenance Mode Toggle -->
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div>
+                                    <label class="text-sm font-medium text-prime-navy dark:text-white">Maintenance Mode</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Non-admins see a "Under Maintenance" message</p>
+                                </div>
+                                {{ form.maintenance_mode }}
+                            </div>
+
+                            <!-- Mock Data Toggle -->
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div>
+                                    <label class="text-sm font-medium text-prime-navy dark:text-white">Use Demo Data</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Display mock data instead of live ConnectWise</p>
+                                </div>
+                                {{ form.use_mock_data }}
+                            </div>
+                            
+                            <!-- KB Recommendation Logic -->
+                            <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-2">
+                                    KB Article Sorting Logic
+                                </label>
+                                {{ form.kb_recommendation_logic }}
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">How KB articles are sorted on the catalog homepage</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Support Contact Information -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                            <h3 class="text-lg font-bold text-prime-navy dark:text-white flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                Support Contact Information
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Details displayed to users in the footer and dashboard</p>
+                        </div>
+
+                        <div class="p-6 space-y-6">
+                            <!-- Phone Number -->
+                            <div>
+                                <label for="id_support_phone" class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-2">
+                                    Support Phone Number
+                                </label>
+                                {{ form.support_phone }}
+                                {% if form.support_phone.help_text %}
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ form.support_phone.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email Address -->
+                            <div>
+                                <label for="id_support_email" class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-2">
+                                    Support Email Address
+                                </label>
+                                {{ form.support_email }}
+                                {% if form.support_email.help_text %}
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ form.support_email.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Support Hours -->
+                            <div>
+                                <label for="id_support_hours" class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-2">
+                                    Support Hours
+                                </label>
+                                {{ form.support_hours }}
+                                {% if form.support_hours.help_text %}
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ form.support_hours.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STICKY SAVE BUTTON (FLOATING BAR) -->
+                    <div class="sticky bottom-6 z-30 mt-8">
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-lg p-4 flex items-center justify-between backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+                            <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="hidden sm:inline">Unsaved changes will be lost if you leave this page.</span>
+                            </div>
+                            <button 
+                                type="submit" 
+                                id="save-button"
+                                class="bg-prime-orange text-white px-6 py-2 rounded-md font-bold transition-all duration-200 flex items-center gap-2 hover:bg-orange-600 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Save Changes</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ========== PANEL 2: KB TAXONOMY MANAGER ========== -->
+            <div id="panel-taxonomy" class="panel-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[600px] flex overflow-hidden">
+                    
+                    <!-- LEFT COLUMN: Categories List (1/3) -->
+                    <div class="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+                        <!-- Header -->
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                            <h3 class="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Categories</h3>
+                        </div>
+                        
+                        <!-- Categories List -->
+                        <div class="flex-1 overflow-y-auto">
+                            {% for cat in categories %}
+                            <!-- Converted to DIV to allow nested forms without breaking layout -->
+                            <div onclick="selectCategory('{{ cat.id }}')" 
+                                 id="cat-btn-{{ cat.id }}"
+                                 class="category-item group flex justify-between items-center px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-l-4 border-transparent hover:border-l-blue-200 dark:hover:border-l-blue-800 transition-all cursor-pointer">
+                                
+                                <span class="font-medium text-sm text-gray-700 dark:text-gray-200 truncate pr-2">{{ cat.name }}</span>
+                                
+                                {% if cat.name != "Uncategorized" %}
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" onclick="event.stopPropagation();">
+                                    <form method="post" action="{% url 'kb_category_delete' cat.id %}" onsubmit="return confirm('Delete this category? Linked articles will move to Uncategorized.');" class="m-0 p-0 flex">
+                                        {% csrf_token %}
+                                        <button type="submit" class="p-1.5 text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-full transition-colors shadow-sm" title="Delete Category">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Add Category Form -->
+                        <div class="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-700">
+                            <form method="post" action="{% url 'kb_category_add' %}" class="space-y-2">
+                                {% csrf_token %}
+                                <input type="text" name="name" placeholder="New Category Name" required
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-800 dark:text-white">
+                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-prime-orange text-white text-sm font-medium rounded-md hover:bg-orange-600">
+                                    Add Category
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Subcategories Panels (2/3) -->
+                    <div class="w-2/3 flex flex-col overflow-hidden">
+                        
+                        <!-- Empty State -->
+                        <div id="subcat-empty" class="flex-1 flex items-center justify-center text-center p-8">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p class="text-gray-500 dark:text-gray-400 font-medium">Select a category on the left to manage subcategories</p>
+                            </div>
+                        </div>
+
+                        <!-- Subcategory Panels -->
+                        {% for cat in categories %}
+                        <div id="subcats-{{ cat.id }}" class="subcat-panel hidden flex-1 flex flex-col overflow-hidden">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                                <h3 class="text-lg font-bold text-prime-navy dark:text-white">{{ cat.name }} <span class="text-gray-400 font-normal text-sm">/ Subcategories</span></h3>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-6">
+                                {% if cat.subcategories.all %}
+                                <div class="space-y-2">
+                                    {% for sub in cat.subcategories.all %}
+                                    <div class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 hover:border-prime-orange transition-colors">
+                                        <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ sub.name }}</span>
+                                        <form method="post" action="{% url 'kb_subcategory_delete' sub.id %}" onsubmit="return confirm('Delete subcategory?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-red-500 hover:text-red-700 p-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <p class="text-center text-gray-400 italic">No subcategories defined.</p>
+                                {% endif %}
+                            </div>
+                            <div class="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-700">
+                                <form method="post" action="{% url 'kb_subcategory_add' %}" class="flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="parent_id" value="{{ cat.id }}">
+                                    <input type="text" name="name" placeholder="New Subcategory" required class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-800 dark:text-white">
+                                    <button type="submit" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-500">Add</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Tab Switching & Form Logic Script -->
+<script>
+    // TAB SWITCHER
+    function switchTab(tabName, buttonElement) {
+        document.querySelectorAll('.panel-content').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+        
+        const target = document.getElementById('panel-' + tabName);
+        if(target) target.classList.remove('hidden');
+        
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'border-l-prime-orange', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-prime-navy', 'dark:text-white');
+            btn.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+        });
+        
+        if(buttonElement) {
+            buttonElement.classList.add('active', 'border-l-prime-orange', 'bg-blue-50', 'dark:bg-blue-900/20', 'text-prime-navy', 'dark:text-white');
+            buttonElement.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+        }
+    }
+
+    // TAXONOMY CATEGORY SELECTOR
+    function selectCategory(categoryId) {
+        document.getElementById('subcat-empty').classList.add('hidden');
+        document.querySelectorAll('.subcat-panel').forEach(p => p.classList.add('hidden'));
+        
+        const panel = document.getElementById('subcats-' + categoryId);
+        if(panel) panel.classList.remove('hidden');
+        
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.classList.remove('bg-prime-orange', 'bg-opacity-10', 'border-l-prime-orange', 'border-l-4');
+        });
+        const activeBtn = document.querySelector(`button[data-category-id="${categoryId}"]`);
+        if(activeBtn) activeBtn.classList.add('bg-prime-orange', 'bg-opacity-10', 'border-l-prime-orange', 'border-l-4');
+    }
+
+    // DIRTY FORM DETECTION
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('settings-form');
+        const saveButton = document.getElementById('save-button');
+        
+        if(form && saveButton) {
+            const initialFormData = new FormData(form);
+            const initialValues = {};
+            
+            for (let [key, value] of initialFormData.entries()) {
+                initialValues[key] = value;
+            }
+            
+            function checkFormChanged() {
+                const currentFormData = new FormData(form);
+                let hasChanged = false;
+
+                for (let [key, value] of currentFormData.entries()) {
+                    if (initialValues[key] !== value) {
+                        hasChanged = true;
+                        break;
+                    }
+                }
+
+                if (hasChanged) {
+                    saveButton.disabled = false;
+                    saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    saveButton.disabled = true;
+                    saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+            
+            form.addEventListener('input', checkFormChanged);
+            form.addEventListener('change', checkFormChanged);
+            checkFormChanged();
+        }
+    });
+</script>
+{% endblock %}
