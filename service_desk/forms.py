@@ -8,13 +8,13 @@ INPUT_STYLE = 'w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md
 
 # Shared Tailwind widget helpers for user forms
 USER_TEXT_WIDGET = forms.TextInput(attrs={
-    'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
+    'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
 })
 USER_EMAIL_WIDGET = forms.EmailInput(attrs={
-    'class': 'w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
+    'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
 })
 USER_CHECKBOX_WIDGET = forms.CheckboxInput(attrs={
-    'class': 'h-5 w-5 text-prime-orange border-gray-300 rounded focus:ring-prime-orange'
+    'class': 'h-5 w-5 text-prime-orange border-gray-300 dark:border-gray-600 rounded focus:ring-prime-orange'
 })
 USER_GROUPS_WIDGET = forms.CheckboxSelectMultiple(attrs={
     'class': 'space-y-2'

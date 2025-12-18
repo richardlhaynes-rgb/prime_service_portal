@@ -1,7 +1,7 @@
 {
     "announcement": {
-        "title": "Security Alert",
-        "message": "Please be aware of a suspicious email circulating. Do not click links from unknown sources.",
+        "title": "Service Interruption",
+        "message": "We are currently experiencing issues with [Service Name]. IT is investigating.",
         "type": "critical",
         "date": "Today",
         "start_datetime": "",
@@ -14,7 +14,7 @@
         },
         {
             "name": "Autodesk Cloud",
-            "status": "Degraded Performance"
+            "status": "Operational"
         },
         {
             "name": "Bentley ProjectWise",
@@ -22,7 +22,7 @@
         },
         {
             "name": "Egnyte File Server",
-            "status": "Degraded Performance"
+            "status": "Operational"
         },
         {
             "name": "Bluebeam Studio",

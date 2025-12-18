@@ -17,28 +17,28 @@
                    id="btn-today"
                    class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
                           {% if current_range == 'today' %}text-white bg-prime-orange border border-prime-orange
-                          {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                          {% else %}text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700{% endif %}">
                     Today
                 </a>
                 <a href="?range=yesterday" 
                    id="btn-yesterday"
                    class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
                           {% if current_range == 'yesterday' %}text-white bg-prime-orange border border-prime-orange
-                          {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                          {% else %}text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700{% endif %}">
                     Yesterday
                 </a>
                 <a href="?range=7d" 
                    id="btn-7d"
                    class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
                           {% if current_range == '7d' or not current_range %}text-white bg-prime-orange border border-prime-orange
-                          {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                          {% else %}text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700{% endif %}">
                     Last 7 Days
                 </a>
                 <a href="?range=30d" 
                    id="btn-30d"
                    class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
                           {% if current_range == '30d' %}text-white bg-prime-orange border border-prime-orange
-                          {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                          {% else %}text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700{% endif %}">
                     Last 30 Days
                 </a>
                 <button 
@@ -47,7 +47,7 @@
                     onclick="toggleCustomRange()"
                     class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
                            {% if current_range == 'custom' %}text-white bg-prime-orange border border-prime-orange
-                           {% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
+                           {% else %}text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700{% endif %}">
                     Custom Range
                 </button>
             </div>
@@ -56,18 +56,18 @@
             <form method="GET" id="custom-input-row" class="hidden flex items-center gap-2">
                 <input type="hidden" name="range" value="custom">
                 
-                <span class="text-sm text-gray-600 font-medium">From:</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">From:</span>
                 <input type="date" 
                        name="start" 
                        value="{{ request.GET.start|default:'' }}"
-                       class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange" 
+                       class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" 
                        required>
                 
-                <span class="text-sm text-gray-600 font-medium">To:</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">To:</span>
                 <input type="date" 
                        name="end" 
                        value="{{ request.GET.end|default:'' }}"
-                       class="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange" 
+                       class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-prime-orange focus:border-prime-orange bg-white dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" 
                        required>
                 
                 <button type="submit" 
@@ -76,7 +76,7 @@
                 </button>
                 <button type="button" 
                         onclick="toggleCustomRange()"
-                        class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                        class="px-3 py-1 text-sm font-medium bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                     Cancel
                 </button>
             </form>

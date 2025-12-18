@@ -20,39 +20,39 @@
         {% csrf_token %}
 
         <!-- CARD 1: Announcement Configuration -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <h3 class="text-lg font-bold text-prime-navy dark:text-white flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                     </svg>
                     Announcement Banner Configuration
                 </h3>
-                <p class="text-xs text-gray-500 mt-1">This banner appears at the top of every page for all users.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This banner appears at the top of every page for all users.</p>
             </div>
 
             <div class="p-6 space-y-6">
                 <!-- NEW: Quick Select Template -->
                 <div>
-                    <label for="announcement_quick_select" class="block text-sm font-medium text-prime-navy mb-2">
+                    <label for="announcement_quick_select" class="block text-sm font-medium text-prime-navy dark:text-white mb-2">
                         Quick Select Template
                     </label>
                     <select 
                         id="announcement_quick_select" 
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
-                        <option value="">Select a preset...</option>
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:text-white">
+                        <option value="">-- Select a preset...</option>
                         <option value="operational">All Systems Operational</option>
                         <option value="maintenance">Scheduled Maintenance</option>
                         <option value="outage">Service Outage</option>
                         <option value="vpn">VPN/Network Issues</option>
                         <option value="security">Security Alert</option>
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">Choose a preset to auto-fill the fields below.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Choose a preset to auto-fill the fields below.</p>
                 </div>
 
                 <!-- Announcement Title -->
                 <div>
-                    <label for="announcement_title" class="block text-sm font-medium text-prime-navy mb-2">
+                    <label for="announcement_title" class="block text-sm font-medium text-prime-navy dark:text-white mb-2">
                         Announcement Title <span class="text-red-500">*</span>
                     </label>
                     <input 
@@ -60,32 +60,32 @@
                         name="announcement_title" 
                         id="announcement_title" 
                         value="{{ system_health.announcement.title|default:'All Systems Operational' }}"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:text-white"
                         placeholder="e.g., Scheduled Maintenance Window"
                         required>
-                    <p class="text-xs text-gray-500 mt-1">Keep this concise (50 characters max).</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Keep this concise (50 characters max).</p>
                 </div>
 
                 <!-- Announcement Message -->
                 <div>
-                    <label for="announcement_message" class="block text-sm font-medium text-prime-navy mb-2">
+                    <label for="announcement_message" class="block text-sm font-medium text-prime-navy dark:text-white mb-2">
                         Announcement Message <span class="text-red-500">*</span>
                     </label>
                     <textarea 
                         name="announcement_message" 
                         id="announcement_message" 
                         rows="4"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:text-white"
                         placeholder="e.g., VPN services will be offline Saturday 10 PM - 2 AM for upgrades."
                         required>{{ system_health.announcement.message|default:'No known issues at this time.' }}</textarea>
-                    <p class="text-xs text-gray-500 mt-1">Provide clear, actionable information. Users can expand this to read the full text.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Provide clear, actionable information. Users can expand this to read the full text.</p>
                 </div>
 
                 <!-- *** SCHEDULED DATETIME FIELDS (2-COLUMN GRID) *** -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Start Time -->
                     <div>
-                        <label for="start_time" class="block text-sm font-medium text-prime-navy mb-2">
+                        <label for="start_time" class="block text-sm font-medium text-prime-navy dark:text-white mb-2">
                             Schedule Start (Optional)
                         </label>
                         <input 
@@ -93,13 +93,13 @@
                             name="start_time" 
                             id="start_time" 
                             value="{{ system_health.announcement.start_datetime|default:'' }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
-                        <p class="text-xs text-gray-500 mt-1">When should this banner first appear?</p>
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:text-white">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">When should this banner first appear?</p>
                     </div>
 
                     <!-- End Time -->
                     <div>
-                        <label for="end_time" class="block text-sm font-medium text-prime-navy mb-2">
+                        <label for="end_time" class="block text-sm font-medium text-prime-navy dark:text-white mb-2">
                             Schedule End (Optional)
                         </label>
                         <input 
@@ -107,38 +107,31 @@
                             name="end_time" 
                             id="end_time" 
                             value="{{ system_health.announcement.end_datetime|default:'' }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
-                        <p class="text-xs text-gray-500 mt-1">When should this banner disappear?</p>
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:text-white">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">When should this banner disappear?</p>
                     </div>
                 </div>
 
                 <!-- Scheduling Tips (Full-Width) -->
-                <div class="col-span-1 md:col-span-2">
-                    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
-                        <div class="flex items-start gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                            </svg>
-                            <div>
-                                <p class="text-sm font-semibold text-blue-900">Scheduling Tips</p>
-                                <p class="text-xs text-blue-700 mt-1">
-                                    <strong>Leave blank to display immediately.</strong> If you set both dates, the banner will only appear within that time window. 
-                                    Use this for planned maintenance windows or time-sensitive alerts.
-                                </p>
-                            </div>
-                        </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 rounded-lg p-4">
+                    <div>
+                        <p class="text-sm font-semibold text-blue-900 dark:text-blue-100">Scheduling Tips</p>
+                        <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                            <strong>Leave blank to display immediately.</strong> If you set both dates, the banner will only appear within that time window. 
+                            Use this for planned maintenance windows or time-sensitive alerts.
+                        </p>
                     </div>
                 </div>
 
                 <!-- Announcement Type (Severity) -->
                 <div>
-                    <label for="announcement_type" class="block text-sm font-medium text-prime-navy mb-2">
+                    <label for="announcement_type" class="block text-sm font-medium text-prime-navy dark:text-white mb-2">
                         Announcement Type <span class="text-red-500">*</span>
                     </label>
                     <select 
                         name="announcement_type" 
                         id="announcement_type"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:text-white">
                         <option value="info" {% if system_health.announcement.type == 'info' %}selected{% endif %}>
                             ℹ️ Info (Blue) - General updates
                         </option>
@@ -152,26 +145,26 @@
                             🔴 Critical (Red) - Major outage
                         </option>
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">This controls the banner's color scheme and urgency indicator.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This controls the banner's color scheme and urgency indicator.</p>
                 </div>
             </div>
         </div>
 
         <!-- CARD 2: Vendor Service Status -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <h3 class="text-lg font-bold text-prime-navy flex items-center gap-2">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <h3 class="text-lg font-bold text-prime-navy dark:text-white flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                     </svg>
                     Vendor Service Status
                 </h3>
-                <p class="text-xs text-gray-500 mt-1">Update the real-time status of critical third-party services.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Update the real-time status of critical third-party services.</p>
             </div>
 
-            <div class="divide-y divide-gray-200">
+            <div class="divide-y divide-gray-200 dark:divide-gray-700">
                 {% for vendor in system_health.vendor_status %}
-                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <!-- Vendor Name -->
                     <div class="flex items-center gap-3">
                         <span class="h-2.5 w-2.5 rounded-full 
@@ -180,7 +173,7 @@
                             {% elif vendor.status == 'Partial Outage' %}bg-orange-500
                             {% else %}bg-red-500{% endif %}">
                         </span>
-                        <span class="text-sm font-medium text-gray-800">{{ vendor.name }}</span>
+                        <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ vendor.name }}</span>
                     </div>
 
                     <!-- Hidden Input for Vendor Name -->
@@ -189,7 +182,7 @@
                     <!-- Status Dropdown -->
                     <select 
                         name="vendor_status_{{ forloop.counter0 }}"
-                        class="px-3 py-1.5 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange">
+                        class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:text-white">
                         <option value="Operational" {% if vendor.status == 'Operational' %}selected{% endif %}>
                             ✅ Operational
                         </option>
@@ -206,26 +199,23 @@
                 </div>
                 {% empty %}
                 <div class="px-6 py-10 text-center">
-                    <p class="text-sm text-gray-400 italic">No vendor services configured.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 italic">No vendor services configured.</p>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- Submit Button (Sticky Bottom Bar) -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky bottom-6 z-10">
-            <div class="flex items-center justify-between">
+        <!-- Sticky "Save Changes" Footer -->
+        <div class="sticky bottom-6 z-30 mt-8">
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-lg p-4 flex items-center justify-between backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
                 <div>
-                    <p class="text-sm font-medium text-gray-700">Ready to save?</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Changes will be visible immediately on all pages.</p>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Ready to save?</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Changes will be visible immediately on all pages.</p>
                 </div>
-                <button 
-                    type="submit" 
-                    id="save-button"
-                    class="bg-gray-300 text-gray-500 cursor-not-allowed px-8 py-3 rounded-lg font-bold transition-all duration-200 flex items-center gap-2"
-                    disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                <button type="submit" id="save-button" disabled
+                        class="bg-prime-orange text-white px-6 py-2 rounded-md font-bold transition-all duration-200 flex items-center gap-2 hover:bg-orange-600 shadow-md opacity-50 cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                     <span>Save Changes</span>
                 </button>
@@ -355,5 +345,60 @@ document.addEventListener('DOMContentLoaded', function() {
         typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
 });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const saveButton = document.getElementById('save-button');
+        // Find the preset dropdown (adjust selector if needed)
+        const presetDropdown = form ? form.querySelector('select') : null; 
+
+        if (!form || !saveButton) return;
+
+        // 1. Helper to Enable Button
+        function enableSave() {
+            saveButton.disabled = false;
+            saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            saveButton.classList.add('hover:bg-opacity-90', 'cursor-pointer'); // Ensure hover effect works
+        }
+
+        // 2. Helper to Disable Button
+        function disableSave() {
+            saveButton.disabled = true;
+            saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+            saveButton.classList.remove('hover:bg-opacity-90', 'cursor-pointer');
+        }
+
+        // 3. Capture Initial State (for manual typing comparison)
+        const initialFormData = new FormData(form);
+        const initialValues = Object.fromEntries(initialFormData.entries());
+
+        function checkDirty() {
+            const currentFormData = new FormData(form);
+            let isDirty = false;
+            
+            for (let [key, value] of currentFormData.entries()) {
+                if (initialValues[key] !== value) {
+                    isDirty = true;
+                    break;
+                }
+            }
+
+            if (isDirty) enableSave();
+            else disableSave();
+        }
+
+        // 4. Listeners
+        form.addEventListener('input', checkDirty);
+        
+        // 5. CRITICAL FIX: Force enable on Preset Change
+        if (presetDropdown) {
+            presetDropdown.addEventListener('change', function() {
+                // Allow other script to populate fields, then enable
+                setTimeout(enableSave, 100); 
+            });
+        }
+    });
 </script>
 {% endblock %}

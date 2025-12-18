@@ -34,6 +34,19 @@
             }
         }
     </script>
+
+    <!-- Add inside <head> after Tailwind config scripts -->
+    <style>
+    /* Dark Mode Autofill Override */
+    .dark input:-webkit-autofill,
+    .dark input:-webkit-autofill:hover,
+    .dark input:-webkit-autofill:focus,
+    .dark input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #374151 inset !important; /* Matches bg-gray-700 */
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+    </style>
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-100 flex flex-col min-h-screen">
 
@@ -267,21 +280,35 @@
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                 </button>
-                <div id="status-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-slate-700 z-50 overflow-hidden">
+                <div id="status-dropdown" class="hidden absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
                     <div class="px-4 py-3 bg-gray-50 dark:bg-slate-700 border-b border-gray-200 dark:border-slate-600">
-                        <h4 class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Service Status Details</h4>
+                        <h4 class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide whitespace-nowrap">Service Status Details</h4>
                     </div>
                     <div class="max-h-80 overflow-y-auto">
                         {% for vendor in system_health.vendor_status %}
                         <div class="px-4 py-3 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                             <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ vendor.name }}</span>
+                                <!-- Vendor Name with Public URL -->
+                                {% if vendor.name == 'Office 365' %}
+                                    <a href="https://portal.office.com/servicestatus" target="_blank" class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap hover:underline hover:text-prime-orange dark:hover:text-prime-orange transition-colors">{{ vendor.name }}</a>
+                                {% elif vendor.name == 'Autodesk Cloud' %}
+                                    <a href="https://health.autodesk.com/" target="_blank" class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap hover:underline hover:text-prime-orange dark:hover:text-prime-orange transition-colors">{{ vendor.name }}</a>
+                                {% elif vendor.name == 'Bentley ProjectWise' %}
+                                    <a href="https://status.bentley.com/" target="_blank" class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap hover:underline hover:text-prime-orange dark:hover:text-prime-orange transition-colors">{{ vendor.name }}</a>
+                                {% elif vendor.name == 'Egnyte File Server' %}
+                                    <a href="https://status.egnyte.com/" target="_blank" class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap hover:underline hover:text-prime-orange dark:hover:text-prime-orange transition-colors">{{ vendor.name }}</a>
+                                {% elif vendor.name == 'Bluebeam Studio' %}
+                                    <a href="https://status.bluebeam.com/" target="_blank" class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap hover:underline hover:text-prime-orange dark:hover:text-prime-orange transition-colors">{{ vendor.name }}</a>
+                                {% else %}
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap">{{ vendor.name }}</span>
+                                {% endif %}
+                                
                                 <div class="flex items-center gap-2">
                                     <span class="h-2.5 w-2.5 rounded-full 
                                         {% if vendor.status == 'Operational' %}bg-green-500
                                         {% elif vendor.status == 'Degraded Performance' %}bg-yellow-500
                                         {% else %}bg-red-500{% endif %}"></span>
-                                    <span class="text-xs font-semibold 
+                                    <span class="text-xs font-semibold whitespace-nowrap
                                         {% if vendor.status == 'Operational' %}text-green-700 dark:text-green-300
                                         {% elif vendor.status == 'Degraded Performance' %}text-yellow-700 dark:text-yellow-300
                                         {% else %}text-red-700 dark:text-red-300{% endif %}">
@@ -289,10 +316,6 @@
                                     </span>
                                 </div>
                             </div>
-                        </div>
-                        {% empty %}
-                        <div class="px-4 py-6 text-center">
-                            <p class="text-sm text-gray-400 dark:text-gray-500 italic">No vendor data available.</p>
                         </div>
                         {% endfor %}
                     </div>

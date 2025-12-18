@@ -34,7 +34,7 @@
                     {% csrf_token %}
                     <div class="flex items-center gap-3">
                         <input type="file" name="avatar" id="avatar-input" accept="image/*" 
-                               class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-orange-600 cursor-pointer">
+                               class="text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-orange-600 cursor-pointer">
                         <button type="submit" 
                                 class="px-4 py-2 bg-prime-navy text-white text-sm font-semibold rounded-md hover:bg-opacity-90 transition shadow-sm">
                             Upload
@@ -51,10 +51,10 @@
             <!-- Username Field (Read-Only) -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Username <span class="text-gray-500 font-normal text-xs">(System Login ID)</span>
+                    Username <span class="text-gray-500 dark:text-gray-400 font-normal text-xs">(System Login ID)</span>
                 </label>
                 <input type="text" value="{{ user.username }}" readonly disabled 
-                       class="w-full rounded-md border-gray-300 bg-gray-100 text-gray-500 shadow-sm cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shadow-sm cursor-not-allowed dark:border-gray-600">
                 
                 <!-- Help Text with Asterisk -->
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -68,7 +68,7 @@
                     First Name <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="first_name" id="first_name" value="{{ user.first_name }}" required
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                        placeholder="Enter your first name">
             </div>
 
@@ -78,7 +78,7 @@
                     Last Name <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="last_name" id="last_name" value="{{ user.last_name }}" required
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                        placeholder="Enter your last name">
             </div>
 
@@ -88,7 +88,7 @@
                     Email Address <span class="text-red-500">*</span>
                 </label>
                 <input type="email" name="email" id="email" value="{{ user.email }}" required
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                       class="w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                        placeholder="your.email@primeeng.com">
             </div>
 
@@ -99,7 +99,7 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Updates will be reflected immediately.</p>
                 </div>
                 <button type="submit" id="save-btn" disabled
-                        class="bg-gray-400 cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md">
+                        class="bg-gray-400 dark:bg-gray-600 cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>
@@ -147,13 +147,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (hasChanged) {
             // Enable button (orange styling)
             saveBtn.disabled = false;
-            saveBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-            saveBtn.classList.add('bg-prime-orange', 'hover:bg-orange-600', 'cursor-pointer');
+            saveBtn.classList.add('bg-prime-orange', 'hover:bg-orange-600', 'dark:bg-orange-600', 'cursor-pointer');
+            saveBtn.classList.remove('bg-gray-400', 'dark:bg-gray-600', 'cursor-not-allowed');
         } else {
             // Disable button (gray styling)
             saveBtn.disabled = true;
-            saveBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
-            saveBtn.classList.remove('bg-prime-orange', 'hover:bg-orange-600', 'cursor-pointer');
+            saveBtn.classList.add('bg-gray-400', 'dark:bg-gray-600', 'cursor-not-allowed');
+            saveBtn.classList.remove('bg-prime-orange', 'hover:bg-orange-600', 'dark:bg-orange-600', 'cursor-pointer');
         }
     }
 
