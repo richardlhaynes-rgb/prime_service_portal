@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from service_desk import views
 
 urlpatterns = [
     path('', views.kb_home, name='kb_home'),

@@ -742,5 +742,69 @@
         "action": "Updated System Health",
         "target": "System Health",
         "details": "Admin Settings saved"
+    },
+    {
+        "id": 94,
+        "timestamp": "2025-12-18T02:31:20.571129Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "KB Article #1",
+        "details": "Updated fields (title='AutoCAD: How to Reset to Default Settings', status='Draft')"
+    },
+    {
+        "id": 95,
+        "timestamp": "2025-12-18T02:32:23.300190Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "KB Article #2",
+        "details": "Updated fields (title='Civil 3D: How to Clean and Repair a Corrupt Drawing', status='Pending')"
+    },
+    {
+        "id": 96,
+        "timestamp": "2025-12-18T03:49:42.285293Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'Service Interruption' with 5 vendor entries"
+    },
+    {
+        "id": 97,
+        "timestamp": "2025-12-18T03:49:42.303049Z",
+        "user": "marty.mcfly",
+        "action": "Updated System Health",
+        "target": "System Health",
+        "details": "Admin Settings saved"
+    },
+    {
+        "id": 98,
+        "timestamp": "2025-12-18T04:36:06.056056Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "KB Article #1",
+        "details": "Updated fields (title='AutoCAD: How to Reset to Default Settings', status='Pending')"
+    },
+    {
+        "id": 99,
+        "timestamp": "2025-12-19T23:38:02.385602Z",
+        "user": "marty.mcfly",
+        "action": "Bulk Update",
+        "target": "KB Articles (45)",
+        "details": "Set status='Approved' for IDs: 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1"
+    },
+    {
+        "id": 100,
+        "timestamp": "2025-12-20T03:45:01.293921Z",
+        "user": "marty.mcfly",
+        "action": "Bulk Update",
+        "target": "KB Articles (45)",
+        "details": "Set status='Approved' for IDs: 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1"
+    },
+    {
+        "id": 101,
+        "timestamp": "2025-12-20T13:40:26.732313Z",
+        "user": "marty.mcfly",
+        "action": "Bulk Update",
+        "target": "KB Articles (1)",
+        "details": "Set status='Approved' for IDs: 42"
     }
 ]

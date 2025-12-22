@@ -6,6 +6,34 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [0.10.0] - 2025-12-21 (User Identity & Data Integrity)
+
+### 🚀 New Features
+- **Enhanced User Profiles:** Expanded the data model to include **Company**, **Manager**, and **Office Location** fields.
+- **Identity Privacy Controls:** Introduced a "Prefer Initials" toggle, allowing users to override their profile photo with a generated avatar.
+- **Smart Avatar Engine:** Implemented instant JavaScript previews that update immediately when uploading a file or toggling the "Initials" setting.
+- **Expanded Ticket Schema:** Added missing ticket types (`General Question`, `VP Password Reset`, `VP Permissions`) to the database model.
+
+### 🎨 UI & UX Polish
+- **"Clean Split" Header Design:** Redesigned the *Edit User* screen with a balanced "Identity vs. Status" layout.
+- **Visual Account Stats:** Added right-aligned badges (Active, Staff, Superuser) and "Member Since/Last Login" timestamps to the user header.
+- **Instant Feedback:** Avatar previews now react in real-time to user inputs (uploads or checkbox toggles) before saving.
+- **Consistent Badging:** Standardized user badges across the User Management list and Edit User screens.
+
+### ⚙️ Backend & Architecture
+- **Data Generator Overhaul:** Rewrote `generate_demo_tickets.py` to populate the new profile fields and assign realistic office locations.
+- **Status Standardization:** Standardized the ticket workflow to use **"Resolved"** (removing references to the invalid "Closed" status).
+- **Form Bridge:** Updated `CustomUserChangeForm` to explicitly handle persistence for `UserProfile` fields (Company, Manager, etc.).
+- **URL Safety:** Hardcoded robust URL lookups in templates to prevent `NoReverseMatch` errors on navigation buttons.
+
+### 🐛 Fixes
+- **Generator Crash:** Fixed `AttributeError: type object 'Status' has no attribute 'CLOSED'` during demo data generation.
+- **Missing Options:** Fixed "General Question" tickets failing to save due to missing database choices.
+- **Avatar Consistency:** Fixed an issue where the "Prefer Initials" setting was randomly applied by the generator, causing UI inconsistencies.
+- **Broken Links:** Repaired navigation buttons on the User Edit form by syncing URL names with `urls.py`.
+
+---
+
 ## [0.9.0] - 2025-12-17 (Dark Mode Perfection)
 
 ### 🚀 New Features
@@ -65,8 +93,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 - **User Menu:** Detached “Windows 11 Style” flyout with name/title and secure POST Sign Out.
 
 ### 🎨 UI & UX Polish
-- **Table Icon Columns:** Standardized center-center alignment across Dashboard and KB Manager.
-- **KB Manager Toolbar:** Fixed vertical spacing and padding consistency.
+- Table Icon Columns: Standardized center-center alignment across Dashboard and KB Manager.
+- KB Manager Toolbar: Fixed vertical spacing and padding consistency.
 
 ### ⚙️ Backend & Architecture
 - **Logging Pipeline:** Implemented `log_system_event()` in `services/ticket_service.py` enforcing max 500 retained entries.

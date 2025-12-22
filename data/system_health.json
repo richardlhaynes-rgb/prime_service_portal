@@ -14,7 +14,7 @@
         },
         {
             "name": "Autodesk Cloud",
-            "status": "Operational"
+            "status": "Degraded Performance"
         },
         {
             "name": "Bentley ProjectWise",
@@ -22,7 +22,7 @@
         },
         {
             "name": "Egnyte File Server",
-            "status": "Operational"
+            "status": "Partial Outage"
         },
         {
             "name": "Bluebeam Studio",

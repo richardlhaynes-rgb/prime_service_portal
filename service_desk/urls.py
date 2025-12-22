@@ -27,6 +27,7 @@ urlpatterns = [
     # --- Knowledge Base (Viewer) ---
     path('kb/', views.kb_home, name='kb_home'),
     path('kb/article/<int:article_id>/', views.article_detail, name='article_detail'),
+    path('kb/article/<int:pk>/status/', views.kb_update_status, name='kb_update_status'),
 
     # --- Management Hub & Manager Tools ---
     path('manager/hub/', views.management_hub, name='management_hub'),

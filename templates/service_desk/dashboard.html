@@ -5,7 +5,7 @@
     <!-- Welcome Banner & System Status -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-prime-orange mb-8 flex justify-between items-center">
         <div>
-            <h2 class="text-2xl font-bold text-prime-navy dark:text-white">Welcome, {{ user.first_name }}.</h2>
+            <h2 class="text-2xl font-bold text-prime-navy dark:text-white">Welcome, {{ user.first_name|default:user.username }}.</h2>
             <p class="text-gray-600 dark:text-gray-400 mt-1">System Status: <span class="font-bold text-prime-green dark:text-green-400">● Operational</span></p>
         </div>
         <div class="flex gap-4">
@@ -14,9 +14,8 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                 </svg>
-                <span>Browse KB</span>
+                <span>Knowledge Base</span>
             </a>
-            
             <!-- Link to New Ticket -->
             <a href="{% url 'service_catalog' %}" class="bg-prime-orange text-white px-6 py-3 rounded-md font-bold shadow hover:bg-opacity-90 transition flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -69,7 +68,8 @@
         </div>
     </div>
 
-    <!-- CSAT Survey Callout (Banner) -->
+    <!-- CSAT Survey Callout Banner (Only shows if feedback_ticket exists) -->
+    {% if feedback_ticket %}
     <div class="bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-600 rounded-r-lg p-6 mb-8 shadow-sm flex items-center justify-between">
         <div class="flex items-center gap-4">
             <!-- Star Icon (Heroicon Solid) -->
@@ -84,13 +84,13 @@
                 <p class="text-sm font-semibold text-indigo-900 dark:text-indigo-200">Your feedback matters!</p>
                 <p class="text-sm text-indigo-700 dark:text-indigo-300 mt-0.5">
                     Please take a moment to rate your experience on 
-                    <span class="font-bold">Ticket #104 - VPN Connection Issue</span>.
+                    <span class="font-bold">Ticket #{{ feedback_ticket.id }} - {{ feedback_ticket.title|truncatechars:40 }}</span>.
                 </p>
             </div>
         </div>
         
         <!-- Take Survey Button -->
-        <a href="{% url 'ticket_survey' ticket_id=104 %}" 
+        <a href="{% url 'ticket_survey' ticket_id=feedback_ticket.id %}" 
            class="bg-indigo-600 text-white px-6 py-2 rounded-md text-sm font-semibold shadow-md hover:bg-indigo-800 transition-all duration-200 flex items-center gap-2 flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -98,36 +98,35 @@
             <span>Take Survey</span>
         </a>
     </div>
+    {% endif %}
 
     <!-- Recent Tickets Table -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
             <h3 class="text-lg font-semibold text-prime-navy dark:text-white">My Recent Tickets</h3>
         </div>
-
-        <!-- Sortable Table -->
+        
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <!-- Left-aligned headers -->
                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
-                            <a href="?sort={% if current_sort == 'id' %}-id{% else %}id{% endif %}" class="flex items-center">ID {% if current_sort == 'id' %}&uarr;{% elif current_sort == '-id' %}&darr;{% endif %}</a>
+                            <a href="?sort={% if current_sort == 'id' %}-id{% else %}id{% endif %}" class="flex items-center">ID {% if current_sort == 'id' %}↑{% elif current_sort == '-id' %}↓{% endif %}</a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
-                            <a href="?sort={% if current_sort == 'title' %}-title{% else %}title{% endif %}" class="flex items-center">Title {% if current_sort == 'title' %}&uarr;{% elif current_sort == '-title' %}&darr;{% endif %}</a>
+                            <a href="?sort={% if current_sort == 'title' %}-title{% else %}title{% endif %}" class="flex items-center">Title {% if current_sort == 'title' %}↑{% elif current_sort == '-title' %}↓{% endif %}</a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Type</th>
                         <!-- Centered headers for Priority and Status -->
                         <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
-                            <a href="?sort={% if current_sort == 'priority' %}-priority{% else %}priority{% endif %}" class="flex items-center justify-center">Priority {% if current_sort == 'priority' %}&uarr;{% elif current_sort == '-priority' %}&darr;{% endif %}</a>
+                            <a href="?sort={% if current_sort == 'priority' %}-priority{% else %}priority{% endif %}" class="flex items-center justify-center">Priority {% if current_sort == 'priority' %}↑{% elif current_sort == '-priority' %}↓{% endif %}</a>
                         </th>
                         <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
-                            <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="flex items-center justify-center">Status {% if current_sort == 'status' %}&uarr;{% elif current_sort == '-status' %}&darr;{% endif %}</a>
+                            <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="flex items-center justify-center">Status {% if current_sort == 'status' %}↑{% elif current_sort == '-status' %}↓{% endif %}</a>
                         </th>
                         <!-- Left-aligned Date -->
                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
-                            <a href="?sort={% if current_sort == 'created_at' %}-created_at{% else %}created_at{% endif %}" class="flex items-center">Date {% if current_sort == 'created_at' %}&uarr;{% elif current_sort == '-created_at' %}&darr;{% endif %}</a>
+                            <a href="?sort={% if current_sort == 'created_at' %}-created_at{% else %}created_at{% endif %}" class="flex items-center">Date {% if current_sort == 'created_at' %}↑{% elif current_sort == '-created_at' %}↓{% endif %}</a>
                         </th>
                         <!-- Action Column Header (Empty) -->
                         <th scope="col" class="px-6 py-3"></th>
@@ -146,29 +145,29 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex justify-center w-full">
                                 <span class="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0
-                                    {% if ticket.priority == 'Critical' or ticket.priority == 'High' %}
+                                    {% if 'Critical' in ticket.priority or 'High' in ticket.priority %}
                                         bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400
-                                    {% elif ticket.priority == 'Medium' %}
+                                    {% elif 'Medium' in ticket.priority %}
                                         bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400
-                                    {% elif ticket.priority == 'Low' %}
+                                    {% elif 'Low' in ticket.priority or 'Standard' in ticket.priority %}
                                         bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400
                                     {% else %}
                                         bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400
                                     {% endif %}"
                                     title="Priority: {{ ticket.priority }}">
 
-                                    {% if ticket.priority == 'Critical' or ticket.priority == 'High' %}
-                                        <!-- Exclamation Circle (High Priority) -->
+                                    {% if 'Critical' in ticket.priority or 'High' in ticket.priority %}
+                                        <!-- Exclamation Circle (High/Critical Priority) -->
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                                         </svg>
-                                    {% elif ticket.priority == 'Medium' %}
+                                    {% elif 'Medium' in ticket.priority %}
                                         <!-- Minus Circle (Medium Priority) -->
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
                                         </svg>
-                                    {% elif ticket.priority == 'Low' %}
-                                        <!-- Arrow Down Circle (Low Priority) -->
+                                    {% elif 'Low' in ticket.priority or 'Standard' in ticket.priority %}
+                                        <!-- Arrow Down Circle (Low/Standard Priority) -->
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
                                         </svg>
@@ -186,25 +185,35 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex justify-center w-full">
                                 <span class="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0
-                                    {% if ticket.status == 'New' %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400
-                                    {% elif ticket.status == 'In Progress' or ticket.status == 'Assigned' %}bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400
-                                    {% elif ticket.status == 'Resolved' or ticket.status == 'Closed' %}bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400
+                                    {% if ticket.status == 'New' or ticket.status == 'User Commented' or ticket.status == 'Reopened' %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400
+                                    {% elif ticket.status == 'In Progress' or ticket.status == 'Work In Progress' or ticket.status == 'Assigned' or ticket.status == 'Awaiting User Reply' or ticket.status == 'On Hold' %}bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400
+                                    {% elif ticket.status == 'Resolved' or ticket.status == 'Cancelled' %}bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400
                                     {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400{% endif %}"
                                     title="Status: {{ ticket.status }}">
-                                    {% if ticket.status == 'New' %}
-                                    <!-- Star Icon (New Status) -->
+                                    {% if ticket.status == 'New' or ticket.status == 'User Commented' or ticket.status == 'Reopened' %}
+                                    <!-- Star Icon (New/Reopened Status) -->
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                     </svg>
-                                    {% elif ticket.status == 'In Progress' or ticket.status == 'Assigned' %}
-                                    <!-- Spinner Icon (In Progress) -->
+                                    {% elif ticket.status == 'In Progress' or ticket.status == 'Work In Progress' or ticket.status == 'Assigned' %}
+                                    <!-- Spinner Icon (In Progress/Assigned) -->
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-spin" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
                                     </svg>
-                                    {% elif ticket.status == 'Resolved' or ticket.status == 'Closed' %}
+                                    {% elif ticket.status == 'Awaiting User Reply' or ticket.status == 'On Hold' %}
+                                    <!-- Pause Icon (Awaiting/On Hold) -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                    {% elif ticket.status == 'Resolved' %}
                                     <!-- Checkmark Icon (Resolved) -->
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                    {% elif ticket.status == 'Cancelled' %}
+                                    <!-- X Icon (Cancelled) -->
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                                     </svg>
                                     {% else %}
                                     <!-- Question Icon (Unknown Status) -->
@@ -218,7 +227,7 @@
                         
                         <!-- DATE -->
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ ticket.formatted_date }}
+                            {{ ticket.created_at|date:"M d, Y" }}
                         </td>
                         
                         <!-- CHEVRON ACTION COLUMN -->
@@ -238,6 +247,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <p class="text-sm font-medium">No tickets found.</p>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Submit a new request to get started.</p>
                             </div>
                         </td>
                     </tr>

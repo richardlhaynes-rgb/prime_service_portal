@@ -142,145 +142,28 @@ class TicketReplyForm(forms.Form):
     )
 
 # --- 10. Knowledge Base Article Form (NEW) ---
-class KBArticleForm(forms.Form):
+class KBArticleForm(forms.ModelForm):
     """
-    Form for creating and editing Knowledge Base articles.
-    Used by Manager/Admin users only.
+    ModelForm for creating and editing Knowledge Base articles.
     """
-    
-    # Category Choices (from Article.Category model)
-    CATEGORY_CHOICES = [
-        ('', '-- Select Category --'),
-        ('Business & Admin Software', 'Business & Admin Software'),
-        ('Design Applications', 'Design Applications'),
-        ('Hardware & Peripherals', 'Hardware & Peripherals'),
-        ('Internal IT Processes', 'Internal IT Processes'),
-        ('Networking & Connectivity', 'Networking & Connectivity'),
-        ('Printing & Plotting', 'Printing & Plotting'),
-        ('User Accounts & Security', 'User Accounts & Security'),
-    ]
-    
-    # Common Subcategory Choices (expandable list)
-    SUBCATEGORY_CHOICES = [
-        ('', '-- Select Subcategory --'),
-        # Design Applications
-        ('Adobe Creative Suite (Photoshop, InDesign)', 'Adobe Creative Suite (Photoshop, InDesign)'),
-        ('Autodesk (AutoCAD, Revit, Civil 3D)', 'Autodesk (AutoCAD, Revit, Civil 3D)'),
-        ('Bluebeam Revu (PDF & Markup)', 'Bluebeam Revu (PDF & Markup)'),
-        ('Licensing & Activation', 'Licensing & Activation'),
-        ('Other Design Tools (e.g., Lumion, Enscape, V-Ray)', 'Other Design Tools (e.g., Lumion, Enscape, V-Ray)'),
-        ('SketchUp', 'SketchUp'),
-        # Business & Admin Software
-        ('Deltek (Vision, Vantagepoint, etc.)', 'Deltek (Vision, Vantagepoint, etc.)'),
-        ('Email & Outlook', 'Email & Outlook'),
-        ('File Storage & Sharing', 'File Storage & Sharing'),
-        ('Microsoft 365 (Office, Teams, OneDrive)', 'Microsoft 365 (Office, Teams, OneDrive)'),
-        ('Web Browsers', 'Web Browsers'),
-        # Hardware & Peripherals
-        ('Conference Room AV', 'Conference Room AV'),
-        ('Mobile Devices (iPhones, iPads)', 'Mobile Devices (iPhones, iPads)'),
-        ('Monitors & Docking Stations', 'Monitors & Docking Stations'),
-        ('Specialty Peripherals (3Dconnexion mouse, etc.)', 'Specialty Peripherals (3Dconnexion mouse, etc.)'),
-        ('Workstations (Desktops, Laptops)', 'Workstations (Desktops, Laptops)'),
-        # Internal IT Processes
-        ('Backup & Recovery', 'Backup & Recovery'),
-        ('New User Onboarding', 'New User Onboarding'),
-        ('Server Maintenance', 'Server Maintenance'),
-        ('User Offboarding', 'User Offboarding'),
-        ('Vendor Contact List', 'Vendor Contact List'),
-        # Networking & Connectivity
-        ('Internet Outage (Office-specific)', 'Internet Outage (Office-specific)'),
-        ('VPN / Remote Access', 'VPN / Remote Access'),
-        ('VPN Connection Issues', 'VPN Connection Issues'),
-        ('Wi-Fi', 'Wi-Fi'),
-        ('Wired / Ethernet', 'Wired / Ethernet'),
-        # Printing & Plotting
-        ('Desktop Printers & Copiers', 'Desktop Printers & Copiers'),
-        ('Large Format Plotters', 'Large Format Plotters'),
-        ('Print Management Software', 'Print Management Software'),
-        ('Scan to Email / Scan to Folder', 'Scan to Email / Scan to Folder'),
-        # User Accounts & Security
-        ('File & Folder Permissions', 'File & Folder Permissions'),
-        ('MFA (Multi-Factor Authentication)', 'MFA (Multi-Factor Authentication)'),
-        ('Password Resets', 'Password Resets'),
-        ('Security & Phishing', 'Security & Phishing'),
-        # Generic fallback
-        ('General', 'General'),
-    ]
-    
-    # Status Choices (from Article.Status model)
-    STATUS_CHOICES = [
-        ('Draft', 'Draft'),
-        ('Pending', 'Pending Approval'),
-        ('Approved', 'Approved'),
-    ]
-    
-    # Form Fields
-    title = forms.CharField(
-        label="Article Title",
-        max_length=255,
-        widget=forms.TextInput(attrs={
-            'class': INPUT_STYLE,
-            'placeholder': 'e.g., "AutoCAD: How to Reset to Default Settings"'
-        })
-    )
-    
-    category = forms.ChoiceField(
-        label="Category",
-        choices=CATEGORY_CHOICES,
-        widget=forms.Select(attrs={'class': INPUT_STYLE})
-    )
-    
-    subcategory = forms.ChoiceField(
-        label="Subcategory",
-        choices=SUBCATEGORY_CHOICES,
-        widget=forms.Select(attrs={'class': INPUT_STYLE})
-    )
-    
-    problem = forms.CharField(
-        label="Issue / Problem Description",
-        widget=forms.Textarea(attrs={
-            'class': INPUT_STYLE,
-            'rows': 4,
-            'placeholder': 'Describe the symptoms or error the user is experiencing...'
-        })
-    )
-    
-    solution = forms.CharField(
-        label="Resolution / Solution Steps",
-        widget=forms.Textarea(attrs={
-            'class': INPUT_STYLE,
-            'rows': 6,
-            'placeholder': 'Provide step-by-step instructions to resolve the issue...\n\n1. First step\n2. Second step\n3. ...'
-        })
-    )
-    
-    internal_notes = forms.CharField(
-        label="Internal IT Notes (Optional)",
-        required=False,
-        widget=forms.Textarea(attrs={
-            'class': INPUT_STYLE,
-            'rows': 3,
-            'placeholder': 'Internal technical notes, known bugs, escalation info... (Only visible to Superusers)'
-        })
-    )
-    
-    status = forms.ChoiceField(
-        label="Article Status",
-        choices=STATUS_CHOICES,
-        initial='Draft',
-        widget=forms.Select(attrs={'class': INPUT_STYLE})
-    )
-    
-    def __init__(self, *args, **kwargs):
-        """
-        Custom initialization to allow pre-populating form with existing article data.
-        """
-        initial_data = kwargs.get('initial', {})
-        super().__init__(*args, **kwargs)
+    class Meta:
+        model = Article
+        fields = ['title', 'category', 'subcategory', 'problem', 'solution', 'internal_notes', 'status']
         
-        # If editing an existing article, you can pre-populate fields here
-        # Example: self.fields['category'].initial = initial_data.get('category')
+        # Define the standard styling for all inputs (Light & Dark Mode compatible)
+        # bg-white dark:bg-gray-700 -> Adapts background
+        # text-gray-900 dark:text-gray-200 -> Adapts text color
+        INPUT_STYLE = 'block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50'
+
+        widgets = {
+            'title': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'Enter article title...'}),
+            'category': forms.Select(attrs={'class': INPUT_STYLE}),
+            'subcategory': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'e.g., Adobe, Bluebeam, Outlook'}),
+            'problem': forms.Textarea(attrs={'class': INPUT_STYLE, 'rows': 4, 'placeholder': 'Describe the symptoms or issue...'}),
+            'solution': forms.Textarea(attrs={'class': INPUT_STYLE, 'rows': 6, 'placeholder': 'Provide step-by-step resolution...'}),
+            'internal_notes': forms.Textarea(attrs={'class': INPUT_STYLE, 'rows': 3, 'placeholder': 'Internal technical notes (optional)...'}),
+            'status': forms.Select(attrs={'class': INPUT_STYLE}),
+        }
 
 # --- 11. Global Settings Form (Admin Configuration) ---
 class GlobalSettingsForm(forms.ModelForm):
@@ -393,10 +276,78 @@ class CustomUserCreationForm(UserCreationForm):
 # --- 13. Custom User Change Form (Admin Replacement) ---
 class CustomUserChangeForm(UserChangeForm):
     password = None  # Hide password hash display
-    
-    # Add avatar field (Manual handling for UserProfile)
+
+    # --- UserProfile fields ---
+    title = forms.CharField(
+        required=False,
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'placeholder': 'e.g., Project Manager, Senior Engineer'
+        })
+    )
+    department = forms.ChoiceField(
+        required=False,
+        choices=UserProfile.Department.choices,
+        widget=forms.Select(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
+        })
+    )
+    company = forms.CharField(
+        required=False,
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'placeholder': 'PRIME AE Group, Inc.'
+        })
+    )
+    location = forms.ChoiceField(
+        required=False,
+        choices=UserProfile.Site.choices,
+        widget=forms.Select(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white'
+        })
+    )
+    phone_office = forms.CharField(
+        required=False,
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'placeholder': '859-555-1234'
+        })
+    )
+    phone_mobile = forms.CharField(
+        required=False,
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'placeholder': '859-555-5678'
+        })
+    )
+    manager_name = forms.CharField(
+        required=False,
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'placeholder': 'Direct Supervisor Name'
+        })
+    )
+    bio = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white',
+            'rows': 3,
+            'placeholder': 'Brief bio or notes about this user...'
+        })
+    )
+    prefer_initials = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'h-5 w-5 text-prime-orange border-gray-300 dark:border-gray-600 rounded focus:ring-prime-orange'
+        })
+    )
     avatar = forms.ImageField(
-        required=False, 
+        required=False,
         widget=forms.FileInput(attrs={'class': 'hidden', 'id': 'file-upload'})
     )
 
@@ -426,23 +377,36 @@ class CustomUserChangeForm(UserChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['groups'].queryset = Group.objects.all()
-        
-        # Pre-fill avatar from UserProfile
+        # Pre-fill profile fields from UserProfile
         if self.instance.pk:
             try:
-                if hasattr(self.instance, 'profile') and self.instance.profile.avatar:
-                    self.initial['avatar'] = self.instance.profile.avatar
+                profile = self.instance.profile
+                self.initial['title'] = profile.title
+                self.initial['department'] = profile.department
+                self.initial['company'] = profile.company
+                self.initial['location'] = profile.location
+                self.initial['phone_office'] = profile.phone_office
+                self.initial['phone_mobile'] = profile.phone_mobile
+                self.initial['manager_name'] = profile.manager_name
+                self.initial['bio'] = profile.bio
+                self.initial['prefer_initials'] = profile.prefer_initials
+                self.initial['avatar'] = profile.avatar if profile.avatar else None
             except Exception:
                 pass
-    
+
     def save(self, commit=True):
         user = super().save(commit=commit)
-        # Handle Avatar Save
-        avatar = self.cleaned_data.get('avatar')
-        if avatar:
-            # Import here to avoid circular dependency if needed, or rely on top-level import
-            from .models import UserProfile
-            profile, created = UserProfile.objects.get_or_create(user=user)
-            profile.avatar = avatar
-            profile.save()
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.title = self.cleaned_data.get('title', '')
+        profile.department = self.cleaned_data.get('department', UserProfile.Department.CORPORATE)
+        profile.company = self.cleaned_data.get('company', '')
+        profile.location = self.cleaned_data.get('location', UserProfile.Site.REMOTE)
+        profile.phone_office = self.cleaned_data.get('phone_office', '')
+        profile.phone_mobile = self.cleaned_data.get('phone_mobile', '')
+        profile.manager_name = self.cleaned_data.get('manager_name', '')
+        profile.bio = self.cleaned_data.get('bio', '')
+        profile.prefer_initials = self.cleaned_data.get('prefer_initials', False)
+        if self.cleaned_data.get('avatar'):
+            profile.avatar = self.cleaned_data['avatar']
+        profile.save()
         return user

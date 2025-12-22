@@ -37,32 +37,11 @@ def kb_home(request):
     )[:10]
     
     return render(request, 'knowledge_base/kb_home.html', {
+        'articles': articles,
         'recent_articles': recent_articles,
         'search_query': search_query,
-        'current_category': category_filter  # NEW: Pass active category to template
+        'current_category': category_filter
     })
 
-
-def article_detail(request, pk):
-    """
-    Displays a single KB article.
-    
-    Args:
-        pk: Article ID (from URL)
-    
-    Returns:
-        Rendered article_detail.html template or redirect to KB home if not found
-    """
-    # Fetch all articles (with icon mapping applied)
-    articles = ticket_service.get_knowledge_base_articles()
-    
-    # Find the specific article by ID
-    article = next((a for a in articles if a['id'] == pk), None)
-    
-    if not article:
-        messages.error(request, "Article not found.")
-        return redirect('kb_home')
-    
-    return render(request, 'knowledge_base/article_detail.html', {
-        'article': article
-    })
+# NOTE: article_detail view is now handled by service_desk/views.py
+# The URL routing in knowledge_base/urls.py should point to the service_desk version

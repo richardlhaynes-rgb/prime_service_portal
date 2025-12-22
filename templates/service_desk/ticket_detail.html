@@ -9,32 +9,35 @@
             <a href="{% url 'dashboard' %}" class="text-sm text-prime-orange hover:underline">&larr; Back to Dashboard</a>
         </div>
 
-        <!-- Ticket Info -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-8">
-            <div class="p-6 border-b border-gray-200 flex justify-between items-start">
+        <!-- Ticket Info Card (Dark Mode Fixed) -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-start">
                 <div>
                     <div class="flex items-center gap-3 mb-2">
-                        <h1 class="text-2xl font-bold text-prime-navy">Ticket #{{ ticket.connectwise_id|default:ticket.id }}</h1>
+                        <h1 class="text-2xl font-bold text-prime-navy dark:text-white">Ticket #{{ ticket.connectwise_id|default:ticket.id }}</h1>
                         <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full 
-                            {% if ticket.status == 'New' %} bg-blue-100 text-blue-800 
-                            {% elif ticket.status == 'In Progress' %} bg-yellow-100 text-yellow-800
-                            {% elif ticket.status == 'Resolved' %} bg-green-100 text-green-800
-                            {% else %} bg-gray-100 text-gray-800 {% endif %}">
+                            {% if ticket.status == 'New' %} bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200
+                            {% elif ticket.status == 'In Progress' or ticket.status == 'Work In Progress' or ticket.status == 'Assigned' %} bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200
+                            {% elif ticket.status == 'Awaiting User Reply' or ticket.status == 'On Hold' %} bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200
+                            {% elif ticket.status == 'Resolved' %} bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200
+                            {% elif ticket.status == 'Cancelled' %} bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200
+                            {% else %} bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 {% endif %}">
                             {{ ticket.get_status_display|default:ticket.status }}
                         </span>
                     </div>
-                    <h2 class="text-lg text-gray-700 font-medium">{{ ticket.title }}</h2>
+                    <h2 class="text-lg text-gray-700 dark:text-gray-300 font-medium">{{ ticket.title }}</h2>
                 </div>
-                <div class="text-right text-sm text-gray-500">
+                <div class="text-right text-sm text-gray-500 dark:text-gray-400">
                     <p>Created: {{ ticket.created_at|date:"M d, Y" }}</p>
-                    <p class="mt-1">Type: <span class="font-medium text-gray-700">{{ ticket.get_ticket_type_display|default:ticket.ticket_type }}</span></p>
-                    <p><span class="font-semibold">Technician:</span> {{ ticket.technician.username|default:"Unassigned" }}</p>
+                    <p class="mt-1">Type: <span class="font-medium text-gray-700 dark:text-gray-300">{{ ticket.get_ticket_type_display|default:ticket.ticket_type }}</span></p>
+                    <p><span class="font-semibold">Technician:</span> {{ ticket.technician.get_full_name|default:ticket.technician.username|default:"Unassigned" }}</p>
                 </div>
             </div>
 
-            <div class="p-6 bg-gray-50">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Description</h3>
-                <div class="prose text-gray-800 whitespace-pre-wrap bg-white p-4 rounded border border-gray-200 shadow-sm font-mono text-sm">
+            <!-- Description Box (Dark Mode Fixed) -->
+            <div class="p-6 bg-gray-50 dark:bg-gray-700/50">
+                <h3 class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Description</h3>
+                <div class="prose text-gray-800 dark:text-gray-200 whitespace-pre-wrap bg-white dark:bg-gray-800 p-4 rounded border border-gray-200 dark:border-gray-600 shadow-sm font-mono text-sm">
 {{ ticket.description }}
                 </div>
             </div>
@@ -42,42 +45,42 @@
 
         <!-- Activity / Comments -->
         <div class="space-y-6">
-            <h3 class="text-lg font-bold text-prime-navy">Activity Log</h3>
+            <h3 class="text-lg font-bold text-prime-navy dark:text-white">Activity Log</h3>
             {% for comment in comments %}
             <div class="flex gap-4 {% if comment.author == request.user %} flex-row-reverse {% endif %}">
                 <div class="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0
                     {% if comment.author == request.user %} bg-prime-orange {% else %} bg-prime-navy {% endif %}">
                     {{ comment.author.username|slice:":1"|upper }}
                 </div>
-                <div class="max-w-xl bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <div class="max-w-xl bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                     <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold text-sm text-gray-900">{{ comment.author.username }}</span>
-                        <span class="text-xs text-gray-400 ml-4">{{ comment.created_at|timesince }} ago</span>
+                        <span class="font-bold text-sm text-gray-900 dark:text-white">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+                        <span class="text-xs text-gray-400 dark:text-gray-500 ml-4">{{ comment.created_at|timesince }} ago</span>
                     </div>
-                    <p class="text-gray-700 text-sm whitespace-pre-wrap">{{ comment.text }}</p>
+                    <p class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{{ comment.text }}</p>
                 </div>
             </div>
             {% empty %}
-            <p class="text-center text-gray-400 italic py-4">No comments yet.</p>
+            <p class="text-center text-gray-400 dark:text-gray-500 italic py-4">No comments yet.</p>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Right Column: Actions -->
-    <div class="lg:col-span-1">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6">
-            <h3 class="text-lg font-bold text-prime-navy mb-4">Manage Ticket</h3>
+    <!-- Right Column: Actions (with mt-10 for vertical alignment) -->
+    <div class="lg:col-span-1 mt-10">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-6">
+            <h3 class="text-lg font-bold text-prime-navy dark:text-white mb-4">Manage Ticket</h3>
             
             <!-- Demo Mode Warning (if applicable) -->
             {% if is_demo_mode %}
-            <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
                 <div class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
                     <div>
-                        <p class="text-sm font-semibold text-yellow-800">Demo Mode Active</p>
-                        <p class="text-xs text-yellow-700 mt-1">This form is for demonstration only. Changes will not be saved to the database.</p>
+                        <p class="text-sm font-semibold text-yellow-800 dark:text-yellow-200">Demo Mode Active</p>
+                        <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-1">This form is for demonstration only. Changes will not be saved to the database.</p>
                     </div>
                 </div>
             </div>
@@ -85,14 +88,14 @@
             
             <!-- THE FORM (Always Displayed) -->
             {% if form %}
-            <form method="post">
+            <form method="post" id="ticket-update-form">
                 {% csrf_token %}
                 
                 <!-- Error Display -->
                 {% if form.errors %}
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p class="text-xs font-bold text-red-800 mb-2">Please fix the following errors:</p>
-                    <ul class="text-xs text-red-600 list-disc list-inside space-y-1">
+                <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+                    <p class="text-xs font-bold text-red-800 dark:text-red-200 mb-2">Please fix the following errors:</p>
+                    <ul class="text-xs text-red-600 dark:text-red-300 list-disc list-inside space-y-1">
                         {% for field, errors in form.errors.items %}
                             {% for error in errors %}
                                 <li>{{ field }}: {{ error }}</li>
@@ -102,71 +105,72 @@
                 </div>
                 {% endif %}
 
-                <!-- Comment Field -->
+                <!-- Comment Field (Dark Mode Fixed) -->
                 <div class="mb-6">
-                    <label for="{{ form.comment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="{{ form.comment.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {{ form.comment.label }}
                     </label>
                     <textarea 
                         name="{{ form.comment.name }}" 
                         id="{{ form.comment.id_for_label }}"
                         rows="4"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange resize-none"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange resize-none placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="Add a note, reply to the technician, or provide updates..."
                         {% if is_demo_mode %}disabled{% endif %}>{{ form.comment.value|default:'' }}</textarea>
                     {% if form.comment.help_text %}
-                    <p class="mt-1 text-xs text-gray-500">{{ form.comment.help_text }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ form.comment.help_text }}</p>
                     {% endif %}
                 </div>
 
-                <!-- Priority Dropdown -->
+                <!-- Priority Dropdown (Dark Mode Fixed) -->
                 <div class="mb-6">
-                    <label for="{{ form.priority.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="{{ form.priority.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {{ form.priority.label }}
                     </label>
                     <select 
                         name="{{ form.priority.name }}" 
                         id="{{ form.priority.id_for_label }}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
+                        class="w-full px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
                         {% if is_demo_mode %}disabled{% endif %}>
                         {% for value, label in form.priority.field.choices %}
                         <option value="{{ value }}" {% if form.priority.value == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                     {% if form.priority.help_text %}
-                    <p class="mt-1 text-xs text-gray-500">{{ form.priority.help_text }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ form.priority.help_text }}</p>
                     {% endif %}
                 </div>
 
-                <!-- Close Ticket Checkbox -->
-                <div class="mb-6 flex items-start p-3 bg-red-50 rounded-lg border border-red-200">
+                <!-- Close Ticket Checkbox (Dark Mode Fixed) -->
+                <div class="mb-6 flex items-start p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                     <input 
                         type="checkbox" 
                         name="{{ form.close_ticket.name }}" 
                         id="{{ form.close_ticket.id_for_label }}"
-                        class="h-4 w-4 text-prime-orange border-gray-300 rounded focus:ring-prime-orange mt-0.5"
+                        class="h-4 w-4 text-prime-orange border-gray-300 dark:border-gray-600 rounded focus:ring-prime-orange mt-0.5"
                         {% if form.close_ticket.value %}checked{% endif %}
                         {% if is_demo_mode %}disabled{% endif %}>
-                    <label for="{{ form.close_ticket.id_for_label }}" class="ml-3 text-sm font-medium text-red-800">
+                    <label for="{{ form.close_ticket.id_for_label }}" class="ml-3 text-sm font-medium text-red-800 dark:text-red-200">
                         {{ form.close_ticket.label }}
-                        <p class="text-xs text-red-600 font-normal mt-1">This will mark the ticket as Closed and remove it from your active queue.</p>
+                        <p class="text-xs text-red-600 dark:text-red-300 font-normal mt-1">This will mark the ticket as Closed and remove it from your active queue.</p>
                     </label>
                 </div>
 
-                <!-- Submit Button -->
+                <!-- Submit Button (Orange with Dirty State) -->
                 <button 
-                    type="submit" 
-                    class="w-full bg-prime-navy text-white px-4 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition shadow-sm flex items-center justify-center gap-2 {% if is_demo_mode %}opacity-50 cursor-not-allowed{% endif %}"
-                    {% if is_demo_mode %}disabled{% endif %}>
+                    type="submit"
+                    id="submit-update-btn"
+                    disabled
+                    class="w-full bg-prime-orange text-white px-4 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition shadow-sm flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>
-                    <span>{% if is_demo_mode %}Demo Mode - Submit Disabled{% else %}Submit Update{% endif %}</span>
+                    <span>Submit Update</span>
                 </button>
             </form>
             {% else %}
             <!-- Fallback (should never happen now) -->
-            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center text-gray-500">
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-center text-gray-500 dark:text-gray-400">
                 <p class="text-sm">Form unavailable.</p>
             </div>
             {% endif %}
@@ -174,4 +178,79 @@
     </div>
 
 </div>
+
+<!-- Dirty State Detection Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('ticket-update-form');
+    const submitBtn = document.getElementById('submit-update-btn');
+    const commentTextarea = document.getElementById('{{ form.comment.id_for_label }}');
+    const priorityDropdown = document.getElementById('{{ form.priority.id_for_label }}');
+    const closeTicketCheckbox = document.getElementById('{{ form.close_ticket.id_for_label }}');
+    
+    // Exit if essential elements are missing
+    if (!form || !submitBtn) return;
+    
+    // Store initial values
+    const initialPriority = priorityDropdown ? priorityDropdown.value : '';
+    const initialCloseTicket = closeTicketCheckbox ? closeTicketCheckbox.checked : false;
+    
+    // Function to check if form has changes (is "dirty")
+    function checkDirtyState() {
+        let isDirty = false;
+        
+        // Check 1: Comment textarea has content
+        if (commentTextarea && commentTextarea.value.trim().length > 0) {
+            isDirty = true;
+        }
+        
+        // Check 2: Priority has changed from initial value
+        if (priorityDropdown && priorityDropdown.value !== initialPriority) {
+            isDirty = true;
+        }
+        
+        // Check 3: Close ticket checkbox is checked (and wasn't initially)
+        if (closeTicketCheckbox && closeTicketCheckbox.checked !== initialCloseTicket) {
+            isDirty = true;
+        }
+        
+        // Update button state
+        if (isDirty) {
+            enableButton();
+        } else {
+            disableButton();
+        }
+    }
+    
+    // Enable button (remove disabled styling)
+    function enableButton() {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        submitBtn.classList.add('hover:bg-opacity-90', 'shadow-md', 'transform', 'hover:-translate-y-0.5');
+    }
+    
+    // Disable button (add disabled styling)
+    function disableButton() {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        submitBtn.classList.remove('hover:bg-opacity-90', 'shadow-md', 'transform', 'hover:-translate-y-0.5');
+    }
+    
+    // Event Listeners
+    if (commentTextarea) {
+        commentTextarea.addEventListener('input', checkDirtyState);
+    }
+    
+    if (priorityDropdown) {
+        priorityDropdown.addEventListener('change', checkDirtyState);
+    }
+    
+    if (closeTicketCheckbox) {
+        closeTicketCheckbox.addEventListener('change', checkDirtyState);
+    }
+    
+    // Initial check (in case form was pre-filled with errors)
+    checkDirtyState();
+});
+</script>
 {% endblock %}
