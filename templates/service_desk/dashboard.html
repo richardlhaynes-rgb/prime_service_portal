@@ -12,7 +12,7 @@
              <!-- Link to Knowledge Base -->
             <a href="{% url 'kb_home' %}" class="bg-white dark:bg-gray-700 text-prime-navy dark:text-white border border-gray-300 dark:border-gray-600 px-6 py-3 rounded-md font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 005.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                 </svg>
                 <span>Knowledge Base</span>
             </a>
@@ -29,7 +29,8 @@
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Open Tickets -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-blue-500 flex justify-between items-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-blue-500 flex justify-between items-center cursor-pointer"
+             onclick="filterTable('open')">
             <div>
                 <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wide">Open Tickets</div>
                 <div class="text-3xl font-bold text-gray-800 dark:text-white mt-1">{{ open_tickets }}</div>
@@ -42,7 +43,8 @@
         </div>
 
         <!-- Resolved -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-green-500 flex justify-between items-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-green-500 flex justify-between items-center cursor-pointer"
+             onclick="filterTable('resolved')">
             <div>
                 <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wide">Resolved</div>
                 <div class="text-3xl font-bold text-gray-800 dark:text-white mt-1">{{ resolved_tickets }}</div>
@@ -55,14 +57,15 @@
         </div>
 
         <!-- Total History -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-gray-400 dark:border-gray-600 flex justify-between items-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border-l-4 border-gray-400 dark:border-gray-600 flex justify-between items-center cursor-pointer"
+             onclick="filterTable('all')">
             <div>
                 <div class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wide">Total History</div>
                 <div class="text-3xl font-bold text-gray-800 dark:text-white mt-1">{{ total_tickets }}</div>
             </div>
             <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
             </div>
         </div>
@@ -103,7 +106,7 @@
     <!-- Recent Tickets Table -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-            <h3 class="text-lg font-semibold text-prime-navy dark:text-white">My Recent Tickets</h3>
+            <h3 id="table-title" class="text-lg font-semibold text-prime-navy dark:text-white">My Recent Tickets</h3>
         </div>
         
         <div class="overflow-x-auto">
@@ -134,7 +137,9 @@
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {% for ticket in tickets %}
-                    <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150 cursor-pointer" onclick="window.location='{% url 'ticket_detail' ticket.id %}'">
+                    <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150 cursor-pointer"
+                        onclick="window.location='{% url 'ticket_detail' ticket.id %}'"
+                        data-status="{{ ticket.status }}">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-prime-navy dark:text-blue-400">#{{ ticket.id }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                             {% if ticket.title|length > 50 %}{{ ticket.title|slice:":50" }}...{% else %}{{ ticket.title }}{% endif %}
@@ -170,12 +175,10 @@
                                         <!-- Arrow Down Circle (Low/Standard Priority) -->
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" />
-                                        </svg>
                                     {% else %}
                                         <!-- Question Circle (Unknown Priority) -->
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-                                        </svg>
                                     {% endif %}
                                 </span>
                             </div>
@@ -254,7 +257,99 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div id="pagination-controls" class="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between hidden">
+                <button onclick="changePage(-1)" id="btn-prev" class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    &larr; Previous
+                </button>
+                <span id="page-indicator" class="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                    Page 1 of 1
+                </span>
+                <button onclick="changePage(1)" id="btn-next" class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next &rarr;
+                </button>
+            </div>
         </div>
     </div>
 
+<script>
+    // State Variables
+    let currentCategory = 'open';
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let visibleRows = []; 
+
+    function filterTable(category) {
+        // 1. Reset State
+        currentCategory = category;
+        currentPage = 1; 
+        
+        // 2. Update Title
+        const title = document.getElementById('table-title');
+        if (category === 'open') title.textContent = "Open Tickets (Action Required)";
+        else if (category === 'resolved') title.textContent = "Resolved & Closed Tickets";
+        else title.textContent = "All Ticket History";
+
+        // 3. Filter Rows (Collect matches)
+        const allRows = Array.from(document.querySelectorAll('tbody tr[data-status]'));
+        visibleRows = allRows.filter(row => {
+            const status = row.getAttribute('data-status');
+            const isResolved = (status === 'Resolved' || status === 'Cancelled' || status === 'Closed');
+            
+            if (category === 'open') return !isResolved;
+            if (category === 'resolved') return isResolved;
+            return true; // 'all'
+        });
+
+        // 4. Render Page 1
+        renderPage();
+    }
+
+    function renderPage() {
+        const controls = document.getElementById('pagination-controls');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const indicator = document.getElementById('page-indicator');
+        const allRows = document.querySelectorAll('tbody tr[data-status]');
+
+        // Hide ALL rows first
+        allRows.forEach(row => row.style.display = 'none');
+
+        // Calculate Pages
+        const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
+        
+        // Handle Empty or Single Page
+        if (visibleRows.length === 0 || totalPages <= 1) {
+            controls.classList.add('hidden');
+            // If we have items but less than 1 page worth, show them all
+            if (visibleRows.length > 0) visibleRows.forEach(row => row.style.display = ''); 
+            return;
+        } else {
+            controls.classList.remove('hidden');
+        }
+
+        // Show Current Slice
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        visibleRows.slice(start, end).forEach(row => row.style.display = '');
+
+        // Update UI
+        indicator.textContent = `Page ${currentPage} of ${totalPages}`;
+        btnPrev.disabled = (currentPage === 1);
+        btnNext.disabled = (currentPage === totalPages);
+    }
+
+    function changePage(delta) {
+        const totalPages = Math.ceil(visibleRows.length / itemsPerPage);
+        const newPage = currentPage + delta;
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            renderPage();
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        filterTable('open');
+    });
+</script>
 {% endblock %}

@@ -18,6 +18,8 @@ from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
 from knowledge_base.models import KBCategory, KBSubcategory, Article
 from django.db import transaction
+import pytz
+from django.utils.dateparse import parse_datetime
 
 # ============================================================================
 # USER DASHBOARD
@@ -958,8 +960,123 @@ def kb_bulk_action(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def system_logs(request):
+    # 1. Define Timezones
+    NA_TIMEZONES = [
+        ('America/New_York', 'Eastern Time (ET)'),
+        ('America/Chicago', 'Central Time (CT)'),
+        ('America/Denver', 'Mountain Time (MT)'),
+        ('America/Los_Angeles', 'Pacific Time (PT)'),
+        ('America/Anchorage', 'Alaska Time (AKT)'),
+        ('Pacific/Honolulu', 'Hawaii-Aleutian Time (HST)'),
+    ]
+
+    # 2. Get Params
+    selected_tz = request.GET.get('timezone', 'America/New_York')
+    search_query = request.GET.get('q', '').strip()
+    sort_param = request.GET.get('sort', '-timestamp')
+    date_range = request.GET.get('range', '7d') # Default to 7 days
+    
+    # Activate Timezone for Display
+    try:
+        timezone.activate(selected_tz)
+    except:
+        timezone.activate('America/New_York')
+
+    # 3. Calculate Date Range (Server Time)
+    now = timezone.now()
+    start_date = now - timedelta(days=7)
+    end_date = now
+    
+    # Custom Start/End strings for the inputs
+    custom_start_str = request.GET.get('start_date', '')
+    custom_end_str = request.GET.get('end_date', '')
+
+    if date_range == 'today':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = now
+    elif date_range == 'yesterday':
+        yesterday = now - timedelta(days=1)
+        start_date = yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = yesterday.replace(hour=23, minute=59, second=59, microsecond=999999)
+    elif date_range == '7d':
+        start_date = now - timedelta(days=7)
+        end_date = now
+    elif date_range == '30d':
+        start_date = now - timedelta(days=30)
+        end_date = now
+    elif date_range == 'custom':
+        if custom_start_str and custom_end_str:
+            try:
+                # Parse YYYY-MM-DD inputs
+                s_dt = datetime.strptime(custom_start_str, '%Y-%m-%d')
+                e_dt = datetime.strptime(custom_end_str, '%Y-%m-%d')
+                # Make them aware (using current active timezone logic or server default)
+                current_tz = timezone.get_current_timezone()
+                start_date = timezone.make_aware(s_dt, current_tz)
+                end_date = timezone.make_aware(e_dt, current_tz).replace(hour=23, minute=59, second=59)
+            except ValueError:
+                pass # Fallback to default if parse fails
+
+    # 4. Fetch All Logs & Process
     logs = ticket_service.get_system_logs()
-    return render(request, 'service_desk/system_logs.html', {'logs': logs})
+    processed_logs = []
+    
+    for log in logs:
+        entry = log.copy()
+        if 'timestamp' in entry:
+            dt = parse_datetime(entry['timestamp'])
+            if dt:
+                if dt.tzinfo is None:
+                    dt = pytz.utc.localize(dt)
+                entry['dt_obj'] = dt
+            else:
+                entry['dt_obj'] = timezone.now()
+        processed_logs.append(entry)
+
+    # 5. Filter by Date
+    # Note: ensure we compare aware datetimes
+    filtered_logs = []
+    for log in processed_logs:
+        log_dt = log.get('dt_obj')
+        if log_dt and start_date <= log_dt <= end_date:
+            filtered_logs.append(log)
+
+    # 6. Filter by Search Query
+    if search_query:
+        query = search_query.lower()
+        filtered_logs = [
+            l for l in filtered_logs
+            if query in str(l.get('user', '')).lower()
+            or query in str(l.get('action', '')).lower()
+            or query in str(l.get('target', '')).lower()
+            or query in str(l.get('details', '')).lower()
+        ]
+
+    # 7. Sort
+    reverse = sort_param.startswith('-')
+    sort_key = sort_param.lstrip('-')
+    key_map = {'timestamp': 'timestamp', 'user': 'user', 'action': 'action'}
+    dict_key = key_map.get(sort_key, 'timestamp')
+    
+    try:
+        filtered_logs.sort(key=lambda x: x.get(dict_key, ''), reverse=reverse)
+    except:
+        pass 
+
+    # 8. Context
+    context = {
+        'logs': filtered_logs,
+        'na_timezones': NA_TIMEZONES,
+        'selected_tz': selected_tz,
+        'search_query': search_query,
+        'current_sort': sort_param,
+        # New Date Context
+        'current_range': date_range,
+        'start_date': custom_start_str,
+        'end_date': custom_end_str,
+    }
+    
+    return render(request, 'service_desk/system_logs.html', context)
 
 
 # ============================================================================

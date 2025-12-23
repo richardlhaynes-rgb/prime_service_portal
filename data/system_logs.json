@@ -806,5 +806,21 @@
         "action": "Bulk Update",
         "target": "KB Articles (1)",
         "details": "Set status='Approved' for IDs: 42"
+    },
+    {
+        "id": 102,
+        "timestamp": "2025-12-22T04:19:16.390808Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'All Systems Operational' with 5 vendor entries"
+    },
+    {
+        "id": 103,
+        "timestamp": "2025-12-22T04:19:36.198142Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'All Systems Operational' with 5 vendor entries"
     }
 ]

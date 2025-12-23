@@ -6,6 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [0.11.0] - 2025-12-23 (Dashboard Interactivity & System Control)
+
+### 🚀 New Features
+- **Interactive Dashboard:** Metric cards (Open, Resolved, History) are now clickable filters that instantly toggle the ticket table view.
+- **Smart Pagination:** Implemented client-side pagination for Dashboard (10 rows) and System Logs (15 rows) with auto-hiding controls.
+- **System Logs "Control Deck":** Overhauled the header into a pro-grade command center with Date Range presets (Today, Yesterday, 7d, 30d) and Custom Date support.
+- **HTMX Ready:** Injected the HTMX library into the base template to support future high-performance partial reloads.
+
+### 🎨 UI & UX Polish
+- **Dashboard Focus:** Default view now auto-filters to "Open Tickets" on load to prioritize action items.
+- **Visual Consistency:** System Logs date controls now match the "Manager Analytics" styling 1:1 (Dark Mode optimized, specific button borders/colors).
+- **Icon Harmony:** Standardized the Management Hub gear icon's hover state to White (matching the Theme toggle) and restored the correct outline SVG.
+
+### ⚙️ Backend & Architecture
+- **Log Filtering Engine:** Rewrote `system_logs` view logic to process semantic date ranges (`today`, `yesterday`) and custom datetime windows.
+- **Security Hardening:** Restricted visibility of the Management Hub (Settings) navigation link to Superusers only.
+
+### 🐛 Fixes
+- Fixed the Management Hub icon link pointing to a non-existent URL name.
+- Corrected disjointed hover states in the main navigation header.
+
+---
+
 ## [0.10.0] - 2025-12-21 (User Identity & Data Integrity)
 
 ### 🚀 New Features

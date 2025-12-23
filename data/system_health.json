@@ -1,8 +1,8 @@
 {
     "announcement": {
-        "title": "Service Interruption",
-        "message": "We are currently experiencing issues with [Service Name]. IT is investigating.",
-        "type": "critical",
+        "title": "All Systems Operational",
+        "message": "No known issues at this time.",
+        "type": "info",
         "date": "Today",
         "start_datetime": "",
         "end_datetime": ""
@@ -14,7 +14,7 @@
         },
         {
             "name": "Autodesk Cloud",
-            "status": "Degraded Performance"
+            "status": "Operational"
         },
         {
             "name": "Bentley ProjectWise",
@@ -22,7 +22,7 @@
         },
         {
             "name": "Egnyte File Server",
-            "status": "Partial Outage"
+            "status": "Operational"
         },
         {
             "name": "Bluebeam Studio",

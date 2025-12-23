@@ -11,53 +11,77 @@
 
     <!-- Block 2: Main Card (Toolbar + Table) -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <!-- Left: Title & Icon -->
+        
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 space-y-4">
+            
             <div class="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" class="h-5 w-5 text-prime-navy dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5h6m-6 4h6m-6 4h6M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z"/>
                 </svg>
                 <h3 class="text-lg font-semibold text-prime-navy dark:text-white">Recent Activity</h3>
             </div>
 
-            <!-- Right: Timezone + Search -->
-            <div class="flex justify-end items-center gap-2 w-full sm:w-auto">
-                <!-- Timezone Selector -->
-                <form method="get" class="flex items-center">
-                    <input type="hidden" name="q" value="{{ search_query|default:'' }}">
-                    <input type="hidden" name="sort" value="{{ current_sort|default:'-timestamp' }}">
+            <div class="flex flex-col xl:flex-row justify-between items-center gap-4">
+                
+                <div class="w-full xl:w-auto">
+                     <form method="get" id="tz-form">
+                        <input type="hidden" name="q" value="{{ search_query|default:'' }}">
+                        <input type="hidden" name="range" value="{{ current_range|default:'7d' }}">
+                        <div class="relative">
+                            <select id="timezone" name="timezone" onchange="document.getElementById('tz-form').submit()" 
+                                    class="w-full xl:w-auto pl-3 pr-8 py-2 text-sm rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-white focus:ring-prime-orange focus:border-prime-orange">
+                                {% for tz_id, tz_label in na_timezones %}
+                                    <option value="{{ tz_id }}" {% if selected_tz == tz_id %}selected{% endif %}>{{ tz_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
 
-                    <label for="timezone" class="sr-only">Timezone</label>
-                    <select
-                        id="timezone"
-                        name="timezone"
-                        onchange="this.form.submit()"
-                        class="px-2 py-2 text-sm rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
-                    >
-                        {% for tz_id, tz_label in na_timezones %}
-                            <option value="{{ tz_id }}" {% if selected_tz == tz_id %}selected{% endif %}>
-                                {{ tz_label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </form>
+                <div class="flex-1 flex justify-center w-full xl:w-auto overflow-x-auto">
+                    <form method="get" id="filter-form" class="flex items-center gap-2">
+                        <input type="hidden" name="q" value="{{ search_query|default:'' }}">
+                        <input type="hidden" name="timezone" value="{{ selected_tz|default:'America/New_York' }}">
+                        
+                        <div id="preset-buttons" class="flex gap-2 {% if current_range == 'custom' %}hidden{% endif %}">
+                            {% with r=current_range|default:'7d' %}
+                            <button name="range" value="today" class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == 'today' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Today</button>
+                            <button name="range" value="yesterday" class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == 'yesterday' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Yesterday</button>
+                            <button name="range" value="7d" class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == '7d' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Last 7 Days</button>
+                            <button name="range" value="30d" class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == '30d' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Last 30 Days</button>
+                            <button type="button" onclick="toggleCustomRange(true)" class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">Custom Range</button>
+                            {% endwith %}
+                        </div>
 
-                <!-- Search Form -->
-                <form method="get" class="flex items-center gap-2">
-                    <input type="hidden" name="sort" value="{{ current_sort|default:'-timestamp' }}">
-                    <input type="hidden" name="timezone" value="{{ selected_tz|default:'America/New_York' }}">
+                        <div id="custom-inputs" class="flex items-center gap-3 {% if current_range != 'custom' %}hidden{% endif %}">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">From:</span>
+                                <input type="date" name="start_date" value="{{ start_date|default:'' }}" class="px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-prime-orange focus:border-prime-orange">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-500 dark:text-gray-400">To:</span>
+                                <input type="date" name="end_date" value="{{ end_date|default:'' }}" class="px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-prime-orange focus:border-prime-orange">
+                            </div>
+                            <button type="submit" name="range" value="custom" class="px-4 py-2 text-sm font-medium bg-prime-orange text-white rounded-md hover:bg-opacity-90 shadow-sm transition-colors">Apply</button>
+                            <button type="button" onclick="toggleCustomRange(false)" class="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm transition-colors">Cancel</button>
+                        </div>
+                    </form>
+                </div>
 
-                    <input
-                        type="text"
-                        name="q"
-                        value="{{ search_query|default:'' }}"
-                        placeholder="Search logs..."
-                        class="w-64 px-3 py-2 text-sm rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-prime-orange"
-                    />
-                    <button type="submit" class="bg-prime-orange text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-opacity-90 transition-colors">
-                        Search
-                    </button>
-                </form>
+                <div class="w-full xl:w-auto flex-shrink-0">
+                    <form method="get" class="relative">
+                        <input type="hidden" name="range" value="{{ current_range|default:'7d' }}">
+                        <input type="hidden" name="timezone" value="{{ selected_tz|default:'America/New_York' }}">
+                        
+                        <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search logs..." 
+                               class="w-full xl:w-64 pl-3 pr-10 py-2 text-sm rounded-md shadow-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-white focus:ring-prime-orange focus:border-prime-orange">
+                        <button type="submit" class="absolute right-0 top-0 bottom-0 px-3 text-gray-400 hover:text-prime-orange">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -164,7 +188,81 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <div id="log-pagination" class="bg-gray-50 dark:bg-gray-800 px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between hidden">
+                <button onclick="changeLogPage(-1)" id="btn-prev-log" class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                    &larr; Previous
+                </button>
+                <span id="log-indicator" class="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                    Page 1 of 1
+                </span>
+                <button onclick="changeLogPage(1)" id="btn-next-log" class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next &rarr;
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    let currentLogPage = 1;
+    const logsPerPage = 15;
+    const logRows = Array.from(document.querySelectorAll('tbody tr')); // All rows
+
+    function renderLogPage() {
+        const controls = document.getElementById('log-pagination');
+        const btnPrev = document.getElementById('btn-prev-log');
+        const btnNext = document.getElementById('btn-next-log');
+        const indicator = document.getElementById('log-indicator');
+        
+        // Hide all rows first
+        logRows.forEach(row => row.style.display = 'none');
+
+        const totalPages = Math.ceil(logRows.length / logsPerPage);
+
+        // Hide controls if 1 page or empty
+        if (logRows.length === 0 || totalPages <= 1) {
+            controls.classList.add('hidden');
+            logRows.forEach(row => row.style.display = ''); // Show all if short
+            return;
+        } else {
+            controls.classList.remove('hidden');
+        }
+
+        // Show Slice
+        const start = (currentLogPage - 1) * logsPerPage;
+        const end = start + logsPerPage;
+        logRows.slice(start, end).forEach(row => row.style.display = '');
+
+        // Update Controls
+        indicator.textContent = `Page ${currentLogPage} of ${totalPages}`;
+        btnPrev.disabled = (currentLogPage === 1);
+        btnNext.disabled = (currentLogPage === totalPages);
+    }
+
+    function changeLogPage(delta) {
+        const totalPages = Math.ceil(logRows.length / logsPerPage);
+        const newPage = currentLogPage + delta;
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentLogPage = newPage;
+            renderLogPage();
+        }
+    }
+
+    // Initialize on Load
+    document.addEventListener('DOMContentLoaded', function() {
+        renderLogPage();
+    });
+
+    function toggleCustomRange(show) {
+        const buttons = document.getElementById('preset-buttons');
+        const inputs = document.getElementById('custom-inputs');
+        if (show) {
+            buttons.classList.add('hidden');
+            inputs.classList.remove('hidden');
+        } else {
+            buttons.classList.remove('hidden');
+            inputs.classList.add('hidden');
+        }
+    }
+</script>
 {% endblock %}
