@@ -43,9 +43,53 @@
     .dark input:-webkit-autofill:hover,
     .dark input:-webkit-autofill:focus,
     .dark input:-webkit-autofill:active {
-        -webkit-box-shadow: 0 0 0 30px #374151 inset !important; /* Matches bg-gray-700 */
-        -webkit-text-fill-color: white !important;
-        transition: background-color 5000s ease-in-out 0s;
+        background-color: #374151; /* bg-gray-700 */
+        border-color: #4b5563;     /* border-gray-600 */
+        color: #e5e7eb;            /* text-gray-200 */
+    }
+    </style>
+
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+    <script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+    <style>
+        /* Trix Editor Customization */
+        trix-toolbar .trix-button-group { margin-bottom: 0 !important; border-color: #e5e7eb !important; }
+        trix-toolbar .trix-button { border-bottom: 0 !important; }
+        trix-editor { min-height: 10rem; border-radius: 0.375rem; }
+        
+        /* Dark Mode Overrides for Trix */
+    
+    /* 1. Kill the Group Borders (The Boxy Outlines) */
+    .dark trix-toolbar .trix-button-group { 
+        border-color: transparent !important; 
+        margin-bottom: 0 !important;
+    }
+
+    /* 2. Button State: Transparent BG, No Border, White Icons */
+    .dark trix-toolbar .trix-button {
+        background-color: transparent !important;
+        border-color: transparent !important;
+        /* Invert Black icons to White */
+        filter: invert(1) brightness(1.5); 
+    }
+
+    /* 3. Hover State: Light BG (Inverted to Dark) */
+    .dark trix-toolbar .trix-button:hover {
+        background-color: #e5e7eb !important; 
+    }
+
+    /* 4. Active State: Prime Orange (No Filter) */
+    .dark trix-toolbar .trix-button.trix-button--active {
+        filter: none !important;
+        background-color: #F15D2B !important;
+        border-radius: 4px; /* Soften the active button */
+    }
+
+    /* 5. Editor Area Colors */
+    .dark trix-editor {
+        background-color: #374151;
+        color: white;
+        border-color: #4b5563;
     }
     </style>
 </head>
@@ -68,29 +112,41 @@
 
                 <!-- Navigation (with icons and spacing) -->
                 <nav class="hidden md:flex items-center ml-8 space-x-8">
-                    <a href="{% url 'dashboard' %}" class="flex items-center group text-sm font-medium text-gray-300 hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2 text-gray-300 group-hover:text-white transition-colors">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                    <a href="{% url 'dashboard' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
-                        <span>Dashboard</span>
+                        Dashboard
                     </a>
-                    <a href="{% url 'service_catalog' %}" class="flex items-center group text-sm font-medium text-gray-300 hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2 text-gray-300 group-hover:text-white transition-colors">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+
+                    <a href="{% url 'service_catalog' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
-                        <span>Catalog</span>
+                        Catalog
                     </a>
-                    <a href="{% url 'kb_home' %}" class="flex items-center group text-sm font-medium text-gray-300 hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2 text-gray-300 group-hover:text-white transition-colors">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-5.266-1.437c-1.387-.267-1.387-1.84 0-2.107a50.558 50.558 0 015.266-1.437m15.482 0a50.473 50.473 0 00-5.266 1.437c-1.387.267-1.387 1.84 0 2.107a50.473 50.473 0 015.266 1.437m-15.482 0L12 7.5l7.741 2.647M12 7.5v8.25" />
+
+                    <a href="{% url 'kb_home' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
-                        <span>Knowledge Base</span>
+                        Knowledge Base
                     </a>
+
+                    {% if user.is_staff %}
+                    <a href="{% url 'kanban_board' %}" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Workspace
+                    </a>
+                    {% endif %}
                 </nav>
             </div>
 
             <!-- Right: Admin Cog -> Theme Toggle -> Divider -> Avatar -->
             <div class="flex items-center gap-2">
+                {% include 'service_desk/partials/notification_bell.html' %}
                 
                 <!-- Admin Cog (Icon Only) -->
                 {% if user.is_superuser %}

@@ -1,0 +1,32 @@
+<div class="py-2">
+    <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-700/50">
+        <h3 class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Notifications</h3>
+        {% if notifications %}
+        <button hx-post="{% url 'clear_notifications' %}" hx-target="#notification-list-container" class="text-xs text-prime-orange hover:text-orange-600 font-medium">
+            Clear All
+        </button>
+        {% endif %}
+    </div>
+
+    <div id="notification-items" class="max-h-64 overflow-y-auto">
+        {% for note in notifications %}
+        <a href="{% url 'mark_notification_read' note.id %}" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0 group">
+            <div class="flex justify-between items-start mb-1">
+                <span class="text-sm font-bold text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">{{ note.title }}</span>
+                <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2">{{ note.created_at|timesince }} ago</span>
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ note.message }}</p>
+        </a>
+        {% empty %}
+        <div class="px-4 py-6 text-center">
+            <p class="text-sm text-gray-500 dark:text-gray-400 italic">No new notifications.</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 text-center">
+        <a href="{% url 'notification_history' %}" class="block text-center text-xs text-prime-orange font-semibold py-1 hover:underline transition">
+            View All History
+        </a>
+    </div>
+</div>

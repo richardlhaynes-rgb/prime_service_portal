@@ -3,22 +3,22 @@
 {% block content %}
     <!-- Catalog Header -->
     <div class="mb-8 text-center">
-        <h2 class="text-3xl font-bold text-prime-navy">How can we help you today?</h2>
-        <p class="text-gray-600 mt-2">Select a category below to submit a request.</p>
+        <h2 class="text-3xl font-bold text-prime-navy dark:text-white">How can we help you today?</h2>
+        <p class="text-gray-600 dark:text-gray-300 mt-2">Select a category below to submit a request.</p>
     </div>
 
     <!-- Recommended Solutions (Quick Links) -->
     {% if recommended_articles %}
     <div class="bg-blue-50 dark:bg-gray-800 border-l-4 border-prime-orange p-4 rounded-r-lg mb-8">
-        <h4 class="text-prime-navy uppercase text-xs tracking-wider mb-3 font-bold">Recommended for you:</h4>
+        <h4 class="text-gray-500 dark:text-gray-400 uppercase text-xs tracking-wider mb-3 font-bold">Recommended for you:</h4>
         <div class="flex flex-col md:flex-row gap-4">
             {% for article in recommended_articles %}
             <a href="{% url 'article_detail' article.id %}"
-               class="bg-white dark:bg-gray-900 shadow-sm rounded-md px-3 py-2 flex items-center gap-2 hover:shadow transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-prime-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="bg-white dark:bg-gray-900 shadow-sm rounded-md px-3 py-2 flex items-center gap-2 hover:shadow transition text-gray-700 dark:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-prime-orange flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2h3l2-2h3a2 2 0 002-2V6a2 2 0 00-2-2h-3z" />
                 </svg>
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-prime-orange">{{ article.title }}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-white hover:text-prime-orange">{{ article.title }}</span>
             </a>
             {% endfor %}
         </div>

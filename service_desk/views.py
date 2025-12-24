@@ -9,7 +9,8 @@ from .forms import (
     SoftwareInstallForm, GeneralQuestionForm, VPResetForm, VPPermissionsForm,
     TicketReplyForm, KBArticleForm, GlobalSettingsForm, CustomUserCreationForm, CustomUserChangeForm
 )
-from .models import Ticket, Comment, GlobalSettings
+# FIXED: Added Notification to top-level imports
+from .models import Ticket, Comment, GlobalSettings, Notification
 from services import ticket_service
 from datetime import datetime, timedelta
 import random
@@ -20,6 +21,9 @@ from knowledge_base.models import KBCategory, KBSubcategory, Article
 from django.db import transaction
 import pytz
 from django.utils.dateparse import parse_datetime
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 # ============================================================================
 # USER DASHBOARD
@@ -67,6 +71,27 @@ def dashboard(request):
     }
     
     return render(request, 'service_desk/dashboard.html', context)
+
+@login_required
+def dashboard_stats(request):
+    """
+    HTMX Endpoint: Returns only the dashboard stats cards (Open, Resolved, Total).
+    Called via polling every 30s.
+    """
+    user_tickets = Ticket.objects.filter(submitter=request.user)
+    
+    open_statuses = ['New', 'User Commented', 'Work In Progress', 'Reopened', 'Assigned', 'In Progress', 'Awaiting User Reply', 'On Hold']
+    resolved_statuses = ['Resolved', 'Cancelled']
+    
+    open_tickets = user_tickets.filter(status__in=open_statuses).count()
+    resolved_tickets = user_tickets.filter(status__in=resolved_statuses).count()
+    total_tickets = user_tickets.count()
+    
+    return render(request, 'service_desk/partials/dashboard_stats.html', {
+        'open_tickets': open_tickets,
+        'resolved_tickets': resolved_tickets,
+        'total_tickets': total_tickets,
+    })
 
 
 # ============================================================================
@@ -796,6 +821,12 @@ def kb_home(request):
         articles = articles.filter(category=category_filter)
 
     recent_articles = articles[:10]
+    
+    # MAGIC: If HTMX request, return only the results list, not the whole page.
+    if request.headers.get('HX-Request'):
+        return render(request, 'knowledge_base/partials/kb_results.html', {
+            'recent_articles': recent_articles
+        })
 
     return render(request, 'knowledge_base/kb_home.html', {
         'articles': articles,
@@ -1331,3 +1362,192 @@ def kb_update_status(request, pk):
             article.save()
 
     return redirect('article_detail', article_id=pk)
+
+# ============================================================================
+# NOTIFICATIONS
+# ============================================================================
+
+@login_required
+def get_notifications(request):
+    """
+    HTMX Endpoint: Returns ONLY the red dot badge.
+    """
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return render(request, 'service_desk/partials/notification_badge.html', {
+        'unread_count': unread_count
+    })
+
+@login_required
+def notification_list(request):
+    """
+    Returns the HTML list of unread notifications for the dropdown.
+    """
+    notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')[:5]
+    return render(request, 'service_desk/partials/notification_list.html', {
+        'notifications': notifications
+    })
+
+@login_required
+def clear_notifications(request):
+    """
+    Marks all notifications as read and returns the empty list.
+    """
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    
+    # Return empty list UI
+    return render(request, 'service_desk/partials/notification_list.html', {
+        'notifications': []
+    })
+
+@login_required
+def mark_notification_read(request, notification_id):
+    """
+    The 'Middleman' View:
+    1. Finds the notification.
+    2. Marks it as read.
+    3. Safely redirects the user with feedback if the link is broken.
+    """
+    from .models import Notification
+    from django.urls import NoReverseMatch
+    
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    
+    # Mark as read
+    if not notification.is_read:
+        notification.is_read = True
+        notification.save()
+    
+    target = notification.link
+    
+    # Safety Check 1: Explicitly catch empty or dummy links
+    if not target or target == '#' or target == 'None':
+        messages.warning(request, "This notification was just an informational alert (no specific page attached).")
+        return redirect('dashboard')
+        
+    # Safety Check 2: Try to redirect, catch any URL errors (like 404s or bad view names)
+    try:
+        return redirect(target)
+    except (NoReverseMatch, Exception):
+        messages.error(request, "We couldn't take you to that specific page (the link might be outdated), so here is your Dashboard.")
+        return redirect('dashboard')
+
+@login_required
+def notification_history(request):
+    """
+    Shows all notifications for the user, ordered by newest first.
+    """
+    from .models import Notification
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    
+    return render(request, 'service_desk/notification_history.html', {
+        'notifications': notifications
+    })
+
+@login_required
+@require_POST
+def notification_bulk_action(request):
+    """
+    Handles bulk operations (Mark Read / Mark Unread) from the history page.
+    """
+    from .models import Notification
+    
+    action = request.POST.get('action')
+    selected_ids = request.POST.getlist('selected_ids')
+    
+    if not selected_ids:
+        messages.warning(request, "No notifications selected.")
+        return redirect('notification_history')
+
+    # Filter to ensure users can only modify their own notifications
+    qs = Notification.objects.filter(id__in=selected_ids, user=request.user)
+    count = qs.count()
+
+    if action == 'mark_unread':
+        qs.update(is_read=False)
+        messages.success(request, f"Marked {count} notifications as unread.")
+    elif action == 'mark_read':
+        qs.update(is_read=True)
+        messages.success(request, f"Marked {count} notifications as read.")
+
+    return redirect('notification_history')
+
+
+@login_required
+@require_POST
+def delete_notifications(request):
+    """
+    Deletes selected notifications.
+    """
+    # The checkboxes in notification_history.html use name="selected_ids"
+    notification_ids = request.POST.getlist('selected_ids')
+    if notification_ids:
+        # Filter by user to ensure they can only delete their own
+        Notification.objects.filter(
+            id__in=notification_ids, 
+            user=request.user
+        ).delete()
+        messages.success(request, f"{len(notification_ids)} notification(s) deleted.")
+    else:
+        messages.warning(request, "No notifications selected.")
+        
+    return redirect('notification_history')
+
+# ============================================================================
+# KANBAN BOARD
+# ============================================================================
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def kanban_board(request):
+    """
+    Technician Kanban Board.
+    Separates tickets into 3 buckets: New, In Progress, Resolved.
+    """
+    tickets = Ticket.objects.all().order_by('-created_at')
+    
+    # Bucket Logic
+    new_tickets = tickets.filter(status__in=['New', 'Reopened', 'User Commented', 'Awaiting User Reply', 'On Hold'])
+    progress_tickets = tickets.filter(status__in=['In Progress', 'Work In Progress', 'Assigned'])
+    done_tickets = tickets.filter(status__in=['Resolved', 'Closed', 'Cancelled'])[:20] # Limit resolved to last 20 for performance
+
+    return render(request, 'service_desk/kanban.html', {
+        'new_tickets': new_tickets,
+        'progress_tickets': progress_tickets,
+        'done_tickets': done_tickets
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+@csrf_exempt
+def kanban_update(request):
+    """
+    API Endpoint for Kanban Drag-and-Drop.
+    Updates status and auto-assigns technician if moving to In Progress.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            ticket_id = data.get('ticket_id')
+            new_status = data.get('new_status')
+            
+            ticket = Ticket.objects.get(id=ticket_id)
+            
+            # 1. Update Status
+            ticket.status = new_status
+            
+            # 2. Auto-Assign Logic (If moving to 'In Progress' and unassigned)
+            if new_status == 'In Progress' and not ticket.technician:
+                ticket.technician = request.user
+                
+            # 3. Close Logic (If moving to 'Resolved')
+            if new_status == 'Resolved' and not ticket.closed_at:
+                ticket.closed_at = timezone.now()
+                
+            ticket.save()
+            return JsonResponse({'status': 'success'})
+        except Ticket.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Ticket not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            
+    return JsonResponse({'status': 'invalid method'}, status=400)

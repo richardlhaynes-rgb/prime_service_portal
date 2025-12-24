@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+<div class="h-[calc(100vh-80px)] flex flex-col p-6">
+    
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-prime-navy dark:text-white">Technician Workspace</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Drag and drop tickets to update status.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Auto-Assign Enabled</span>
+            <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+        </div>
+    </div>
+
+    <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden">
+        
+        <div class="flex flex-col bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 h-full">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 rounded-t-lg flex justify-between items-center">
+                <h3 class="font-bold text-gray-700 dark:text-gray-200">To Do / New</h3>
+                <span class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-100 py-0.5 px-2 rounded-full text-xs font-bold">{{ new_tickets|length }}</span>
+            </div>
+            <div id="col-new" class="p-4 flex-grow overflow-y-auto space-y-3 kanban-col" data-status="New">
+                {% for ticket in new_tickets %}
+                    {% include 'service_desk/partials/kanban_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex flex-col bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30 h-full">
+            <div class="p-4 border-b border-blue-100 dark:border-blue-900/30 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg flex justify-between items-center">
+                <h3 class="font-bold text-blue-700 dark:text-blue-300">In Progress</h3>
+                <span class="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 py-0.5 px-2 rounded-full text-xs font-bold">{{ progress_tickets|length }}</span>
+            </div>
+            <div id="col-progress" class="p-4 flex-grow overflow-y-auto space-y-3 kanban-col" data-status="In Progress">
+                {% for ticket in progress_tickets %}
+                    {% include 'service_desk/partials/kanban_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex flex-col bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900/30 h-full">
+            <div class="p-4 border-b border-green-100 dark:border-green-900/30 bg-green-50 dark:bg-green-900/20 rounded-t-lg flex justify-between items-center">
+                <h3 class="font-bold text-green-700 dark:text-green-300">Resolved</h3>
+                <span class="bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 py-0.5 px-2 rounded-full text-xs font-bold">{{ done_tickets|length }}</span>
+            </div>
+            <div id="col-done" class="p-4 flex-grow overflow-y-auto space-y-3 kanban-col" data-status="Resolved">
+                {% for ticket in done_tickets %}
+                    {% include 'service_desk/partials/kanban_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Initialize Drag and Drop
+    document.querySelectorAll('.kanban-col').forEach(column => {
+        new Sortable(column, {
+            group: 'kanban', // Allows dragging between columns
+            animation: 150,
+            ghostClass: 'bg-prime-orange/20', // Class applied to the placeholder
+            delay: 100, // Slight delay prevents accidental drags on touch
+            delayOnTouchOnly: true,
+            
+            // THE MAGIC: What happens when you drop a card
+            onEnd: function (evt) {
+                const itemEl = evt.item;  // The card being dragged
+                const newStatus = evt.to.getAttribute('data-status'); // The column status
+                const ticketId = itemEl.getAttribute('data-ticket-id'); // The Ticket ID
+
+                // If moved to same column, ignore
+                if (evt.to === evt.from) return;
+
+                // Send Update to Django via HTMX (simulated via Fetch for SortableJS)
+                fetch(`{% url 'kanban_update' %}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ticket_id: ticketId,
+                        new_status: newStatus
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Ticket updated!");
+                    } else {
+                        console.error("Update failed");
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

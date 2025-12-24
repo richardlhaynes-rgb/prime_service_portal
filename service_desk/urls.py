@@ -61,4 +61,20 @@ urlpatterns = [
     path('manager/users/', views.user_management, name='user_management'),
     path('manager/users/add/', views.user_add, name='user_add'),
     path('manager/users/edit/<int:user_id>/', views.user_edit, name='user_edit'),
+
+    # --- Notifications ---
+    path('notifications/poll/', views.get_notifications, name='get_notifications'),
+    path('notifications/list/', views.notification_list, name='notification_list'),
+    path('notifications/clear/', views.clear_notifications, name='clear_notifications'),
+    path('notifications/history/', views.notification_history, name='notification_history'),
+    path('notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('notifications/bulk/', views.notification_bulk_action, name='notification_bulk_action'),
+    path('notifications/delete/', views.delete_notifications, name='delete_notifications'),
+
+    # --- Dashboard Stats ---
+    path('dashboard/stats/', views.dashboard_stats, name='dashboard_stats'),
+
+    # --- Technician Workspace (Kanban) ---
+    path('workspace/', views.kanban_board, name='kanban_board'),
+    path('workspace/update/', views.kanban_update, name='kanban_update'),
 ]

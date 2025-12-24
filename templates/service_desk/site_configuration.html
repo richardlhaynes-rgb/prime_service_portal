@@ -62,45 +62,67 @@
                     {% csrf_token %}
                     <input type="hidden" name="save_settings" value="1">
 
-                    <!-- Card 1: System Behavior -->
+                    <!-- Card 1: Data Source Mode -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600 dark:text-blue-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-prime-navy dark:text-white text-lg">Data Source Mode</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Choose where the portal retrieves its ticket and asset data.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 space-y-4">
+                            <label class="relative flex items-start p-4 cursor-pointer rounded-lg border-2 border-prime-orange bg-orange-50/10 dark:bg-orange-900/10 transition-all">
+                                <div class="flex items-center h-5">
+                                    <input type="radio" name="use_mock_data" value="True" checked class="h-4 w-4 text-prime-orange border-gray-300 focus:ring-prime-orange">
+                                </div>
+                                <div class="ml-3">
+                                    <span class="block text-sm font-bold text-prime-navy dark:text-white">PRIME Internal Database (Demo Mode)</span>
+                                    <span class="block text-sm text-gray-500 dark:text-gray-400 mt-1">Uses the local Django database. Fully operational for internal testing, development, and demos.</span>
+                                </div>
+                                <span class="absolute top-4 right-4 flex items-center gap-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-200 dark:border-green-800">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span> ACTIVE
+                                </span>
+                            </label>
+
+                            <label class="flex items-start p-4 rounded-lg border border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50 grayscale-[0.5]">
+                                <div class="flex items-center h-5">
+                                    <input type="radio" name="use_mock_data" value="False" disabled class="h-4 w-4 text-gray-300 border-gray-300">
+                                </div>
+                                <div class="ml-3">
+                                    <span class="block text-sm font-bold text-gray-500 dark:text-gray-400">ConnectWise PSA (Live Sync)</span>
+                                    <span class="block text-sm text-gray-500 dark:text-gray-500 mt-1">Real-time bi-directional API integration with ConnectWise Manage.</span>
+                                </div>
+                                <span class="ml-auto bg-gray-200 dark:bg-gray-700 text-gray-500 text-[10px] font-bold px-2 py-1 rounded border border-gray-300 dark:border-gray-600">
+                                    COMING SOON
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Knowledge Base Settings -->
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
                             <h3 class="text-lg font-bold text-prime-navy dark:text-white flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                 </svg>
-                                System Behavior
+                                Knowledge Base Settings
                             </h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Control application-wide feature toggles</p>
                         </div>
-
-                        <div class="p-6 space-y-6">
-                            <!-- Maintenance Mode Toggle -->
-                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div>
-                                    <label class="text-sm font-medium text-prime-navy dark:text-white">Maintenance Mode</label>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Non-admins see a "Under Maintenance" message</p>
-                                </div>
-                                {{ form.maintenance_mode }}
-                            </div>
-
-                            <!-- Mock Data Toggle -->
-                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div>
-                                    <label class="text-sm font-medium text-prime-navy dark:text-white">Use Demo Data</label>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Display mock data instead of live ConnectWise</p>
-                                </div>
-                                {{ form.use_mock_data }}
-                            </div>
-                            
-                            <!-- KB Recommendation Logic -->
-                            <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
-                                <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-2">
-                                    KB Article Sorting Logic
-                                </label>
-                                {{ form.kb_recommendation_logic }}
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">How KB articles are sorted on the catalog homepage</p>
-                            </div>
+                        <div class="p-6">
+                            <label class="block text-sm font-medium text-prime-navy dark:text-gray-300 mb-2">
+                                KB Article Sorting Logic
+                            </label>
+                            {{ form.kb_recommendation_logic }}
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">How KB articles are sorted on the catalog homepage</p>
                         </div>
                     </div>
 

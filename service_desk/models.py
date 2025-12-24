@@ -409,3 +409,22 @@ class GlobalSettings(models.Model):
         """
         obj, created = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class Notification(models.Model):
+    """
+    User notification model.
+    Stores notifications for users (e.g., ticket updates, new comments).
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    link = models.CharField(max_length=255, blank=True, null=True) # e.g., /ticket/902/
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"

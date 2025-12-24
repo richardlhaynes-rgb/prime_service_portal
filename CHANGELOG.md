@@ -6,6 +6,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [0.12.0] - 2025-12-24 (Technician Workspace & System Hardening)
+
+### 🚀 New Features
+- **Technician Workspace:** Launched a fully interactive Kanban board for staff (`/service-desk/workspace/`). Features drag-and-drop status updates and a dedicated navigation link.
+- **Data Source Selector:** Replaced the legacy "Maintenance Mode" toggle in Site Configuration with a clear "Data Source" selector (Internal DB vs. ConnectWise PSA).
+- **Notification Management:** Added bulk deletion capabilities to the Notification History page, allowing users to scrub old alerts.
+- **Role-Based Visualization:** Kanban cards now distinctively separate the Submitter (User Icon) from the Assigned Technician (Wrench Icon/Badge).
+
+### 🎨 UI & UX Polish
+- **Dark Mode Typography:** Fixed invisible or low-contrast text headers across the Service Catalog, System Health Settings, and System Logs pages.
+- **Navigation Standardization:** Aligned spacing, colors, and icons in the main navigation bar (restored Book icon for Knowledge Base, Toolbox for Workspace).
+- **Kanban Aesthetics:** Fixed the "To Do" column header background color in Dark Mode to match the rest of the board.
+- **Visual Hierarchy:** Added a clean divider line and role-specific iconography to Kanban cards to reduce visual clutter.
+
+### ⚙️ Backend & Architecture
+- **Resilient Deletion Logic:** Updated `delete_notifications` view to handle multiple checkbox payload names (`notification_ids`, `pk`, `selection`) to ensure template compatibility.
+- **Honest Form Binding:** Refactored Site Configuration to bind radio buttons directly to `use_mock_data`, removing "ghost inputs" and hidden fields.
+- **Routing Optimization:** Renamed Kanban routes to `/workspace/` to match the frontend terminology.
+
+### 🐛 Fixes
+- **Routing Error:** Resolved 404 errors on the Kanban board by correcting internal URL patterns in the Service Desk app.
+- **Selection Failure:** Fixed the "No notifications selected" error during bulk delete operations by broadening the backend parameter search.
+- **Button Sizing:** Standardized the "Delete" button size in the Notification toolbar to match existing "Mark Read/Unread" buttons.
+
+---
+
 ## [0.11.0] - 2025-12-23 (Dashboard Interactivity & System Control)
 
 ### 🚀 New Features

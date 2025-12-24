@@ -3,6 +3,7 @@ from .models import Ticket, Comment, GlobalSettings, UserProfile
 from knowledge_base.models import Article
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm  # Shared auth forms
 from django.contrib.auth.models import User, Group  # User + Groups for checkbox list
+from django.utils.safestring import mark_safe
 
 INPUT_STYLE = 'w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400'
 
@@ -19,6 +20,21 @@ USER_CHECKBOX_WIDGET = forms.CheckboxInput(attrs={
 USER_GROUPS_WIDGET = forms.CheckboxSelectMultiple(attrs={
     'class': 'space-y-2'
 })
+
+# --- Custom Trix RichText Widget ---
+class RichTextWidget(forms.Textarea):
+    def render(self, name, value, attrs=None, renderer=None):
+        attrs = attrs or {}
+        # Trix uses a hidden input to sync data. We hide the actual django textarea.
+        attrs['hidden'] = True 
+        html = super().render(name, value, attrs=attrs)
+        
+        # We construct the Trix Editor tag and link it to the hidden input via ID
+        final_attrs = self.build_attrs(attrs)
+        input_id = final_attrs.get('id', f'id_{name}')
+        
+        trix_html = f'<trix-editor input="{input_id}" class="trix-content w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white px-3 py-2"></trix-editor>'
+        return mark_safe(html + trix_html)
 
 # --- 1. Application Issue Form ---
 class ApplicationIssueForm(forms.Form):
@@ -45,7 +61,10 @@ class ApplicationIssueForm(forms.Form):
     other_application = forms.CharField(required=False, label="Other Application", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "If 'Other' selected, please specify"}))
     computer_name = forms.CharField(required=False, label="Affected Computer (if not your own)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Leave blank if it's your primary computer"}))
     summary = forms.CharField(label="Summary of Problem", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Ex: Revit crashing when opening file"}))
-    description = forms.CharField(label="Detailed Description / Error Message", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Describe steps taken, error text, when it began."}))
+    description = forms.CharField(
+        label="Detailed Description / Error Message",
+        widget=RichTextWidget()
+    )
     screenshot = forms.FileField(required=False, label="Add Screenshot (Optional)", widget=forms.FileInput(attrs={'class': 'w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-opacity-90'}))
 
 # --- 2. Email & Mailbox Form ---
@@ -60,7 +79,10 @@ class EmailMailboxForm(forms.Form):
     request_type = forms.ChoiceField(choices=TYPE_CHOICES, label="Type of Request", widget=forms.Select(attrs={'class': INPUT_STYLE}))
     mailbox_name = forms.CharField(required=False, label="Mailbox or List Name (if applicable)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Ex: projects@primeeng.com, Marketing DL"}))
     summary = forms.CharField(label="Summary of Request", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Ex: Add Jane Doe to Marketing DL"}))
-    description = forms.CharField(label="Detailed Description / Users to Add/Remove", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Names, emails, required permissions."}))
+    description = forms.CharField(
+        label="Detailed Description / Users to Add/Remove",
+        widget=RichTextWidget()
+    )
 
 # --- 3. Hardware Issue Form ---
 class HardwareIssueForm(forms.Form):
@@ -78,19 +100,28 @@ class HardwareIssueForm(forms.Form):
     asset_tag = forms.CharField(required=False, label="Asset Tag or Device Name (if known)", widget=forms.TextInput(attrs={'class': INPUT_STYLE}))
     location = forms.CharField(required=False, label="Location of Shared Device (if applicable)", widget=forms.TextInput(attrs={'class': INPUT_STYLE}))
     summary = forms.CharField(label="Summary of Problem", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "e.g., Monitor won't turn on"}))
-    description = forms.CharField(label="Detailed Description", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please provide details, including any errors."}))
+    description = forms.CharField(
+        label="Detailed Description",
+        widget=RichTextWidget()
+    )
     screenshot = forms.FileField(required=False, label="Add Screenshot or Photo (Optional)", widget=forms.FileInput(attrs={'class': 'w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-opacity-90'}))
 
 # --- 4. Printer & Scanner Form ---
 class PrinterScannerForm(forms.Form):
     printer_location = forms.CharField(label="Printer/Scanner Location", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'Location (e.g., "Lexington 1st Floor")'}))
-    description = forms.CharField(label="Summary of Problem", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Please describe the problem in detail."}))
+    description = forms.CharField(
+        label="Summary of Problem",
+        widget=RichTextWidget()
+    )
     computer_name = forms.CharField(required=False, label="Affected Computer (if not your own)", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Leave blank if it's your primary computer"}))
 
 # --- 5. Software Install Form ---
 class SoftwareInstallForm(forms.Form):
     software_name = forms.CharField(label="Software Name", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "e.g., Adobe Photoshop, AutoCAD 2026"}))
-    justification = forms.CharField(label="Business Justification / Project", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24', 'placeholder': "e.g., Needed for Project XYZ graphics"}))
+    justification = forms.CharField(
+        label="Business Justification / Project",
+        widget=RichTextWidget()
+    )
     REQUEST_FOR_CHOICES = [('Myself', 'Myself'), ('Another User', 'Another User')]
     request_for = forms.ChoiceField(label="Is this request for yourself or someone else?", choices=REQUEST_FOR_CHOICES, widget=forms.RadioSelect(attrs={'class': 'ml-2'}), initial='Myself')
     target_user = forms.CharField(required=False, label="User Requiring Software (if not yourself)", widget=forms.TextInput(attrs={'class': INPUT_STYLE}))
@@ -100,7 +131,10 @@ class SoftwareInstallForm(forms.Form):
 # --- 6. General Question Form ---
 class GeneralQuestionForm(forms.Form):
     summary = forms.CharField(label="Subject", widget=forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': "Briefly state your question or issue."}))
-    description = forms.CharField(label="Your Question / Issue Details", widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-32', 'placeholder': "Provide details about your question or problem."}))
+    description = forms.CharField(
+        label="Your Question / Issue Details",
+        widget=RichTextWidget()
+    )
     screenshot = forms.FileField(required=False, label="Add Screenshot (Optional)", widget=forms.FileInput(attrs={'class': 'w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-prime-orange file:text-white hover:file:bg-opacity-90'}))
 
 # --- 7. VP Reset Form ---
@@ -123,7 +157,7 @@ class TicketReplyForm(forms.Form):
     comment = forms.CharField(
         label="Add Comment / Reply",
         required=False,
-        widget=forms.Textarea(attrs={'class': INPUT_STYLE + ' h-24', 'placeholder': 'Add a note, reply to the technician...'})
+        widget=RichTextWidget()
     )
     
     # Close Ticket Checkbox
@@ -159,9 +193,9 @@ class KBArticleForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'Enter article title...'}),
             'category': forms.Select(attrs={'class': INPUT_STYLE}),
             'subcategory': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'e.g., Adobe, Bluebeam, Outlook'}),
-            'problem': forms.Textarea(attrs={'class': INPUT_STYLE, 'rows': 4, 'placeholder': 'Describe the symptoms or issue...'}),
-            'solution': forms.Textarea(attrs={'class': INPUT_STYLE, 'rows': 6, 'placeholder': 'Provide step-by-step resolution...'}),
-            'internal_notes': forms.Textarea(attrs={'class': INPUT_STYLE, 'rows': 3, 'placeholder': 'Internal technical notes (optional)...'}),
+            'problem': RichTextWidget(),
+            'solution': RichTextWidget(),
+            'internal_notes': RichTextWidget(),
             'status': forms.Select(attrs={'class': INPUT_STYLE}),
         }
 
