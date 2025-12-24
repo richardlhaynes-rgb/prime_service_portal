@@ -46,23 +46,9 @@
         <!-- Activity / Comments -->
         <div class="space-y-6">
             <h3 class="text-lg font-bold text-prime-navy dark:text-white">Activity Log</h3>
-            {% for comment in comments %}
-            <div class="flex gap-4 {% if comment.author == request.user %} flex-row-reverse {% endif %}">
-                <div class="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0
-                    {% if comment.author == request.user %} bg-prime-orange {% else %} bg-prime-navy {% endif %}">
-                    {{ comment.author.username|slice:":1"|upper }}
-                </div>
-                <div class="max-w-xl bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold text-sm text-gray-900 dark:text-white">{{ comment.author.get_full_name|default:comment.author.username }}</span>
-                        <span class="text-xs text-gray-400 dark:text-gray-500 ml-4">{{ comment.created_at|timesince }} ago</span>
-                    </div>
-                    <p class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{{ comment.text }}</p>
-                </div>
+            <div id="activity-log">
+                {% include 'service_desk/partials/ticket_activities.html' %}
             </div>
-            {% empty %}
-            <p class="text-center text-gray-400 dark:text-gray-500 italic py-4">No comments yet.</p>
-            {% endfor %}
         </div>
     </div>
 
@@ -88,7 +74,19 @@
             
             <!-- THE FORM (Always Displayed) -->
             {% if form %}
-            <form method="post" id="ticket-update-form">
+            <form method="post" id="ticket-update-form"
+                  hx-post="." 
+                  hx-target="#activity-log" 
+                  hx-swap="innerHTML"
+                  hx-on::after-request="
+                    if(event.detail.successful) {
+                        this.reset(); 
+                        const btn = this.querySelector('button[type=submit]');
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                        btn.classList.remove('hover:bg-opacity-90', 'shadow-md', 'transform', 'hover:-translate-y-0.5');
+                    }
+                  ">
                 {% csrf_token %}
                 
                 <!-- Error Display -->

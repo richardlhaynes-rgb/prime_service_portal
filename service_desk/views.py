@@ -355,10 +355,21 @@ def ticket_detail(request, ticket_id):
             if changes_made:
                 ticket.save()
                 message = f"Ticket updated: {', '.join(action_summary)}."
-                messages.success(request, message)
+                # Only show flash message for standard requests
+                if not request.headers.get('HX-Request'):
+                    messages.success(request, message)
             else:
-                messages.info(request, "No changes were made to the ticket.")
+                if not request.headers.get('HX-Request'):
+                    messages.info(request, "No changes were made to the ticket.")
             
+            # HTMX Response: Return only the updated activity log partial
+            if request.headers.get('HX-Request'):
+                updated_comments = ticket.comments.all().order_by('created_at')
+                return render(request, 'service_desk/partials/ticket_activities.html', {
+                    'comments': updated_comments, 
+                    'request': request
+                })
+
             return redirect('ticket_detail', ticket_id=ticket_id)
         else:
             messages.error(request, "Please correct the errors below.")
@@ -812,6 +823,9 @@ def kb_manager(request):
     status_filter = request.GET.get('status', '').strip()
     sort_by = request.GET.get('sort', 'id').strip()
 
+    # Fetch all category names for the dropdown
+    categories = KBCategory.objects.values_list('name', flat=True).order_by('name')
+
     articles = Article.objects.all()
 
     total_count = articles.count()
@@ -845,6 +859,19 @@ def kb_manager(request):
     else:
         articles = articles.order_by('-updated_at')
 
+    # HTMX: If this is an HTMX request, only return the KB table partial
+    if request.headers.get('HX-Request') == 'true':
+        return render(request, 'knowledge_base/partials/kb_table.html', {
+            'articles': articles,
+            'total_count': total_count,
+            'draft_count': draft_count,
+            'pending_count': pending_count,
+            'search_query': search_query,
+            'current_category': category_filter,
+            'current_sort': sort_by,
+            'current_status': status_filter,
+            'categories': categories,
+        })
     return render(request, 'knowledge_base/kb_manager.html', {
         'articles': articles,
         'total_count': total_count,
@@ -853,7 +880,8 @@ def kb_manager(request):
         'search_query': search_query,
         'current_category': category_filter,
         'current_sort': sort_by,
-        'current_status': status_filter
+        'current_status': status_filter,
+        'categories': categories,
     })
 
 
@@ -1076,6 +1104,9 @@ def system_logs(request):
         'end_date': custom_end_str,
     }
     
+    # HTMX: If this is an HTMX request, only return the logs table partial
+    if request.headers.get('HX-Request') == 'true':
+        return render(request, 'service_desk/partials/logs_table.html', context)
     return render(request, 'service_desk/system_logs.html', context)
 
 

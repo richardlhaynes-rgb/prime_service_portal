@@ -1,0 +1,158 @@
+<div id="logs-table-container" class="fade-in">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th scope="col" class="w-64 whitespace-nowrap px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                        <a href="#" 
+                           hx-get=".?sort={% if current_sort == 'timestamp' %}-timestamp{% else %}timestamp{% endif %}&q={{ search_query }}&range={{ current_range }}&timezone={{ selected_tz }}"
+                           hx-target="#logs-table-container"
+                           hx-push-url="true"
+                           class="inline-flex items-center gap-1 hover:text-prime-orange">
+                            Date/Time ({{ selected_tz|slice:"8:" }})
+                            {% if current_sort == 'timestamp' %}&uarr;{% elif current_sort == '-timestamp' %}&darr;{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                        <a href="#" 
+                           hx-get=".?sort={% if current_sort == 'user' %}-user{% else %}user{% endif %}&q={{ search_query }}&range={{ current_range }}&timezone={{ selected_tz }}"
+                           hx-target="#logs-table-container"
+                           hx-push-url="true"
+                           class="inline-flex items-center gap-1 hover:text-prime-orange">
+                            User
+                            {% if current_sort == 'user' %}&uarr;{% elif current_sort == '-user' %}&darr;{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                        <a href="#" 
+                           hx-get=".?sort={% if current_sort == 'action' %}-action{% else %}action{% endif %}&q={{ search_query }}&range={{ current_range }}&timezone={{ selected_tz }}"
+                           hx-target="#logs-table-container"
+                           hx-push-url="true"
+                           class="inline-flex items-center justify-center gap-1 hover:text-prime-orange">
+                            Action
+                            {% if current_sort == 'action' %}&uarr;{% elif current_sort == '-action' %}&darr;{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Target</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Details</th>
+                </tr>
+            </thead>
+
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {% for log in logs %}
+                <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="font-mono text-xs text-gray-700 dark:text-gray-300">
+                            {{ log.dt_obj|date:"n/j/Y g:i A" }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-semibold text-prime-navy dark:text-white">{{ log.user }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex justify-center w-full">
+                            {% with action_lower=log.action|lower %}
+                                {% if 'update' in action_lower or 'edit' in action_lower %}
+                                    <span class="h-8 w-8 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300 flex items-center justify-center" title="{{ log.action }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                                    </span>
+                                {% elif 'create' in action_lower or 'add' in action_lower %}
+                                    <span class="h-8 w-8 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/30 flex items-center justify-center" title="{{ log.action }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                    </span>
+                                {% elif 'delete' in action_lower %}
+                                    <span class="h-8 w-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center" title="{{ log.action }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </span>
+                                {% elif 'login' in action_lower %}
+                                    <span class="h-8 w-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center" title="{{ log.action }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </span>
+                                {% else %}
+                                    <span class="h-8 w-8 rounded-full bg-gray-50 text-gray-500 flex items-center justify-center" title="{{ log.action }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm text-gray-900 dark:text-gray-300">{{ log.target }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-gray-700 dark:text-gray-300">{{ log.details }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                        <div class="flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V7a2 2 0 00-2-2h-3l-2-2H9L7 5H4a2 2 0 00-2 2v6m18 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4m18 0H2m18 0l-3-3H7l-3 3" />
+                            </svg>
+                            <p class="font-medium text-gray-700 dark:text-gray-300">No system activity recorded.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="log-pagination" class="bg-gray-50 dark:bg-gray-800 px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between hidden">
+            <button onclick="changeLogPage(-1)" id="btn-prev-log" class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                &larr; Previous
+            </button>
+            <span id="log-indicator" class="text-sm text-gray-600 dark:text-gray-300 font-medium">Page 1 of 1</span>
+            <button onclick="changeLogPage(1)" id="btn-next-log" class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next &rarr;
+            </button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            let currentLogPage = 1;
+            const logsPerPage = 15;
+            const logRows = Array.from(document.querySelectorAll('tbody tr'));
+            const controls = document.getElementById('log-pagination');
+            const btnPrev = document.getElementById('btn-prev-log');
+            const btnNext = document.getElementById('btn-next-log');
+            const indicator = document.getElementById('log-indicator');
+
+            function renderLogPage() {
+                // Hide all rows first
+                logRows.forEach(row => row.style.display = 'none');
+                const totalPages = Math.ceil(logRows.length / logsPerPage);
+
+                if (logRows.length === 0 || totalPages <= 1) {
+                    controls.classList.add('hidden');
+                    logRows.forEach(row => row.style.display = '');
+                    return;
+                } else {
+                    controls.classList.remove('hidden');
+                }
+
+                const start = (currentLogPage - 1) * logsPerPage;
+                const end = start + logsPerPage;
+                logRows.slice(start, end).forEach(row => row.style.display = '');
+
+                indicator.textContent = `Page ${currentLogPage} of ${totalPages}`;
+                btnPrev.disabled = (currentLogPage === 1);
+                btnNext.disabled = (currentLogPage >= totalPages);
+            }
+
+            // Expose function globally for buttons
+            window.changeLogPage = function(delta) {
+                const totalPages = Math.ceil(logRows.length / logsPerPage);
+                const newPage = currentLogPage + delta;
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentLogPage = newPage;
+                    renderLogPage();
+                }
+            };
+
+            // Init immediately
+            renderLogPage();
+        })();
+    </script>
+</div>

@@ -1,0 +1,25 @@
+<div id="activity-log-content" class="space-y-6 fade-in">
+    {% for comment in comments %}
+    <div class="flex gap-4 {% if comment.author == request.user %} flex-row-reverse {% endif %}">
+        {% if comment.author.profile.avatar %}
+            <img src="{{ comment.author.profile.avatar.url }}"
+                 alt="{{ comment.author.get_full_name|default:comment.author.username }}"
+                 class="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm shrink-0">
+        {% else %}
+            <div class="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm shrink-0
+                {% if comment.author == request.user %} bg-prime-orange {% else %} bg-prime-navy {% endif %}">
+                {{ comment.author.username|slice:":1"|upper }}
+            </div>
+        {% endif %}
+        <div class="max-w-xl bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-sm text-gray-900 dark:text-white">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 ml-4">{{ comment.created_at|timesince }} ago</span>
+            </div>
+            <p class="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">{{ comment.text }}</p>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-center text-gray-400 dark:text-gray-500 italic py-4">No comments yet.</p>
+    {% endfor %}
+</div>

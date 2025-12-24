@@ -13,7 +13,6 @@
 
     <!-- Main Toolbar: Buttons + Columns + Filters + Search -->
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm px-6 py-3 flex justify-between items-center mb-3">
-        <!-- LEFT: Actions -->
         <div class="flex items-center gap-2">
             <a href="{% url 'kb_add' %}" class="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-prime-orange hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-prime-orange">
                 <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,9 +28,7 @@
             </a>
         </div>
 
-        <!-- RIGHT: Columns + Category + Search -->
-        <form method="get" class="flex items-center gap-2 relative">
-            <!-- Columns menu -->
+        <div class="flex items-center gap-2 relative">
             <div class="relative">
                 <button type="button" id="columns-btn" onclick="toggleColumnMenu()" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 shadow-sm focus:outline-none">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -72,46 +69,48 @@
                 </div>
             </div>
 
-            <!-- Category filter -->
-            <select name="category" onchange="filterCategory(this)" class="w-72 block pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-prime-orange focus:border-prime-orange rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <select name="category" 
+                    hx-get="." hx-target="#kb-table-container" hx-include="[name='q']" hx-push-url="true"
+                    class="w-72 block pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-prime-orange focus:border-prime-orange rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <option value="All">Filter: All Categories</option>
                 {% for cat in categories %}
                 <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
                 {% endfor %}
             </select>
 
-            <!-- Search -->
             <div class="relative rounded-md shadow-sm w-72">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                     </svg>
                 </div>
-                <input type="text" name="q" value="{{ search_query }}" class="focus:ring-prime-orange focus:border-prime-orange block w-full pl-10 text-sm border-gray-300 rounded-md py-1.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Search articles...">
+                <input type="text" name="q" value="{{ search_query }}" 
+                       hx-get="." hx-target="#kb-table-container" hx-include="[name='category']" hx-trigger="keyup changed delay:500ms, search" hx-push-url="true"
+                       class="focus:ring-prime-orange focus:border-prime-orange block w-full pl-10 text-sm border-gray-300 rounded-md py-1.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Search articles...">
             </div>
-        </form>
+        </div>
     </div>
 
-    <!-- Stats quick filters -->
     <div class="flex items-center px-2 mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-        <a href="?status=" class="hover:text-prime-orange transition-colors {% if not current_status %}text-prime-orange font-bold underline{% endif %}">
+        <a href="#" hx-get=".?status=&q={{ search_query }}&category={{ current_category }}" hx-target="#kb-table-container" hx-push-url="true"
+           class="hover:text-prime-orange transition-colors {% if not current_status %}text-prime-orange font-bold underline{% endif %}">
             Total: <span class="text-gray-900 dark:text-white">{{ total_count }}</span>
         </a>
         <span class="mx-2">|</span>
-        <a href="?status=Draft" class="hover:text-prime-orange transition-colors {% if current_status == 'Draft' %}text-prime-orange font-bold underline{% endif %}">
+        <a href="#" hx-get=".?status=Draft&q={{ search_query }}&category={{ current_category }}" hx-target="#kb-table-container" hx-push-url="true"
+           class="hover:text-prime-orange transition-colors {% if current_status == 'Draft' %}text-prime-orange font-bold underline{% endif %}">
             Drafts: <span class="text-gray-900 dark:text-white">{{ draft_count }}</span>
         </a>
         <span class="mx-2">|</span>
-        <a href="?status=Pending Approval" class="hover:text-prime-orange transition-colors {% if current_status == 'Pending Approval' %}text-prime-orange font-bold underline{% endif %}">
+        <a href="#" hx-get=".?status=Pending Approval&q={{ search_query }}&category={{ current_category }}" hx-target="#kb-table-container" hx-push-url="true"
+           class="hover:text-prime-orange transition-colors {% if current_status == 'Pending Approval' %}text-prime-orange font-bold underline{% endif %}">
             Pending: <span class="text-gray-900 dark:text-white">{{ pending_count }}</span>
         </a>
     </div>
 
-    <!-- Bulk form wraps toolbar + table -->
     <form id="bulk-form" method="post" action="{% url 'kb_bulk_action' %}">
         {% csrf_token %}
 
-        <!-- Bulk toolbar (hidden until selection) -->
         <div id="bulk-toolbar" class="hidden bg-prime-orange bg-opacity-10 border border-prime-orange rounded-lg p-3 mb-4 items-center justify-between transition-all duration-300">
             <div class="flex items-center gap-2 text-prime-orange font-bold px-2">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -133,102 +132,8 @@
             </div>
         </div>
 
-        <!-- Table container -->
-        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider w-10">
-                                <input type="checkbox" id="select-all" onclick="toggleSelectAll()" class="focus:ring-prime-orange h-4 w-4 text-prime-orange border-gray-300 rounded">
-                            </th>
-                            <th scope="col" class="col-id px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-white uppercase tracking-wider whitespace-nowrap">
-                                <a href="?sort={% if current_sort == 'id' %}-id{% else %}id{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">ID</a>
-                            </th>
-                            <th scope="col" class="col-title px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-white uppercase tracking-wider whitespace-nowrap">
-                                <a href="?sort={% if current_sort == 'title' %}-title{% else %}title{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">Title</a>
-                            </th>
-                            <th scope="col" class="col-category px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-white uppercase tracking-wider whitespace-nowrap">
-                                <a href="?sort={% if current_sort == 'category' %}-category{% else %}category{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">Category</a>
-                            </th>
-                            <th scope="col" class="col-sub hidden px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-white uppercase tracking-wider whitespace-nowrap">
-                                <a href="?sort={% if current_sort == 'subcategory' %}-subcategory{% else %}subcategory{% endif %}" class="group flex items-center gap-1 hover:text-prime-orange">Subcategory</a>
-                            </th>
-                            <th scope="col" class="col-status px-6 py-3 text-center text-xs font-bold text-gray-500 dark:text-white uppercase tracking-wider whitespace-nowrap">
-                                <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="group flex items-center gap-1 justify-center hover:text-prime-orange">Status</a>
-                            </th>
-                            <th scope="col" class="col-actions px-6 py-3 text-center text-xs font-bold text-gray-500 dark:text-white uppercase tracking-wider whitespace-nowrap">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                        {% for article in articles %}
-                        <tr class="hover:bg-gray-50 transition-colors dark:text-gray-300 dark:hover:bg-gray-700/50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <input type="checkbox" name="selected_ids" value="{{ article.id }}" class="article-checkbox focus:ring-prime-orange h-4 w-4 text-prime-orange border-gray-300 rounded" onclick="updateToolbar()">
-                            </td>
-                            <td class="col-id px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 font-mono">#{{ article.id }}</td>
-                            <td class="col-title px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">
-                                <a href="{% url 'kb_edit' article.id %}" class="hover:text-prime-orange hover:underline transition-colors block">
-                                    {{ article.title|truncatechars:60 }}
-                                </a>
-                            </td>
-                            <td class="col-category px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{{ article.category }}</td>
-                            <td class="col-sub hidden px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{{ article.subcategory|default:"-" }}</td>
-
-                            <td class="col-status px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex justify-center w-full">
-                                    {% if article.status == 'Approved' %}
-                                        <span title="Approved" class="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                        </span>
-                                    {% elif article.status == 'Pending Approval' or article.status == 'Pending' %}
-                                        <span title="Pending Approval" class="h-8 w-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        </span>
-                                    {% else %}
-                                        <span title="Draft" class="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300">
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </td>
-
-                            <td class="col-actions px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center gap-2 w-full">
-                                    <!-- Edit (Pencil) -->
-                                    <a href="{% url 'kb_edit' article.id %}" title="Edit Article" class="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                    </a>
-                                    <!-- Delete -->
-                                    <button type="button" onclick="openSingleDeleteModal({{ article.id }})" title="Delete Article" class="h-8 w-8 rounded-full bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 transition-colors">
-                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr class="dark:text-gray-300">
-                            <td colspan="7" class="px-6 py-12 text-center">
-                                <div class="flex flex-col items-center justify-center">
-                                    <svg class="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">No articles found.</h3>
-                                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Click the "New Article" button to get started.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        {% include 'knowledge_base/partials/kb_table.html' %}
+        
     </form>
 
 </div>
