@@ -10,7 +10,7 @@
         {% endif %}
     </div>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         {% csrf_token %}
 
         <div class="bg-slate-800 rounded-lg shadow-lg border border-slate-700 p-8 mb-8 flex flex-col md:flex-row gap-8">

@@ -25,6 +25,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from services.ticket_service import log_system_event
+import os
 
 # ============================================================================
 # USER DASHBOARD
@@ -141,7 +142,8 @@ def report_application_issue(request):
                 ticket_type=Ticket.TicketType.APPLICATION,
                 submitter=request.user,
                 priority=Ticket.Priority.P3,
-                status=Ticket.Status.NEW
+                status=Ticket.Status.NEW,
+                attachment=request.FILES.get('screenshot'),  # <-- Added attachment
             )
             messages.success(request, f'Ticket Submitted: {title}')
             return redirect('dashboard')
@@ -180,7 +182,7 @@ def report_hardware_issue(request):
         if form.is_valid():
             data = form.cleaned_data
             device = data['device_type']
-            if device == 'Other' and data['other_device']:
+            if device == 'Other' and data.get('other_device'):
                 device = f'Other ({data["other_device"]})'
             title = f'[Portal] Hardware Issue: {device} - {data["summary"]}'
             desc = f'USER REPORT:\n-----------------\nDevice: {device}\nSerial/Tag: {data.get("device_serial", "N/A")}\n\nDETAILS:\n{data["description"]}'
@@ -190,7 +192,8 @@ def report_hardware_issue(request):
                 ticket_type=Ticket.TicketType.HARDWARE,
                 submitter=request.user,
                 priority=Ticket.Priority.P2 if data.get('is_urgent') else Ticket.Priority.P3,
-                status=Ticket.Status.NEW
+                status=Ticket.Status.NEW,
+                attachment=request.FILES.get('screenshot'),  # <-- Added attachment (field name is 'screenshot' per form)
             )
             messages.success(request, f'Ticket Submitted: {title}')
             return redirect('dashboard')
@@ -260,7 +263,8 @@ def report_general_question(request):
                 ticket_type=Ticket.TicketType.GENERAL,
                 submitter=request.user,
                 priority=Ticket.Priority.P4,
-                status=Ticket.Status.NEW
+                status=Ticket.Status.NEW,
+                attachment=request.FILES.get('screenshot'),  # <-- Added attachment (field name is 'screenshot' per form)
             )
             messages.success(request, f'Ticket Submitted: {title}')
             return redirect('dashboard')
@@ -329,6 +333,10 @@ def ticket_detail(request, ticket_id):
     """
     ticket = get_object_or_404(Ticket, id=ticket_id)
     comments = ticket.comments.all().order_by('created_at')
+
+    # Add this logic before defining the context dictionary
+    if ticket.attachment:
+        ticket.filename = os.path.basename(ticket.attachment.name)
     
     if request.method == 'POST':
         form = TicketReplyForm(request.POST)
@@ -1283,6 +1291,7 @@ def user_edit(request, user_id):
         log_system_event(
              user=request.user,
              action="User Deleted",
+             target=username,  # <-- FIXED: Added target argument
              details=f"Deleted user account: {username}"
         )
         messages.success(request, f"User '{username}' has been deleted.")
@@ -1304,8 +1313,9 @@ def user_edit(request, user_id):
                 profile.save()
             
             log_system_event(
-                user=request.user,
+                user=request.user.username,  # <--- CHANGED: .username (String) instead of object
                 action="User Updated",
+                target=user.username,        # <--- Ensure this is also a string
                 details=f"Updated profile for user: {user.username}"
             )
             messages.success(request, f"User '{user.username}' has been updated.")

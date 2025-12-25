@@ -2,7 +2,27 @@
 
 All notable changes to the PRIME Service Portal project are documented in this file.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
+
+---
+
+## [1.2.0] - 2025-12-25
+### Added
+- **Production Server:** Implemented `Waitress` WSGI server with a 32-thread configuration for enterprise-wide stability.
+- **One-Click Launchers:** Created `Start_Portal.bat` and `run_production.py` for professional deployment without VS Code.
+- **Disaster Recovery:** Created `SYSTEM_MANUAL.md` and `Backup_Database.bat` for "Bus Factor" business continuity.
+- **Asset Management Foundation:** Added initial `Asset` model to `models.py` with lifecycle status tracking.
+- **UI Enhancements:** Added Submitter name, precision timestamps, and Dark-Mode-aware attachment displays to Ticket Details.
+
+### Changed
+- **Database Migration:** Successfully migrated core engine from SQLite to PostgreSQL 18.1.
+- **Log System:** Refactored `log_system_event` to resolve database locking issues during concurrent writes.
+- **File Handling:** Updated ticket submission views to correctly handle and store `request.FILES` attachments.
+
+### Fixed
+- Resolved "VariableDoesNotExist" error on unassigned tickets by adding safe technician checks in templates.
+- Fixed HTML rendering in ticket descriptions using the `|safe` filter.
+- Optimized attachment display to show clean filenames instead of full system paths.
 
 ---
 
