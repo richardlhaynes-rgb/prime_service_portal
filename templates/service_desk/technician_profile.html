@@ -30,9 +30,9 @@
         <!-- Profile Content -->
         <div class="relative flex items-center gap-6">
             <!-- Avatar -->
-            {% if technician.avatar and not technician.prefer_initials and (technician.avatar|slice:":1" == "/" or technician.avatar|startswith:"http") %}
+            {% if technician.avatar and not technician.prefer_initials %}
                 <img src="{{ technician.avatar }}" alt="{{ technician.name }}" 
-                     class="h-32 w-32 rounded-full border-4 border-white shadow-xl">
+                     class="h-32 w-32 rounded-full border-4 border-white shadow-xl object-cover object-top">
             {% else %}
                 <img src="https://ui-avatars.com/api/?name={{ technician.name|urlencode }}&background=0D8ABC&color=fff" 
                      alt="{{ technician.name }}" 

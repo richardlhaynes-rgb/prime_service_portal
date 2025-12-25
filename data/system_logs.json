@@ -822,5 +822,21 @@
         "action": "Update",
         "target": "System Health",
         "details": "Announcement set to 'All Systems Operational' with 5 vendor entries"
+    },
+    {
+        "id": 104,
+        "timestamp": "2025-12-25T02:07:52.082044Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'Security Alert' with 5 vendor entries"
+    },
+    {
+        "id": 105,
+        "timestamp": "2025-12-25T02:08:16.547336Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'Security Alert' with 5 vendor entries"
     }
 ]

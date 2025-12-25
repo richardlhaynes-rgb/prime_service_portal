@@ -6,6 +6,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [0.13.0] - 2025-12-24 (Profile Architecture & Stability)
+
+### 🚀 New Features
+- **Unified Profile System:** Consolidated the *Edit User* (Admin) and *My Profile* (Self) views into a single, maintainable template (`user_profile.html`).
+- **Profile Stability:** Refactored the "Update User" logic to robustly handle avatar uploads and data persistence across all user roles.
+
+### 🎨 UI & UX Polish
+- **Avatar Cropping:** Applied smart positioning (`object-top`) to user avatars to prevent faces from being cut off in circular frames.
+- **Login Status:** Fixed the "Last Login" display to show "Never" instead of broken timestamp strings for new accounts.
+- **Error Feedback:** Enabled proper error reporting on profile forms to prevent silent failures during updates.
+
+### ⚙️ Backend & Architecture
+- **Root Import Fixes:** Corrected Python import paths for `services.ticket_service`, resolving `ModuleNotFoundError` crashes.
+- **Manual File Handling:** Updated `views.py` to manually process `request.FILES` for avatar uploads, bypassing form restriction issues.
+- **Validation Logic:** Switched read-only fields from `disabled` (not sent) to `readonly` (sent) to ensure forms pass server-side validation.
+
+### 🐛 Fixes
+- **Technician Analytics:** Resolved a `TemplateSyntaxError` in the Manager Dashboard caused by an invalid `startswith` filter.
+- **Crash Prevention:** Fixed a critical `NameError` by importing `UserProfile` and logging services correctly in `views.py`.
+
+---
+
 ## [0.12.0] - 2025-12-24 (Technician Workspace & System Hardening)
 
 ### 🚀 New Features

@@ -10,7 +10,7 @@ from .forms import (
     TicketReplyForm, KBArticleForm, GlobalSettingsForm, CustomUserCreationForm, CustomUserChangeForm
 )
 # FIXED: Added Notification to top-level imports
-from .models import Ticket, Comment, GlobalSettings, Notification
+from .models import Ticket, Comment, GlobalSettings, Notification, UserProfile
 from services import ticket_service
 from datetime import datetime, timedelta
 import random
@@ -24,6 +24,7 @@ from django.utils.dateparse import parse_datetime
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from services.ticket_service import log_system_event
 
 # ============================================================================
 # USER DASHBOARD
@@ -1147,28 +1148,53 @@ def system_logs(request):
 
 @login_required
 def my_profile(request):
+    """
+    Allows users to edit their own profile (Avatar/Initials only).
+    Uses 'user_profile.html' but disables text fields for non-superusers.
+    Manual handling for Avatar file save is crucial here.
+    """
+    user = request.user
+    
     if request.method == 'POST':
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        avatar = request.FILES.get('avatar')
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            # 1. Save standard User fields (first_name, last_name, etc.)
+            user = form.save()
 
-        user = request.user
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        user.save()
+            # -------------- CRITICAL FIX --------------
+            # 2. Manually handle Avatar upload (lives on UserProfile)
+            avatar_file = request.FILES.get('avatar')
+            if avatar_file:
+                # Ensure profile exists
+                profile, created = UserProfile.objects.get_or_create(user=user)
+                # Save the new file
+                profile.avatar = avatar_file
+                # Turn off initials if uploading a photo
+                profile.prefer_initials = False
+                profile.save()
+            # ------------------------------------------
 
-        if avatar:
-            user.profile.avatar = avatar
-            user.profile.save()
-            messages.success(request, "Profile updated successfully with new avatar.")
-        else:
-            messages.success(request, "Profile updated successfully.")
-        
-        return redirect('my_profile')
+            messages.success(request, "Your profile has been updated.")
+            return redirect('my_profile')
+    else:
+        form = CustomUserChangeForm(instance=user)
 
-    return render(request, 'service_desk/my_profile.html')
+    # LOCK DOWN FIELDS: If not a superuser, disable everything except avatar/initials
+    if not user.is_superuser:
+        allowed_fields = ['avatar', 'prefer_initials']
+        for field_name, field in form.fields.items():
+            if field_name not in allowed_fields:
+                field.widget.attrs['disabled'] = 'disabled'
+                existing_classes = field.widget.attrs.get('class', '')
+                field.widget.attrs['class'] = f"{existing_classes} opacity-50 cursor-not-allowed".strip()
+
+    context = {
+        'form': form,
+        'is_self_profile': True,
+        'page_title': 'My Profile'
+    }
+    # Note: Using the new unified template filename
+    return render(request, 'service_desk/user_profile.html', context)
 
 
 # ============================================================================
@@ -1235,52 +1261,65 @@ def user_add(request):
     else:
         form = CustomUserCreationForm()
     
-    return render(request, 'service_desk/user_form.html', {'form': form, 'title': 'Add New User'})
+    return render(request, 'service_desk/user_profile.html', {'form': form, 'title': 'Add New User'})
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def user_edit(request, user_id):
-    user_obj = get_object_or_404(User, id=user_id)
+    """
+    Admin view to edit any user.
+    Handles standard user data AND manual avatar/profile saves.
+    """
+    target_user = get_object_or_404(User, pk=user_id)
 
+    # Handle User Deletion
     if request.method == 'POST' and 'delete_user' in request.POST:
-        username = user_obj.username
-        try:
-            LogEntry.objects.log_action(
-                user_id=request.user.id,
-                content_type_id=ContentType.objects.get_for_model(User).pk,
-                object_id=user_obj.id,
-                object_repr=username,
-                action_flag=DELETION,
-                change_message="Deleted via Service Portal"
-            )
-        except:
-            pass
-
-        user_obj.delete()
-        messages.success(request, f'✅ User "{username}" has been deleted.')
+        if target_user == request.user:
+             messages.error(request, "You cannot delete your own account while logged in.")
+             return redirect('user_edit', user_id=user_id)
+        
+        username = target_user.username
+        target_user.delete()
+        log_system_event(
+             user=request.user,
+             action="User Deleted",
+             details=f"Deleted user account: {username}"
+        )
+        messages.success(request, f"User '{username}' has been deleted.")
         return redirect('user_management')
 
+    # Handle Form Submission (Update User)
     if request.method == 'POST':
-        form = CustomUserChangeForm(request.POST, request.FILES, instance=user_obj)
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=target_user)
         if form.is_valid():
-            form.save()
-            try:
-                LogEntry.objects.log_action(
-                    user_id=request.user.id,
-                    content_type_id=ContentType.objects.get_for_model(User).pk,
-                    object_id=user_obj.id,
-                    object_repr=user_obj.username,
-                    action_flag=CHANGE,
-                    change_message="Modified via Service Portal"
-                )
-            except:
-                pass
-            messages.success(request, f'✅ User "{user_obj.username}" updated successfully.')
+            # 1. Save standard user fields
+            user = form.save()
+            
+            # 2. Manually handle avatar upload
+            avatar_file = request.FILES.get('avatar')
+            if avatar_file:
+                profile, created = UserProfile.objects.get_or_create(user=user)
+                profile.avatar = avatar_file
+                profile.prefer_initials = False
+                profile.save()
+            
+            log_system_event(
+                user=request.user,
+                action="User Updated",
+                details=f"Updated profile for user: {user.username}"
+            )
+            messages.success(request, f"User '{user.username}' has been updated.")
             return redirect('user_management')
     else:
-        form = CustomUserChangeForm(instance=user_obj)
+        form = CustomUserChangeForm(instance=target_user)
 
-    return render(request, 'service_desk/user_form.html', {'form': form, 'user_obj': user_obj, 'title': f'Edit User: {user_obj.username}'})
+    context = {
+        'form': form,
+        'target_user': target_user,
+        'is_self_profile': (target_user == request.user),
+        'page_title': f'Edit User: {target_user.username}'
+    }
+    return render(request, 'service_desk/user_profile.html', context)
 
 
 # ============================================================================

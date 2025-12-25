@@ -1,8 +1,8 @@
 {
     "announcement": {
-        "title": "All Systems Operational",
-        "message": "No known issues at this time.",
-        "type": "info",
+        "title": "Security Alert",
+        "message": "Please be aware of a suspicious email circulating. Do not click links from unknown sources.",
+        "type": "critical",
         "date": "Today",
         "start_datetime": "",
         "end_datetime": ""
@@ -26,7 +26,7 @@
         },
         {
             "name": "Bluebeam Studio",
-            "status": "Operational"
+            "status": "Degraded Performance"
         }
     ]
 }
