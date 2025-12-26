@@ -1,11 +1,5 @@
 @echo off
-echo Launching PRIME Control Panel...
-:: This launches the script minimized
-if not "%minimized%"=="" goto :minimized
-set minimized=true
-start /min cmd /C "%~dpnx0"
-goto :EOF
-
-:minimized
+cd /d C:\Projects\prime_service_portal
 call venv\Scripts\activate
-python control_center.py
+start pythonw control_center.pyw
+exit
