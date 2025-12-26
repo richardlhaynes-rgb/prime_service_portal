@@ -6,20 +6,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [1.3.0] - 2025-12-25
+
+### 🚀 New Features
+- **PRIME Control Center:** Launched a custom GUI administration dashboard (`control_center.py`) for centralized site management.
+- **Automated Cloud Snapshots:** Integrated a "One-Click" backup system that clones the entire project and database to Google Drive (G:\).
+- **Minimized Launcher:** Created a silent .bat launcher for the Control Center to maintain a clean desktop workspace.
+
+### ⚙️ Backend & Architecture
+- **Infrastructure Finalization:** Completed the transition to PostgreSQL 18.1 as the primary production engine.
+- **Static Asset Pipeline:** Implemented `collectstatic` workflows and absolute path mapping to ensure 100% image reliability across Network IPs and Hostnames.
+- **Security Hardening:** Configured `ALLOWED_HOSTS` to support multi-office network access via specific IP and Hostname identities.
+
+### 🎨 UI & UX Polish
+- **Production Console:** Enhanced the Waitress startup screen with professional ANSI coloring and dynamic network access discovery.
+- **Custom Branding:** Created and deployed a high-fidelity SVG/ICO icon for the system's administration tools.
+
+---
+
 ## [1.2.0] - 2025-12-25
-### Added
+
+### 🚀 New Features
 - **Production Server:** Implemented `Waitress` WSGI server with a 32-thread configuration for enterprise-wide stability.
 - **One-Click Launchers:** Created `Start_Portal.bat` and `run_production.py` for professional deployment without VS Code.
 - **Disaster Recovery:** Created `SYSTEM_MANUAL.md` and `Backup_Database.bat` for "Bus Factor" business continuity.
 - **Asset Management Foundation:** Added initial `Asset` model to `models.py` with lifecycle status tracking.
 - **UI Enhancements:** Added Submitter name, precision timestamps, and Dark-Mode-aware attachment displays to Ticket Details.
 
-### Changed
+### ⚙️ Backend & Architecture
 - **Database Migration:** Successfully migrated core engine from SQLite to PostgreSQL 18.1.
 - **Log System:** Refactored `log_system_event` to resolve database locking issues during concurrent writes.
 - **File Handling:** Updated ticket submission views to correctly handle and store `request.FILES` attachments.
 
-### Fixed
+### 🐛 Fixes
 - Resolved "VariableDoesNotExist" error on unassigned tickets by adding safe technician checks in templates.
 - Fixed HTML rendering in ticket descriptions using the `|safe` filter.
 - Optimized attachment display to show clean filenames instead of full system paths.
