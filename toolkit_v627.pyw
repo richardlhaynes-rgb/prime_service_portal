@@ -1,5 +1,5 @@
 """
-PRIME Service Portal - Developer Toolkit v6.29
+PRIME Service Portal - Developer Toolkit v6.30
 --------------------------------------------------------------------------------
 App Major Features:
 1. Smart Backup Engine:
@@ -16,7 +16,7 @@ App Major Features:
 
 4. Dev Tools Cockpit:
    - Git Status, Environment Info, Quick File Access.
-   - SMART COMMIT & PUSH: Interactive workflow with in-app feedback (no popups).
+   - SMART COMMIT & PUSH: Uses venv activation to ensure credential inheritance.
    - DJANGO SHELL: One-click venv + manage.py shell access.
 
 5. Server Control:
@@ -95,7 +95,7 @@ os.chdir(SCRIPT_DIR)
 
 # Set AppID so Windows Taskbar shows the correct icon
 try:
-    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.29'
+    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.30'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
 except:
     pass
@@ -900,21 +900,21 @@ def run_smart_git_push():
             proc_commit = subprocess.run(f'git commit -m "{summary}"', shell=True, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
             log_raw(proc_commit.stdout)
 
-            # 3. Push (EXTERNAL WINDOW for Browser Auth)
+            # 3. Push (EXTERNAL WINDOW + VENV ACTIVATION for Credential Inheritance)
             log_raw(">> git push (Launching auth window...)")
             
-            # Using 'start' to open cmd. '/c' runs and closes, 'pause' keeps it if needed.
-            # We want to see the result, so we use logic:
-            # If successful, close after 5 seconds. If failed, pause indefinitely.
-            
+            # CRITICAL FIX: We launch 'activate.bat' BEFORE 'git push' inside the new CMD window.
+            # This replicates the "Green Window" environment where auth works.
             cmd_str = (
                 'start "Git Push" cmd /c '
-                '"git push && (echo. & echo [SUCCESS] Closing in 5 seconds... & timeout /t 5) || (echo. & echo [FAILED] Review error above. & pause)"'
+                '"call venv\\Scripts\\activate.bat && echo. && echo --------------------------- && '
+                'echo   EXECUTING GIT PUSH... && echo --------------------------- && echo. && '
+                'git push && (echo. & echo [SUCCESS] Closing in 5 seconds... & timeout /t 5) || (echo. & echo [FAILED] Review error above. & pause)"'
             )
             subprocess.run(cmd_str, shell=True)
             
             log_status("External Push Process Launched.")
-            log_raw("Please check the popup window for final status/authentication.")
+            log_raw("Please check the popup window for final status.")
 
         except Exception as e:
             log_error(f"GIT ERROR: {str(e)}")
@@ -1011,7 +1011,7 @@ def create_metric_card(parent, title, value_var, accent_color):
 # 10. MAIN UI SETUP
 # =============================================================================
 root = tk.Tk()
-root.title("PRIME Service Portal - Developer Toolkit v6.29")
+root.title("PRIME Service Portal - Developer Toolkit v6.30")
 
 # Work Area Centering
 wa_left, wa_top, wa_right, wa_bottom = get_work_area()
@@ -1040,7 +1040,7 @@ except: tk.Label(h_left, text="PRIME AE", font=('Arial', 24, 'bold'), fg='white'
 tk.Frame(h_left, bg=THEME['border'], width=2).pack(side='left', fill='y', padx=(0, 20))
 h_titles = tk.Frame(h_left, bg=THEME['bg_primary']); h_titles.pack(side='left')
 tk.Label(h_titles, text="DEVELOPER TOOLKIT", font=FONTS['header'], fg=THEME['accent_blue'], bg=THEME['bg_primary']).pack(anchor='w')
-version_lbl = tk.Label(h_titles, text="v6.29 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
+version_lbl = tk.Label(h_titles, text="v6.30 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
 version_lbl.pack(anchor='w'); version_lbl.bind("<Button-1>", open_changelog)
 tk.Label(h_titles, text="© 2025 | Conceived & Designed by Richard Haynes", font=('Segoe UI', 8), fg=THEME['text_muted'], bg=THEME['bg_primary']).pack(anchor='w', pady=(2,0))
 h_right = tk.Frame(header, bg=THEME['bg_primary']); h_right.pack(side='right', fill='y')
@@ -1083,12 +1083,10 @@ graph_cpu = TelemetryGraph(g_container, data_source_key='cpu', title=f"{ICONS['c
 graph_ram = TelemetryGraph(g_container, data_source_key='ram', title=f"{ICONS['ram']} MEMORY USAGE HISTORY", color='#a78bfa', unit="%", height=150, responsive_height=False); graph_ram.pack(side='left', fill='both', expand=True)
 
 # =============================================================================
-# TAB 2: DATABASE OPS (REFINED: CARDS OVER COLUMNS)
+# TAB 2: DATABASE OPS
 # =============================================================================
 tab_db = tk.Frame(notebook, bg=THEME['bg_primary']); notebook.add(tab_db, text=f"{ICONS['database']} DATABASE OPS")
 db_grid = tk.Frame(tab_db, bg=THEME['bg_primary']); db_grid.pack(fill='both', expand=True, pady=20)
-
-# 1. Maintenance Actions (Top)
 db_top = tk.Frame(db_grid, bg=THEME['bg_primary']); db_top.pack(fill='x', pady=(0, 20))
 tk.Label(db_top, text="MAINTENANCE TASKS", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_primary']).pack(anchor='w', pady=(0,5))
 db_actions = tk.Frame(db_top, bg=THEME['bg_card']); db_actions.pack(fill='x', ipady=10)
@@ -1096,42 +1094,15 @@ create_action_button(db_actions, "RUN MIGRATIONS", lambda: run_command_with_log(
 create_action_button(db_actions, "REFRESH DEMO", refresh_demo_data_confirm, THEME['btn_success'], ICONS['refresh']).pack(side='left')
 create_action_button(db_actions, "WIPE INVENTORY DB", wipe_database_confirm, THEME['btn_danger'], ICONS['trash']).pack(side='right', padx=20)
 create_action_button(db_actions, "POPULATE DATA", lambda: run_script_command("populate_inventory.py", "SEED"), THEME['btn_info'], ICONS['seed']).pack(side='right')
-
-# 2. STATUS CARDS (The HUD - 4 Cards)
-cards_frame = tk.Frame(db_grid, bg=THEME['bg_primary'])
-cards_frame.pack(fill='x', pady=(0, 20))
-
-var_card_conns = tk.StringVar(value="-- Active")
-card_conns = create_metric_card(cards_frame, "Active Sessions", var_card_conns, THEME['accent_blue'])
-card_conns.pack(side='left', fill='x', expand=True, padx=(0, 10))
-
-var_card_size = tk.StringVar(value="-- MB")
-card_size = create_metric_card(cards_frame, "Database Size", var_card_size, THEME['status_active'])
-card_size.pack(side='left', fill='x', expand=True, padx=(0, 10))
-
-var_card_cache = tk.StringVar(value="-- %")
-card_cache = create_metric_card(cards_frame, "Cache Hit Ratio", var_card_cache, THEME['accent_purple'])
-card_cache.pack(side='left', fill='x', expand=True, padx=(0, 10))
-
-var_card_commits = tk.StringVar(value="--")
-card_commits = create_metric_card(cards_frame, "Total Commits", var_card_commits, THEME['accent_yellow'])
-card_commits.pack(side='left', fill='x', expand=True)
-
-# 3. ACTIVITY GRAPHS (The Pulse)
-db_graphs = tk.Frame(db_grid, bg=THEME['bg_primary'])
-db_graphs.pack(fill='both', expand=True)
-
-# Graph 1: Transactions (Orange)
-graph_db_tps = TelemetryGraph(db_graphs, data_source_key='db_tps', title="TRANSACTIONS / SEC", color=THEME['accent_orange'], unit="", responsive_height=True, min_y_max=1.0)
-graph_db_tps.pack(side='left', fill='both', expand=True, padx=(0, 10))
-
-# Graph 2: Reads (Blue)
-graph_db_reads = TelemetryGraph(db_graphs, data_source_key='db_reads', title="READS / SEC (TUPLES FETCHED)", color=THEME['accent_blue'], unit="", responsive_height=True, min_y_max=10.0)
-graph_db_reads.pack(side='left', fill='both', expand=True, padx=(0, 10))
-
-# Graph 3: Writes (Pink)
-graph_db_writes = TelemetryGraph(db_graphs, data_source_key='db_writes', title="WRITES / SEC (INSERT/UPD/DEL)", color=THEME['accent_pink'], unit="", responsive_height=True, min_y_max=1.0)
-graph_db_writes.pack(side='left', fill='both', expand=True)
+cards_frame = tk.Frame(db_grid, bg=THEME['bg_primary']); cards_frame.pack(fill='x', pady=(0, 20))
+var_card_conns = tk.StringVar(value="-- Active"); card_conns = create_metric_card(cards_frame, "Active Sessions", var_card_conns, THEME['accent_blue']); card_conns.pack(side='left', fill='x', expand=True, padx=(0, 10))
+var_card_size = tk.StringVar(value="-- MB"); card_size = create_metric_card(cards_frame, "Database Size", var_card_size, THEME['status_active']); card_size.pack(side='left', fill='x', expand=True, padx=(0, 10))
+var_card_cache = tk.StringVar(value="-- %"); card_cache = create_metric_card(cards_frame, "Cache Hit Ratio", var_card_cache, THEME['accent_purple']); card_cache.pack(side='left', fill='x', expand=True, padx=(0, 10))
+var_card_commits = tk.StringVar(value="--"); card_commits = create_metric_card(cards_frame, "Total Commits", var_card_commits, THEME['accent_yellow']); card_commits.pack(side='left', fill='x', expand=True)
+db_graphs = tk.Frame(db_grid, bg=THEME['bg_primary']); db_graphs.pack(fill='both', expand=True)
+graph_db_tps = TelemetryGraph(db_graphs, data_source_key='db_tps', title="TRANSACTIONS / SEC", color=THEME['accent_orange'], unit="", responsive_height=True, min_y_max=1.0); graph_db_tps.pack(side='left', fill='both', expand=True, padx=(0, 10))
+graph_db_reads = TelemetryGraph(db_graphs, data_source_key='db_reads', title="READS / SEC (TUPLES FETCHED)", color=THEME['accent_blue'], unit="", responsive_height=True, min_y_max=10.0); graph_db_reads.pack(side='left', fill='both', expand=True, padx=(0, 10))
+graph_db_writes = TelemetryGraph(db_graphs, data_source_key='db_writes', title="WRITES / SEC (INSERT/UPD/DEL)", color=THEME['accent_pink'], unit="", responsive_height=True, min_y_max=1.0); graph_db_writes.pack(side='left', fill='both', expand=True)
 
 # TAB 3: DEV TOOLS
 tab_dev = tk.Frame(notebook, bg=THEME['bg_primary']); notebook.add(tab_dev, text=f"{ICONS['terminal']} DEV TOOLS")
@@ -1144,6 +1115,7 @@ create_action_button(dev_actions, "PYTHON SHELL", open_python_shell, THEME['btn_
 # NEW BUTTON: Django Shell
 create_action_button(dev_actions, "DJANGO SHELL", open_django_shell, THEME['btn_secondary'], ICONS['django']).pack(side='left', padx=20)
 create_action_button(dev_actions, "COLLECT STATIC", lambda: run_command_with_log("python manage.py collectstatic --noinput", "STATIC"), THEME['btn_info'], ICONS['folder']).pack(side='left')
+# UPDATED BUTTON: Commit & Push
 create_action_button(dev_actions, "COMMIT & PUSH", run_smart_git_push, THEME['accent_orange'], ICONS['git']).pack(side='left', padx=20)
 
 dev_mid = tk.Frame(dev_grid, bg=THEME['bg_primary']); dev_mid.pack(fill='both', expand=True)
@@ -1174,8 +1146,7 @@ r_t_box = tk.Frame(r_tools, bg=THEME['bg_card']); r_t_box.pack(fill='x', pady=5,
 btn_snap = create_action_button(r_t_box, "TAKE SNAPSHOT", None, THEME['btn_backup'], ICONS['shield']); btn_snap.config(command=lambda: run_smart_backup(btn_snap)); btn_snap.pack(side='left', padx=20)
 create_action_button(r_t_box, "RESTORE", show_restore_guide, THEME['btn_purple'], ICONS['refresh']).pack(side='left')
 create_action_button(r_t_box, "EXPLORE ROOT", show_file_browser_root, THEME['btn_secondary'], ICONS['folder']).pack(side='left', padx=20)
-progress_frame = tk.Frame(r_t_box, bg=THEME['bg_card'])
-status_label = tk.Label(r_t_box, text="Ready", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
+progress_frame = tk.Frame(r_t_box, bg=THEME['bg_card']); status_label = tk.Label(r_t_box, text="Ready", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
 style.configure("green.Horizontal.TProgressbar", foreground=THEME['status_active'], background=THEME['status_active'])
 progress_bar = ttk.Progressbar(r_t_box, style="green.Horizontal.TProgressbar", mode='determinate', length=200)
 rec_dash = tk.Frame(tab_rec, bg=THEME['bg_primary']); rec_dash.pack(fill='both', expand=True, padx=5, pady=(5, 20))
@@ -1226,7 +1197,7 @@ log_box.tag_configure('timestamp', foreground=THEME['accent_blue']); log_box.tag
 
 # --- INIT ---
 update_heartbeat_and_stats(); refresh_recovery_view()
-log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.29 initialized")
+log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.30 initialized")
 if not HAS_PSUTIL: log_message("Note: 'psutil' not found. Telemetry running in simulation mode.", tag='error')
 if not HAS_PSYCOPG2: log_message("Note: 'psycopg2' not found. Database stats running in simulation mode.", tag='error')
 if not HAS_PIL: log_message("Note: 'Pillow' (PIL) not found. Images disabled.", tag='error')
