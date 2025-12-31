@@ -1,5 +1,5 @@
 """
-PRIME Service Portal - Developer Toolkit v6.28
+PRIME Service Portal - Developer Toolkit v6.29
 --------------------------------------------------------------------------------
 App Major Features:
 1. Smart Backup Engine:
@@ -16,7 +16,8 @@ App Major Features:
 
 4. Dev Tools Cockpit:
    - Git Status, Environment Info, Quick File Access.
-   - SMART GIT PUSH: Interactive commit & push workflow.
+   - SMART COMMIT & PUSH: Interactive workflow with in-app feedback (no popups).
+   - DJANGO SHELL: One-click venv + manage.py shell access.
 
 5. Server Control:
    - Graphs use "Fixed Height" mode (150px).
@@ -94,7 +95,7 @@ os.chdir(SCRIPT_DIR)
 
 # Set AppID so Windows Taskbar shows the correct icon
 try:
-    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.28'
+    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.29'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
 except:
     pass
@@ -163,7 +164,7 @@ ICONS = {
     'seed': '🌱', 'rocket': '🚀', 'gear': '⚙', 'check': '✓',
     'cpu': '🖥', 'ram': '💾', 'globe': '🌐', 'link': '🔗',
     'expand': '▲', 'collapse': '▼', 'search': '🔍', 'back': '⬅',
-    'code': '📝', 'branch': '🌱'
+    'code': '📝', 'branch': '🌱', 'django': 'DJ'
 }
 
 # =============================================================================
@@ -786,6 +787,10 @@ def open_terminal():
 
 def open_python_shell():
     subprocess.Popen(['start', 'cmd', '/k', r'venv\Scripts\python.exe'], shell=True)
+    
+def open_django_shell():
+    # Launches venv activation AND python manage.py shell in one go
+    subprocess.Popen(['start', 'cmd', '/k', r'call venv\Scripts\activate.bat && python manage.py shell'], shell=True)
 
 # =============================================================================
 # 7. SMART BACKUP ENGINE
@@ -892,39 +897,19 @@ def run_smart_git_push():
             
             # 2. Commit
             log_raw(f">> git commit -m \"{summary}\"")
-            # We use capture_output=True to get the output, but check=False because exit code 1 can just mean 'nothing to commit'
             proc_commit = subprocess.run(f'git commit -m "{summary}"', shell=True, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
             log_raw(proc_commit.stdout)
-            if proc_commit.returncode != 0 and "nothing to commit" not in proc_commit.stdout:
-                 log_error(f"Commit output: {proc_commit.stderr}")
 
-            # 3. Push
-            log_raw(">> git push")
+            # 3. Push (EXTERNAL WINDOW to support OAuth/MFA)
+            log_raw(">> git push (Launching external window for authentication...)")
             
-            # CRITICAL FIX: Removed CREATE_NO_WINDOW for this command only.
-            # This allows the Git Credential Manager or Terminal to pop up if auth is needed.
-            p = subprocess.Popen(
-                "git push", 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.STDOUT, 
-                text=True, 
-                shell=True
-                # NOTE: creationflags removed here to allow AUTH POPUP
-            )
+            # Launch external console for push (NO creationflags, NO blocking wait)
+            # This allows the Google Auth popup to appear freely
+            cmd_str = 'start "Git Push" cmd /c "git push && echo. && echo ✅ PUSH COMPLETE! && pause || echo. && echo ❌ PUSH FAILED! && pause"'
+            subprocess.run(cmd_str, shell=True)
             
-            for line in iter(p.stdout.readline, ''):
-                log_raw(line.rstrip())
-            
-            p.wait()
-            
-            log_raw("-" * 50)
-            
-            if p.returncode == 0:
-                log_status("COMPLETED: GIT PUSH")
-                messagebox.showinfo("Git Push", "Push operation completed successfully.")
-            else:
-                log_error("GIT PUSH FAILED")
-                messagebox.showerror("Git Push Failed", "The push operation failed.\n\nCheck the console output for details.\n\nNote: If you have never signed in to Git on this machine, you may need to run 'git push' from a normal terminal window once to authenticate.")
+            log_status("External Push Process Launched.")
+            log_raw("Please check the popup window for final status/authentication.")
 
         except Exception as e:
             log_error(f"GIT ERROR: {str(e)}")
@@ -1021,7 +1006,7 @@ def create_metric_card(parent, title, value_var, accent_color):
 # 10. MAIN UI SETUP
 # =============================================================================
 root = tk.Tk()
-root.title("PRIME Service Portal - Developer Toolkit v6.28")
+root.title("PRIME Service Portal - Developer Toolkit v6.29")
 
 # Work Area Centering
 wa_left, wa_top, wa_right, wa_bottom = get_work_area()
@@ -1050,7 +1035,7 @@ except: tk.Label(h_left, text="PRIME AE", font=('Arial', 24, 'bold'), fg='white'
 tk.Frame(h_left, bg=THEME['border'], width=2).pack(side='left', fill='y', padx=(0, 20))
 h_titles = tk.Frame(h_left, bg=THEME['bg_primary']); h_titles.pack(side='left')
 tk.Label(h_titles, text="DEVELOPER TOOLKIT", font=FONTS['header'], fg=THEME['accent_blue'], bg=THEME['bg_primary']).pack(anchor='w')
-version_lbl = tk.Label(h_titles, text="v6.28 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
+version_lbl = tk.Label(h_titles, text="v6.29 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
 version_lbl.pack(anchor='w'); version_lbl.bind("<Button-1>", open_changelog)
 tk.Label(h_titles, text="© 2025 | Conceived & Designed by Richard Haynes", font=('Segoe UI', 8), fg=THEME['text_muted'], bg=THEME['bg_primary']).pack(anchor='w', pady=(2,0))
 h_right = tk.Frame(header, bg=THEME['bg_primary']); h_right.pack(side='right', fill='y')
@@ -1151,15 +1136,21 @@ tk.Label(dev_top, text="COMMAND CENTER", font=FONTS['body_bold'], fg=THEME['text
 dev_actions = tk.Frame(dev_top, bg=THEME['bg_card']); dev_actions.pack(fill='x', ipady=10)
 create_action_button(dev_actions, "TERMINAL", open_terminal, THEME['btn_secondary'], ICONS['terminal']).pack(side='left', padx=20)
 create_action_button(dev_actions, "PYTHON SHELL", open_python_shell, THEME['btn_secondary'], ICONS['python']).pack(side='left')
-create_action_button(dev_actions, "COLLECT STATIC", lambda: run_command_with_log("python manage.py collectstatic --noinput", "STATIC"), THEME['btn_info'], ICONS['folder']).pack(side='left', padx=20)
-create_action_button(dev_actions, "GIT PUSH", run_smart_git_push, THEME['accent_orange'], ICONS['git']).pack(side='left')
+# NEW BUTTON: Django Shell
+create_action_button(dev_actions, "DJANGO SHELL", open_django_shell, THEME['btn_secondary'], ICONS['django']).pack(side='left', padx=20)
+create_action_button(dev_actions, "COLLECT STATIC", lambda: run_command_with_log("python manage.py collectstatic --noinput", "STATIC"), THEME['btn_info'], ICONS['folder']).pack(side='left')
+create_action_button(dev_actions, "COMMIT & PUSH", run_smart_git_push, THEME['accent_orange'], ICONS['git']).pack(side='left', padx=20)
+
 dev_mid = tk.Frame(dev_grid, bg=THEME['bg_primary']); dev_mid.pack(fill='both', expand=True)
 lbl_git_branch = tk.Label(None); lbl_git_changes = tk.Label(None); lbl_git_commit = tk.Label(None)
 git_card = tk.Frame(dev_mid, bg=THEME['bg_card'], padx=20, pady=20); git_card.pack(side='left', fill='both', expand=True, padx=(0, 10))
 tk.Label(git_card, text=f"{ICONS['git']} SOURCE CONTROL", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 10))
+# ADDED REPO INFO
+tk.Label(git_card, text="Repo: richardlhaynes-rgb", font=FONTS['small'], fg=THEME['accent_blue'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 5))
 lbl_git_branch = tk.Label(git_card, text="Branch: Loading...", font=FONTS['title'], fg=THEME['accent_orange'], bg=THEME['bg_card']); lbl_git_branch.pack(anchor='w')
 lbl_git_changes = tk.Label(git_card, text="Changes: ...", font=FONTS['small'], fg=THEME['text_primary'], bg=THEME['bg_card']); lbl_git_changes.pack(anchor='w', pady=(5,0))
 lbl_git_commit = tk.Label(git_card, text="Last: ...", font=FONTS['small'], fg=THEME['text_muted'], bg=THEME['bg_card']); lbl_git_commit.pack(anchor='w')
+
 env_card = tk.Frame(dev_mid, bg=THEME['bg_card'], padx=20, pady=20); env_card.pack(side='left', fill='both', expand=True, padx=(0, 10))
 tk.Label(env_card, text=f"{ICONS['code']} ENVIRONMENT", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 10))
 tk.Label(env_card, text=f"Python: {sys.version.split()[0]}", font=FONTS['small'], fg=THEME['text_primary'], bg=THEME['bg_card']).pack(anchor='w')
@@ -1230,7 +1221,7 @@ log_box.tag_configure('timestamp', foreground=THEME['accent_blue']); log_box.tag
 
 # --- INIT ---
 update_heartbeat_and_stats(); refresh_recovery_view()
-log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.28 initialized")
+log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.29 initialized")
 if not HAS_PSUTIL: log_message("Note: 'psutil' not found. Telemetry running in simulation mode.", tag='error')
 if not HAS_PSYCOPG2: log_message("Note: 'psycopg2' not found. Database stats running in simulation mode.", tag='error')
 if not HAS_PIL: log_message("Note: 'Pillow' (PIL) not found. Images disabled.", tag='error')
