@@ -1,5 +1,5 @@
 """
-PRIME Service Portal - Developer Toolkit v6.27
+PRIME Service Portal - Developer Toolkit v6.28
 --------------------------------------------------------------------------------
 App Major Features:
 1. Smart Backup Engine:
@@ -16,6 +16,7 @@ App Major Features:
 
 4. Dev Tools Cockpit:
    - Git Status, Environment Info, Quick File Access.
+   - SMART GIT PUSH: Interactive commit & push workflow.
 
 5. Server Control:
    - Graphs use "Fixed Height" mode (150px).
@@ -93,7 +94,7 @@ os.chdir(SCRIPT_DIR)
 
 # Set AppID so Windows Taskbar shows the correct icon
 try:
-    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.27'
+    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.28'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
 except:
     pass
@@ -878,20 +879,56 @@ def run_command_with_log(cmd, label):
 def run_smart_git_push():
     summary = simpledialog.askstring("Git Push", "Enter commit message:", parent=root)
     if not summary: return
+    
     def task():
-        log_raw(""); log_status("STARTING: SMART GIT PUSH"); log_raw("-" * 50)
+        log_raw("")
+        log_status("STARTING: SMART GIT PUSH")
+        log_raw("-" * 50)
+        
         try:
+            # 1. Add
             log_raw(">> git add .")
             subprocess.run("git add .", shell=True, check=True, creationflags=CREATE_NO_WINDOW)
+            
+            # 2. Commit
             log_raw(f">> git commit -m \"{summary}\"")
-            subprocess.run(f'git commit -m "{summary}"', shell=True, check=False, creationflags=CREATE_NO_WINDOW)
+            # We use capture_output=True to get the output, but check=False because exit code 1 can just mean 'nothing to commit'
+            proc_commit = subprocess.run(f'git commit -m "{summary}"', shell=True, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
+            log_raw(proc_commit.stdout)
+            if proc_commit.returncode != 0 and "nothing to commit" not in proc_commit.stdout:
+                 log_error(f"Commit output: {proc_commit.stderr}")
+
+            # 3. Push
             log_raw(">> git push")
-            p = subprocess.Popen("git push", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, shell=True, creationflags=CREATE_NO_WINDOW)
-            for line in iter(p.stdout.readline, ''): log_raw(line.rstrip())
+            
+            # CRITICAL FIX: Removed CREATE_NO_WINDOW for this command only.
+            # This allows the Git Credential Manager or Terminal to pop up if auth is needed.
+            p = subprocess.Popen(
+                "git push", 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.STDOUT, 
+                text=True, 
+                shell=True
+                # NOTE: creationflags removed here to allow AUTH POPUP
+            )
+            
+            for line in iter(p.stdout.readline, ''):
+                log_raw(line.rstrip())
+            
             p.wait()
-            log_raw("-" * 50); log_status("COMPLETED: GIT PUSH")
-            messagebox.showinfo("Git Push", "Push operation completed successfully.")
-        except Exception as e: log_error(f"GIT ERROR: {str(e)}")
+            
+            log_raw("-" * 50)
+            
+            if p.returncode == 0:
+                log_status("COMPLETED: GIT PUSH")
+                messagebox.showinfo("Git Push", "Push operation completed successfully.")
+            else:
+                log_error("GIT PUSH FAILED")
+                messagebox.showerror("Git Push Failed", "The push operation failed.\n\nCheck the console output for details.\n\nNote: If you have never signed in to Git on this machine, you may need to run 'git push' from a normal terminal window once to authenticate.")
+
+        except Exception as e:
+            log_error(f"GIT ERROR: {str(e)}")
+            
     threading.Thread(target=task, daemon=True).start()
 
 def run_server(cmd, key, btn_start, btn_stop):
@@ -984,7 +1021,7 @@ def create_metric_card(parent, title, value_var, accent_color):
 # 10. MAIN UI SETUP
 # =============================================================================
 root = tk.Tk()
-root.title("PRIME Service Portal - Developer Toolkit v6.27")
+root.title("PRIME Service Portal - Developer Toolkit v6.28")
 
 # Work Area Centering
 wa_left, wa_top, wa_right, wa_bottom = get_work_area()
@@ -1013,7 +1050,7 @@ except: tk.Label(h_left, text="PRIME AE", font=('Arial', 24, 'bold'), fg='white'
 tk.Frame(h_left, bg=THEME['border'], width=2).pack(side='left', fill='y', padx=(0, 20))
 h_titles = tk.Frame(h_left, bg=THEME['bg_primary']); h_titles.pack(side='left')
 tk.Label(h_titles, text="DEVELOPER TOOLKIT", font=FONTS['header'], fg=THEME['accent_blue'], bg=THEME['bg_primary']).pack(anchor='w')
-version_lbl = tk.Label(h_titles, text="v6.27 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
+version_lbl = tk.Label(h_titles, text="v6.28 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
 version_lbl.pack(anchor='w'); version_lbl.bind("<Button-1>", open_changelog)
 tk.Label(h_titles, text="© 2025 | Conceived & Designed by Richard Haynes", font=('Segoe UI', 8), fg=THEME['text_muted'], bg=THEME['bg_primary']).pack(anchor='w', pady=(2,0))
 h_right = tk.Frame(header, bg=THEME['bg_primary']); h_right.pack(side='right', fill='y')
@@ -1193,7 +1230,7 @@ log_box.tag_configure('timestamp', foreground=THEME['accent_blue']); log_box.tag
 
 # --- INIT ---
 update_heartbeat_and_stats(); refresh_recovery_view()
-log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.27 initialized")
+log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.28 initialized")
 if not HAS_PSUTIL: log_message("Note: 'psutil' not found. Telemetry running in simulation mode.", tag='error')
 if not HAS_PSYCOPG2: log_message("Note: 'psycopg2' not found. Database stats running in simulation mode.", tag='error')
 if not HAS_PIL: log_message("Note: 'Pillow' (PIL) not found. Images disabled.", tag='error')
