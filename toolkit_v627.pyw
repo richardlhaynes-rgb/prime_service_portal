@@ -1,5 +1,5 @@
 """
-PRIME Service Portal - Developer Toolkit v6.31
+PRIME Service Portal - Developer Toolkit v6.32
 --------------------------------------------------------------------------------
 App Major Features:
 1. Smart Backup Engine:
@@ -9,22 +9,16 @@ App Major Features:
    - List, Restore Guide, and File Browser views.
 
 3. Database Ops Dashboard (STABLE):
-   - Fixed Tuple Unpacking Crash (now correctly passes 8 values).
-   - Removed obsolete init functions that caused startup errors.
-   - "Total Commits" formatted with commas for readability.
-   - "Visual Decay" graph logic preserved for smooth activity waves.
+   - Fixed Tuple Unpacking Crash.
+   - "Total Commits" formatted with commas.
 
 4. Dev Tools Cockpit:
-   - Git Status, Environment Info, Quick File Access.
-   - SMART COMMIT & PUSH: Launches persistent CMD window to force GCM Auth.
-   - DJANGO SHELL: Fixed label typo ("DJ DJANGO" -> "DJANGO SHELL").
+   - Git Status, Environment Info.
+   - SMART COMMIT & PUSH: Forces Credential Manager for OAuth/Google support.
+   - DJANGO SHELL: One-click shell access.
 
-5. Server Control:
-   - Graphs use "Fixed Height" mode (150px).
-
-6. Architecture:
-   - STRICT "Long-Hand" coding style (One command per line).
-   - Detailed comments for every section.
+5. Architecture:
+   - STRICT "Long-Hand" coding style.
 --------------------------------------------------------------------------------
 """
 
@@ -48,31 +42,26 @@ import re
 import sys
 
 # -----------------------------------------------------------------------------
-# DEPENDENCY CHECKS (CRASH PREVENTION)
+# DEPENDENCY CHECKS
 # -----------------------------------------------------------------------------
-
-# Check for Pillow (Image Processing)
 try:
     from PIL import Image, ImageTk
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False
 
-# Check for tkcalendar (Date Picker)
 try:
     from tkcalendar import Calendar
     HAS_CALENDAR = True
 except ImportError:
     HAS_CALENDAR = False
 
-# Check for psutil (System Telemetry)
 try:
     import psutil
     HAS_PSUTIL = True
 except ImportError:
     HAS_PSUTIL = False
 
-# Check for psycopg2 (PostgreSQL Driver)
 try:
     import psycopg2
     HAS_PSYCOPG2 = True
@@ -80,31 +69,21 @@ except ImportError:
     HAS_PSYCOPG2 = False
 
 # =============================================================================
-# 1. SYSTEM INITIALIZATION & WORK AREA LOGIC
+# 1. SYSTEM INITIALIZATION
 # =============================================================================
-
-# Flag to prevent subprocesses from opening black command windows
 CREATE_NO_WINDOW = 0x08000000
-
-# Base Paths (Adjust as needed)
 SCRIPT_DIR = r"C:\Projects\prime_service_portal"
 BACKUP_ROOT = r"G:\My Drive\development\portal_backups"
 
-# Ensure we are working in the correct directory
 os.chdir(SCRIPT_DIR)
 
-# Set AppID so Windows Taskbar shows the correct icon
 try:
-    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.31'
+    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.32'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
 except:
     pass
 
 def get_work_area():
-    """
-    Gets the usable screen rectangle (excluding the Windows Taskbar).
-    Used to center the window perfectly in the visual workspace.
-    """
     try:
         class RECT(ctypes.Structure):
             _fields_ = [('left', ctypes.c_long), ('top', ctypes.c_long),
@@ -157,6 +136,7 @@ FONTS = {
     'button': ('Segoe UI', 10, 'bold'),
 }
 
+# Fixed 'django' icon to '>>>' instead of 'DJ'
 ICONS = {
     'play': '▶', 'stop': '⏹', 'refresh': '⟳', 'lightning': '⚡',
     'shield': '🛡', 'database': '🗄', 'terminal': '>_', 'python': '>>>',
@@ -168,59 +148,35 @@ ICONS = {
 }
 
 # =============================================================================
-# 3. TELEMETRY ENGINE (PERSISTENT CONNECTION)
+# 3. TELEMETRY ENGINE
 # =============================================================================
 class DatabaseMonitor:
-    """
-    Manages a PERSISTENT connection to the database.
-    Handles 'Visual Decay' logic to make graphs look alive.
-    """
     def __init__(self):
         self.conn = None
         self.last_time = time.monotonic()
-        
-        # Absolute Counters (Raw from DB)
         self.last_xact = 0
         self.last_read = 0
         self.last_write = 0
-        
-        # Display Values (With Decay applied for smooth visuals)
         self.display_tps = 0.0
         self.display_reads = 0.0
         self.display_writes = 0.0
-        
         self.initialized = False
 
     def connect(self):
-        """Establishes a persistent connection."""
-        if not HAS_PSYCOPG2:
-            return False
+        if not HAS_PSYCOPG2: return False
         try:
             self.conn = psycopg2.connect(dbname="prime_service_portal", user="postgres", host="localhost", port="5432")
             self.conn.autocommit = True
             return True
-        except:
-            return False
+        except: return False
 
     def poll(self):
-        """
-        Fetches stats and applies VISUAL DECAY.
-        Returns: (Connections, TPS, Reads, Writes, SizeBytes, Cache%, Status, TotalCommits)
-        """
-        # Return default 8-tuple if driver missing
-        if not HAS_PSYCOPG2:
-            return 0, 0, 0, 0, 0, 0, "Driver Missing", 0
-
-        # Reconnect if needed
+        if not HAS_PSYCOPG2: return 0, 0, 0, 0, 0, 0, "Driver Missing", 0
         if self.conn is None or self.conn.closed:
-            if not self.connect():
-                return 0, 0, 0, 0, 0, 0, "No Connection", 0
+            if not self.connect(): return 0, 0, 0, 0, 0, 0, "No Connection", 0
 
         try:
             cur = self.conn.cursor()
-
-            # Atomic Query: Fetch all counters in one go
-            # Force float conversion to prevent decimal/float type mismatch
             query = """
                 SELECT 
                     (SELECT count(*) FROM pg_stat_activity WHERE datname = 'prime_service_portal'),
@@ -235,11 +191,8 @@ class DatabaseMonitor:
             """
             cur.execute(query)
             row = cur.fetchone()
-            
-            if not row:
-                return 0, 0, 0, 0, 0, 0, "No Data", 0
+            if not row: return 0, 0, 0, 0, 0, 0, "No Data", 0
 
-            # Unpack and Force Float for Calc
             curr_conns = row[0] or 0
             curr_size = row[1] or 0
             curr_xact = float(row[2] or 0)
@@ -248,85 +201,49 @@ class DatabaseMonitor:
             blks_hit = float(row[5] or 0)
             blks_read = float(row[6] or 0)
 
-            # Cache Ratio
             total_blks = blks_hit + blks_read
-            if total_blks > 0:
-                cache_ratio = (blks_hit / total_blks) * 100
-            else:
-                cache_ratio = 0.0
+            cache_ratio = (blks_hit / total_blks * 100) if total_blks > 0 else 0.0
 
-            # Time Delta calculation
             current_time = time.monotonic()
             time_delta = current_time - self.last_time
-            
-            # Prevent Division by Zero
-            if time_delta < 0.1: 
-                time_delta = 0.1
+            if time_delta < 0.1: time_delta = 0.1
 
-            # First Run Initialization
             if not self.initialized:
                 self.last_time = current_time
                 self.last_xact = curr_xact
                 self.last_read = curr_read
                 self.last_write = curr_write
                 self.initialized = True
-                # Return 8 values to match unpack expectation
                 return curr_conns, 0, 0, 0, curr_size, cache_ratio, "Connected", curr_xact
 
-            # --- CALCULATE RAW DELTAS ---
-            delta_xact = curr_xact - self.last_xact
-            delta_read = curr_read - self.last_read
-            delta_write = curr_write - self.last_write
+            raw_tps = (curr_xact - self.last_xact) / time_delta
+            raw_reads = (curr_read - self.last_read) / time_delta
+            raw_writes = (curr_write - self.last_write) / time_delta
 
-            # Calculate Rate per Second
-            raw_tps = delta_xact / time_delta
-            raw_reads = delta_read / time_delta
-            raw_writes = delta_write / time_delta
-
-            # Filter Startup/Reset Spikes
             if raw_tps < 0: raw_tps = 0
             if raw_reads < 0: raw_reads = 0
             if raw_writes < 0: raw_writes = 0
             
-            # --- APPLY VISUAL DECAY ---
-            # TPS Decay
-            if raw_tps > self.display_tps:
-                self.display_tps = raw_tps 
-            else:
-                self.display_tps = self.display_tps * 0.90 
-                if self.display_tps < 0.1: 
-                    self.display_tps = 0
+            # Decay Logic
+            self.display_tps = raw_tps if raw_tps > self.display_tps else self.display_tps * 0.90
+            if self.display_tps < 0.1: self.display_tps = 0
+            
+            self.display_reads = raw_reads if raw_reads > self.display_reads else self.display_reads * 0.90
+            if self.display_reads < 0.1: self.display_reads = 0
+            
+            self.display_writes = raw_writes if raw_writes > self.display_writes else self.display_writes * 0.90
+            if self.display_writes < 0.1: self.display_writes = 0
 
-            # Read Decay
-            if raw_reads > self.display_reads:
-                self.display_reads = raw_reads
-            else:
-                self.display_reads = self.display_reads * 0.90
-                if self.display_reads < 0.1: 
-                    self.display_reads = 0
-
-            # Write Decay
-            if raw_writes > self.display_writes:
-                self.display_writes = raw_writes
-            else:
-                self.display_writes = self.display_writes * 0.90
-                if self.display_writes < 0.1: 
-                    self.display_writes = 0
-
-            # Update State for next tick
             self.last_time = current_time
             self.last_xact = curr_xact
             self.last_read = curr_read
             self.last_write = curr_write
 
-            # Return ALL 8 VALUES required by the main loop
             return curr_conns, self.display_tps, self.display_reads, self.display_writes, curr_size, cache_ratio, "Connected", curr_xact
 
         except Exception as e:
-            # Return error tuple matching length
             return 0, 0, 0, 0, 0, 0, "Error", 0
 
-# Initialize the Monitor
 db_monitor = DatabaseMonitor()
 
 # =============================================================================
@@ -334,28 +251,20 @@ db_monitor = DatabaseMonitor()
 # =============================================================================
 running_pids = {"PROD": None, "DEV": None}
 pulse_state = 0
-
-# Data buffers
 cpu_history = [0] * 60
 ram_history = [0] * 60
-
-# DB Activity Buffers
 db_tps_history = [0] * 60
 db_read_history = [0] * 60
 db_write_history = [0] * 60
-
 is_console_expanded = False
 current_browser_path = BACKUP_ROOT 
 tick_counter = 0
 
-# UI References
 status_indicator_canvas_server = None
 status_indicator_text_server = None
 status_indicator_canvas_db = None
 status_indicator_text_db = None
 lbl_db_version = None 
-
-# Card Text Variables
 var_card_conns = None
 var_card_size = None
 var_card_cache = None
@@ -373,74 +282,49 @@ class TelemetryGraph(tk.Canvas):
         self.unit = unit
         self.responsive_height = responsive_height
         self.min_y_max = min_y_max 
-        
         self.W = 100 
         self.H = height 
         self.current_data = [] 
-        
         self.pad_left = 45 
         self.pad_bottom = 20
         self.pad_top = 25
-        
         self.bind('<Configure>', self.on_resize)
         self.draw_grid_and_labels(0, 100) 
 
     def on_resize(self, event):
         self.W = event.width
-        if self.responsive_height:
-            self.H = event.height
+        if self.responsive_height: self.H = event.height
         self.draw_grid_and_labels(0, 100)
-        if self.current_data:
-            self.update_graph(self.current_data)
+        if self.current_data: self.update_graph(self.current_data)
 
     def draw_grid_and_labels(self, min_val, max_val):
         self.delete("grid")
         self.delete("label")
-        
         grid_color = '#334155'
-        
-        # Y-Axis Max Label
         self.create_text(5, self.pad_top, text=f"{max_val:.1f}{self.unit}", anchor='nw', fill=THEME['text_secondary'], font=('Segoe UI', 8), tags="label")
-        
-        # Y-Axis Min Label
         self.create_text(5, self.H - self.pad_bottom, text="0", anchor='sw', fill=THEME['text_secondary'], font=('Segoe UI', 8), tags="label")
-        
-        # Title Label
         self.create_text(self.pad_left + 10, 5, text=self.title, anchor='nw', fill=THEME['text_secondary'], font=FONTS['small'], tags="label")
-        
-        # Current Value Label (Placeholder)
         self.value_text = self.create_text(self.W-10, 5, text=f"0{self.unit}", anchor='ne', fill=self.line_color, font=FONTS['body_bold'], tags="label")
-        
-        # Grid Lines
         self.create_line(self.pad_left, self.pad_top, self.W, self.pad_top, fill=grid_color, dash=(2, 4), tags="grid")
         mid_y = (self.H - self.pad_bottom + self.pad_top) / 2
         self.create_line(self.pad_left, mid_y, self.W, mid_y, fill=grid_color, dash=(2, 4), tags="grid")
         self.create_line(self.pad_left, self.H - self.pad_bottom, self.W, self.H - self.pad_bottom, fill=THEME['border'], tags="grid")
-        
-        # X-Axis Time Labels
         self.create_text(self.pad_left, self.H - 2, text="60s ago", anchor='sw', fill=THEME['text_muted'], font=('Segoe UI', 7), tags="label")
         self.create_text(self.W - 5, self.H - 2, text="Now", anchor='se', fill=THEME['text_muted'], font=('Segoe UI', 7), tags="label")
 
     def update_graph(self, data):
         self.current_data = data
         self.delete("graph_line")
-        
-        if not data: 
-            return
-        
+        if not data: return
         current_val = data[-1]
         max_val = max(data) if max(data) > 0 else 1
         
-        # Dynamic Scaling
-        if self.unit == "%": 
-            display_max = 100
+        if self.unit == "%": display_max = 100
         else: 
             display_max = max_val * 1.2
-            if self.min_y_max and display_max < self.min_y_max:
-                display_max = self.min_y_max
+            if self.min_y_max and display_max < self.min_y_max: display_max = self.min_y_max
             
         self.draw_grid_and_labels(0, display_max)
-        
         points = []
         n_points = len(data)
         g_w = self.W - self.pad_left
@@ -450,21 +334,15 @@ class TelemetryGraph(tk.Canvas):
         for i, value in enumerate(data):
             x = self.pad_left + (i * step_x)
             ratio = value / display_max if display_max > 0 else 0
-            if ratio > 1: 
-                ratio = 1
+            if ratio > 1: ratio = 1
             y = (self.H - self.pad_bottom) - (ratio * g_h)
             points.extend([x, y])
             
         if len(points) >= 4:
-            # Clean Line Graph style
             self.create_line(points, fill=self.line_color, width=3, smooth=True, capstyle='round', tags="graph_line")
             
-        # Update Value Label
-        if current_val < 10 and self.unit != "%":
-             self.itemconfig(self.value_text, text=f"{current_val:.1f}{self.unit}")
-        else:
-             self.itemconfig(self.value_text, text=f"{current_val:.0f}{self.unit}")
-        
+        if current_val < 10 and self.unit != "%": self.itemconfig(self.value_text, text=f"{current_val:.1f}{self.unit}")
+        else: self.itemconfig(self.value_text, text=f"{current_val:.0f}{self.unit}")
         self.tag_raise("label")
 
 # =============================================================================
@@ -480,17 +358,11 @@ def log_message(msg, tag='default', timestamp=True):
         log_box.see(tk.END)
         log_box.config(state='disabled')
         root.update_idletasks()
-    except: 
-        pass
+    except: pass
 
-def log_status(msg): 
-    log_message(msg, tag='status')
-
-def log_error(msg): 
-    log_message(msg, tag='error')
-
-def log_raw(msg): 
-    log_message(msg, tag='default', timestamp=False)
+def log_status(msg): log_message(msg, tag='status')
+def log_error(msg): log_message(msg, tag='error')
+def log_raw(msg): log_message(msg, tag='default', timestamp=False)
 
 def clear_console():
     log_box.config(state='normal')
@@ -505,27 +377,22 @@ def get_network_details():
         s.connect(("8.8.8.8", 80))
         local_ip = s.getsockname()[0]
         s.close()
-    except: 
-        return "Offline", "N/A", "N/A"
+    except: return "Offline", "N/A", "N/A"
 
     try:
         proc = subprocess.run("ipconfig", capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
         output = proc.stdout
-        mask = "N/A"
-        gateway = "N/A"
+        mask = "N/A"; gateway = "N/A"
         adapters = re.split(r'\n\n', output)
         for adapter in adapters:
             if local_ip in adapter:
                 mask_match = re.search(r"Subnet Mask[\s\.]*: ([0-9\.]+)", adapter)
-                if mask_match: 
-                    mask = mask_match.group(1)
+                if mask_match: mask = mask_match.group(1)
                 gw_match = re.search(r"Default Gateway.*: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", adapter)
-                if gw_match: 
-                    gateway = gw_match.group(1)
+                if gw_match: gateway = gw_match.group(1)
                 break
         return local_ip, mask, gateway
-    except: 
-        return local_ip, "N/A", "N/A"
+    except: return local_ip, "N/A", "N/A"
 
 def get_git_info():
     try:
@@ -534,12 +401,10 @@ def get_git_info():
         changes = len(status.splitlines())
         last_commit = subprocess.check_output('git log -1 --format="%s (%h)"', shell=True, text=True, creationflags=CREATE_NO_WINDOW).strip()
         return branch, changes, last_commit
-    except: 
-        return "No Git Repo", 0, "N/A"
+    except: return "No Git Repo", 0, "N/A"
 
 def get_db_version():
-    if not HAS_PSYCOPG2: 
-        return "Driver Missing"
+    if not HAS_PSYCOPG2: return "Driver Missing"
     try:
         conn = psycopg2.connect(dbname="prime_service_portal", user="postgres", host="localhost", port="5432")
         conn.autocommit = True
@@ -548,28 +413,21 @@ def get_db_version():
         v_str = cur.fetchone()[0]
         conn.close()
         match = re.search(r"PostgreSQL ([\d\.]+)", v_str)
-        if match:
-            return f"PostgreSQL {match.group(1)}"
+        if match: return f"PostgreSQL {match.group(1)}"
         return "PostgreSQL (Unknown)"
-    except:
-        return "Offline / Unknown"
+    except: return "Offline / Unknown"
 
 def update_heartbeat_and_stats():
-    """Main Loop."""
     global pulse_state, cpu_history, ram_history, tick_counter
     global db_tps_history, db_read_history, db_write_history
-    
     tick_counter += 1
     
     try:
-        # 1. Heartbeat
         active_processes = []
         for key, pid in running_pids.items():
             if pid:
-                if HAS_PSUTIL and psutil.pid_exists(pid):
-                    active_processes.append(f"{key}:{pid}")
-                else:
-                    running_pids[key] = None
+                if HAS_PSUTIL and psutil.pid_exists(pid): active_processes.append(f"{key}:{pid}")
+                else: running_pids[key] = None
         
         if active_processes:
             pulse_state = (pulse_state + 1) % 20
@@ -577,85 +435,55 @@ def update_heartbeat_and_stats():
             color = f'#{int(16*b):02x}{int(185*b):02x}{int(129*b):02x}'
             txt = f"Active: {', '.join(active_processes)}"
         else:
-            color = THEME['status_idle']
-            txt = "System Idle"
+            color = THEME['status_idle']; txt = "System Idle"
         
         if status_indicator_canvas_server:
             status_indicator_canvas_server.itemconfig("circle", fill=color, outline=color)
             status_indicator_text_server.set(txt)
 
-        # 2. System Stats
         if HAS_PSUTIL:
             cpu = psutil.cpu_percent()
             ram = psutil.virtual_memory().percent
-        else:
-            cpu = 0; ram = 0
+        else: cpu = 0; ram = 0
         
         cpu_history.append(cpu); cpu_history.pop(0)
         ram_history.append(ram); ram_history.pop(0)
-        
         graph_cpu.update_graph(cpu_history)
         graph_ram.update_graph(ram_history)
 
-        # 3. Database Stats (via Persistent Monitor)
-        # Fix: Unpack 8 values (added total_xact)
         conns, tps, reads, writes, size_bytes, cache_ratio, status, total_xact = db_monitor.poll()
         
         if status_indicator_canvas_db:
-            if status == "Connected":
-                db_color = THEME['status_active']
-                db_txt = "DB Connected"
-            else:
-                db_color = THEME['status_error']
-                db_txt = "DB Offline"
-            
+            if status == "Connected": db_color = THEME['status_active']; db_txt = "DB Connected"
+            else: db_color = THEME['status_error']; db_txt = "DB Offline"
             status_indicator_canvas_db.itemconfig("circle", fill=db_color, outline=db_color)
             status_indicator_text_db.set(db_txt)
 
         if status == "Connected":
-            # --- CARD UPDATES ---
-            if var_card_conns:
-                var_card_conns.set(f"{conns} Active")
-            
-            # Dynamic Size Unit
-            if size_bytes < 1024 * 1024:
-                size_str = f"{size_bytes / 1024.0:.1f} KB"
-            elif size_bytes < 1024 * 1024 * 1024:
-                size_str = f"{size_bytes / (1024.0*1024.0):.1f} MB"
-            else:
-                size_str = f"{size_bytes / (1024.0*1024.0*1024.0):.2f} GB"
-            
-            if var_card_size:
-                var_card_size.set(size_str)
-                
-            if var_card_cache:
-                var_card_cache.set(f"{cache_ratio:.1f}%")
+            if var_card_conns: var_card_conns.set(f"{conns} Active")
+            if size_bytes < 1024 * 1024: size_str = f"{size_bytes / 1024.0:.1f} KB"
+            elif size_bytes < 1024 * 1024 * 1024: size_str = f"{size_bytes / (1024.0*1024.0):.1f} MB"
+            else: size_str = f"{size_bytes / (1024.0*1024.0*1024.0):.2f} GB"
+            if var_card_size: var_card_size.set(size_str)
+            if var_card_cache: var_card_cache.set(f"{cache_ratio:.1f}%")
+            if var_card_commits: var_card_commits.set(f"{total_xact:,.0f}")
 
-            if var_card_commits:
-                # Commas for readability
-                var_card_commits.set(f"{total_xact:,.0f}")
-
-        # Update History Buffers
         db_tps_history.append(tps); db_tps_history.pop(0)
         db_read_history.append(reads); db_read_history.pop(0)
         db_write_history.append(writes); db_write_history.pop(0)
         
-        # Update Graphs
         if 'graph_db_tps' in globals():
             graph_db_tps.update_graph(db_tps_history)
             graph_db_reads.update_graph(db_read_history)
             graph_db_writes.update_graph(db_write_history)
 
-        # 4. Git Stats
         if 'lbl_git_branch' in globals():
             branch, changes, last_commit = get_git_info()
             lbl_git_branch.config(text=f"Branch: {branch}")
             lbl_git_changes.config(text=f"Changes: {changes} uncommitted files")
             lbl_git_commit.config(text=f"Last: {last_commit[:30]}...")
 
-    except Exception as e:
-        print(f"Error in update loop: {e}")
-
+    except Exception as e: print(f"Error in update loop: {e}")
     root.after(1000, update_heartbeat_and_stats)
 
 def toggle_console():
@@ -900,18 +728,23 @@ def run_smart_git_push():
             proc_commit = subprocess.run(f'git commit -m "{summary}"', shell=True, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
             log_raw(proc_commit.stdout)
 
-            # 3. Push (EXTERNAL WINDOW + VENV ACTIVATION for Credential Inheritance)
-            log_raw(">> git push (Launching persistent window...)")
+            # 3. Push (EXTERNAL WINDOW + VENV ACTIVATION + CREDENTIAL HELPER FORCE)
+            log_raw(">> git push (Launching auth window...)")
             
-            # CRITICAL FIX: Use /k instead of /c so the window stays open
-            # This allows the user to see the output and handle any prompts if they appear
+            # CRITICAL FIXES:
+            # 1. /k ensures window stays open for feedback
+            # 2. Activate Venv (Standardize environment)
+            # 3. -c credential.helper=manager forces Windows Credential Manager (Fixes 'username' prompt issue)
+            
             cmd_str = (
                 'start "Git Push" cmd /k '
                 '"echo Activating Environment... & call venv\\Scripts\\activate.bat & echo. & '
-                'echo Executing Git Push... & git push & echo. & '
+                'echo Executing Git Push... & '
+                'git -c credential.helper=manager push & ' 
+                'echo. & '
                 'echo ------------------------------------------------ & '
                 'echo IF SUCCESSFUL: You will see a success message above. & '
-                'echo IF FAILED: You can read the error above. & '
+                'echo IF FAILED: Check if you need to sign in via the browser popup. & '
                 'echo. & echo You may close this window when done."'
             )
             subprocess.run(cmd_str, shell=True)
@@ -1014,7 +847,7 @@ def create_metric_card(parent, title, value_var, accent_color):
 # 10. MAIN UI SETUP
 # =============================================================================
 root = tk.Tk()
-root.title("PRIME Service Portal - Developer Toolkit v6.31")
+root.title("PRIME Service Portal - Developer Toolkit v6.32")
 
 # Work Area Centering
 wa_left, wa_top, wa_right, wa_bottom = get_work_area()
@@ -1043,7 +876,7 @@ except: tk.Label(h_left, text="PRIME AE", font=('Arial', 24, 'bold'), fg='white'
 tk.Frame(h_left, bg=THEME['border'], width=2).pack(side='left', fill='y', padx=(0, 20))
 h_titles = tk.Frame(h_left, bg=THEME['bg_primary']); h_titles.pack(side='left')
 tk.Label(h_titles, text="DEVELOPER TOOLKIT", font=FONTS['header'], fg=THEME['accent_blue'], bg=THEME['bg_primary']).pack(anchor='w')
-version_lbl = tk.Label(h_titles, text="v6.31 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
+version_lbl = tk.Label(h_titles, text="v6.32 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
 version_lbl.pack(anchor='w'); version_lbl.bind("<Button-1>", open_changelog)
 tk.Label(h_titles, text="© 2025 | Conceived & Designed by Richard Haynes", font=('Segoe UI', 8), fg=THEME['text_muted'], bg=THEME['bg_primary']).pack(anchor='w', pady=(2,0))
 h_right = tk.Frame(header, bg=THEME['bg_primary']); h_right.pack(side='right', fill='y')
@@ -1149,8 +982,7 @@ r_t_box = tk.Frame(r_tools, bg=THEME['bg_card']); r_t_box.pack(fill='x', pady=5,
 btn_snap = create_action_button(r_t_box, "TAKE SNAPSHOT", None, THEME['btn_backup'], ICONS['shield']); btn_snap.config(command=lambda: run_smart_backup(btn_snap)); btn_snap.pack(side='left', padx=20)
 create_action_button(r_t_box, "RESTORE", show_restore_guide, THEME['btn_purple'], ICONS['refresh']).pack(side='left')
 create_action_button(r_t_box, "EXPLORE ROOT", show_file_browser_root, THEME['btn_secondary'], ICONS['folder']).pack(side='left', padx=20)
-progress_frame = tk.Frame(r_t_box, bg=THEME['bg_card'])
-status_label = tk.Label(r_t_box, text="Ready", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
+progress_frame = tk.Frame(r_t_box, bg=THEME['bg_card']); status_label = tk.Label(r_t_box, text="Ready", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
 style.configure("green.Horizontal.TProgressbar", foreground=THEME['status_active'], background=THEME['status_active'])
 progress_bar = ttk.Progressbar(r_t_box, style="green.Horizontal.TProgressbar", mode='determinate', length=200)
 rec_dash = tk.Frame(tab_rec, bg=THEME['bg_primary']); rec_dash.pack(fill='both', expand=True, padx=5, pady=(5, 20))
@@ -1201,7 +1033,7 @@ log_box.tag_configure('timestamp', foreground=THEME['accent_blue']); log_box.tag
 
 # --- INIT ---
 update_heartbeat_and_stats(); refresh_recovery_view()
-log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.31 initialized")
+log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.32 initialized")
 if not HAS_PSUTIL: log_message("Note: 'psutil' not found. Telemetry running in simulation mode.", tag='error')
 if not HAS_PSYCOPG2: log_message("Note: 'psycopg2' not found. Database stats running in simulation mode.", tag='error')
 if not HAS_PIL: log_message("Note: 'Pillow' (PIL) not found. Images disabled.", tag='error')
