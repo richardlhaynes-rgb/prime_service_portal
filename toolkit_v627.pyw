@@ -882,12 +882,12 @@ def run_command_with_log(cmd, label):
     threading.Thread(target=task, daemon=True).start()
 
 def run_smart_git_push():
-    summary = simpledialog.askstring("Git Push", "Enter commit message:", parent=root)
+    summary = simpledialog.askstring("Commit & Push", "Enter commit message:", parent=root)
     if not summary: return
     
     def task():
         log_raw("")
-        log_status("STARTING: SMART GIT PUSH")
+        log_status("STARTING: SMART COMMIT & PUSH")
         log_raw("-" * 50)
         
         try:
@@ -900,16 +900,21 @@ def run_smart_git_push():
             proc_commit = subprocess.run(f'git commit -m "{summary}"', shell=True, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
             log_raw(proc_commit.stdout)
 
-            # 3. Push (EXTERNAL WINDOW to support OAuth/MFA)
-            log_raw(">> git push (Launching external window for authentication...)")
+            # 3. Push (EXTERNAL WINDOW for Browser Auth)
+            log_raw(">> git push (Launching auth window...)")
             
-            # Launch external console for push (NO creationflags, NO blocking wait)
-            # This allows the Google Auth popup to appear freely
-            cmd_str = 'start "Git Push" cmd /c "git push && echo. && echo ✅ PUSH COMPLETE! && pause || echo. && echo ❌ PUSH FAILED! && pause"'
+            # Using 'start' to open cmd. '/c' runs and closes, 'pause' keeps it if needed.
+            # We want to see the result, so we use logic:
+            # If successful, close after 5 seconds. If failed, pause indefinitely.
+            
+            cmd_str = (
+                'start "Git Push" cmd /c '
+                '"git push && (echo. & echo [SUCCESS] Closing in 5 seconds... & timeout /t 5) || (echo. & echo [FAILED] Review error above. & pause)"'
+            )
             subprocess.run(cmd_str, shell=True)
             
             log_status("External Push Process Launched.")
-            log_raw("Please check the popup window for final status/authentication.")
+            log_raw("Please check the popup window for authentication/status.")
 
         except Exception as e:
             log_error(f"GIT ERROR: {str(e)}")
