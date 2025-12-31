@@ -914,7 +914,7 @@ def run_smart_git_push():
             subprocess.run(cmd_str, shell=True)
             
             log_status("External Push Process Launched.")
-            log_raw("Please check the popup window for authentication/status.")
+            log_raw("Please check the popup window for final status/authentication.")
 
         except Exception as e:
             log_error(f"GIT ERROR: {str(e)}")
