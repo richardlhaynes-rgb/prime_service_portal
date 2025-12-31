@@ -1,5 +1,5 @@
 """
-PRIME Service Portal - Developer Toolkit v6.30
+PRIME Service Portal - Developer Toolkit v6.31
 --------------------------------------------------------------------------------
 App Major Features:
 1. Smart Backup Engine:
@@ -16,8 +16,8 @@ App Major Features:
 
 4. Dev Tools Cockpit:
    - Git Status, Environment Info, Quick File Access.
-   - SMART COMMIT & PUSH: Uses venv activation to ensure credential inheritance.
-   - DJANGO SHELL: One-click venv + manage.py shell access.
+   - SMART COMMIT & PUSH: Launches persistent CMD window to force GCM Auth.
+   - DJANGO SHELL: Fixed label typo ("DJ DJANGO" -> "DJANGO SHELL").
 
 5. Server Control:
    - Graphs use "Fixed Height" mode (150px).
@@ -95,7 +95,7 @@ os.chdir(SCRIPT_DIR)
 
 # Set AppID so Windows Taskbar shows the correct icon
 try:
-    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.30'
+    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.31'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
 except:
     pass
@@ -164,7 +164,7 @@ ICONS = {
     'seed': '🌱', 'rocket': '🚀', 'gear': '⚙', 'check': '✓',
     'cpu': '🖥', 'ram': '💾', 'globe': '🌐', 'link': '🔗',
     'expand': '▲', 'collapse': '▼', 'search': '🔍', 'back': '⬅',
-    'code': '📝', 'branch': '🌱', 'django': 'DJ'
+    'code': '📝', 'branch': '🌱', 'django': '>>>'
 }
 
 # =============================================================================
@@ -901,15 +901,18 @@ def run_smart_git_push():
             log_raw(proc_commit.stdout)
 
             # 3. Push (EXTERNAL WINDOW + VENV ACTIVATION for Credential Inheritance)
-            log_raw(">> git push (Launching auth window...)")
+            log_raw(">> git push (Launching persistent window...)")
             
-            # CRITICAL FIX: We launch 'activate.bat' BEFORE 'git push' inside the new CMD window.
-            # This replicates the "Green Window" environment where auth works.
+            # CRITICAL FIX: Use /k instead of /c so the window stays open
+            # This allows the user to see the output and handle any prompts if they appear
             cmd_str = (
-                'start "Git Push" cmd /c '
-                '"call venv\\Scripts\\activate.bat && echo. && echo --------------------------- && '
-                'echo   EXECUTING GIT PUSH... && echo --------------------------- && echo. && '
-                'git push && (echo. & echo [SUCCESS] Closing in 5 seconds... & timeout /t 5) || (echo. & echo [FAILED] Review error above. & pause)"'
+                'start "Git Push" cmd /k '
+                '"echo Activating Environment... & call venv\\Scripts\\activate.bat & echo. & '
+                'echo Executing Git Push... & git push & echo. & '
+                'echo ------------------------------------------------ & '
+                'echo IF SUCCESSFUL: You will see a success message above. & '
+                'echo IF FAILED: You can read the error above. & '
+                'echo. & echo You may close this window when done."'
             )
             subprocess.run(cmd_str, shell=True)
             
@@ -1011,7 +1014,7 @@ def create_metric_card(parent, title, value_var, accent_color):
 # 10. MAIN UI SETUP
 # =============================================================================
 root = tk.Tk()
-root.title("PRIME Service Portal - Developer Toolkit v6.30")
+root.title("PRIME Service Portal - Developer Toolkit v6.31")
 
 # Work Area Centering
 wa_left, wa_top, wa_right, wa_bottom = get_work_area()
@@ -1040,7 +1043,7 @@ except: tk.Label(h_left, text="PRIME AE", font=('Arial', 24, 'bold'), fg='white'
 tk.Frame(h_left, bg=THEME['border'], width=2).pack(side='left', fill='y', padx=(0, 20))
 h_titles = tk.Frame(h_left, bg=THEME['bg_primary']); h_titles.pack(side='left')
 tk.Label(h_titles, text="DEVELOPER TOOLKIT", font=FONTS['header'], fg=THEME['accent_blue'], bg=THEME['bg_primary']).pack(anchor='w')
-version_lbl = tk.Label(h_titles, text="v6.30 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
+version_lbl = tk.Label(h_titles, text="v6.31 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
 version_lbl.pack(anchor='w'); version_lbl.bind("<Button-1>", open_changelog)
 tk.Label(h_titles, text="© 2025 | Conceived & Designed by Richard Haynes", font=('Segoe UI', 8), fg=THEME['text_muted'], bg=THEME['bg_primary']).pack(anchor='w', pady=(2,0))
 h_right = tk.Frame(header, bg=THEME['bg_primary']); h_right.pack(side='right', fill='y')
@@ -1146,7 +1149,8 @@ r_t_box = tk.Frame(r_tools, bg=THEME['bg_card']); r_t_box.pack(fill='x', pady=5,
 btn_snap = create_action_button(r_t_box, "TAKE SNAPSHOT", None, THEME['btn_backup'], ICONS['shield']); btn_snap.config(command=lambda: run_smart_backup(btn_snap)); btn_snap.pack(side='left', padx=20)
 create_action_button(r_t_box, "RESTORE", show_restore_guide, THEME['btn_purple'], ICONS['refresh']).pack(side='left')
 create_action_button(r_t_box, "EXPLORE ROOT", show_file_browser_root, THEME['btn_secondary'], ICONS['folder']).pack(side='left', padx=20)
-progress_frame = tk.Frame(r_t_box, bg=THEME['bg_card']); status_label = tk.Label(r_t_box, text="Ready", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
+progress_frame = tk.Frame(r_t_box, bg=THEME['bg_card'])
+status_label = tk.Label(r_t_box, text="Ready", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
 style.configure("green.Horizontal.TProgressbar", foreground=THEME['status_active'], background=THEME['status_active'])
 progress_bar = ttk.Progressbar(r_t_box, style="green.Horizontal.TProgressbar", mode='determinate', length=200)
 rec_dash = tk.Frame(tab_rec, bg=THEME['bg_primary']); rec_dash.pack(fill='both', expand=True, padx=5, pady=(5, 20))
@@ -1197,7 +1201,7 @@ log_box.tag_configure('timestamp', foreground=THEME['accent_blue']); log_box.tag
 
 # --- INIT ---
 update_heartbeat_and_stats(); refresh_recovery_view()
-log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.30 initialized")
+log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.31 initialized")
 if not HAS_PSUTIL: log_message("Note: 'psutil' not found. Telemetry running in simulation mode.", tag='error')
 if not HAS_PSYCOPG2: log_message("Note: 'psycopg2' not found. Database stats running in simulation mode.", tag='error')
 if not HAS_PIL: log_message("Note: 'Pillow' (PIL) not found. Images disabled.", tag='error')
