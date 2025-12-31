@@ -65,7 +65,7 @@ urlpatterns = [
     # --- Notifications ---
     path('notifications/poll/', views.get_notifications, name='get_notifications'),
     path('notifications/list/', views.notification_list, name='notification_list'),
-    path('notifications/clear/', views.clear_notifications, name='clear_notifications'),
+    path('notifications/mark-read-all/', views.mark_all_read, name='mark_all_read'), # <--- UPDATED
     path('notifications/history/', views.notification_history, name='notification_history'),
     path('notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
     path('notifications/bulk/', views.notification_bulk_action, name='notification_bulk_action'),

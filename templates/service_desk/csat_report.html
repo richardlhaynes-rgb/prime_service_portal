@@ -4,7 +4,6 @@
 
 <div class="space-y-8">
 
-    <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold text-prime-navy">
@@ -19,10 +18,8 @@
             </p>
         </div>
 
-        <!-- Date Range Controls -->
         <div class="flex flex-col items-end gap-2">
-            <!-- Preset Buttons Row -->
-            <!-- Date Range Preset Buttons -->
+            
             <div id="date-preset-row" class="flex items-center gap-2">
                 <a href="?range=today"
                    class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
@@ -48,6 +45,7 @@
                           {% else %}text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700{% endif %}">
                     Last 30 Days
                 </a>
+                
                 <button type="button"
                         onclick="toggleCustomRange(true)"
                         class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors
@@ -57,7 +55,6 @@
                 </button>
             </div>
 
-            <!-- Custom Input Row (Hidden by default) -->
             <form method="GET" id="custom-input-row" class="hidden flex items-center gap-2">
                 <input type="hidden" name="range" value="custom">
                 <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">From:</span>
@@ -85,7 +82,6 @@
         </div>
     </div>
 
-    <!-- Technician Filter Banner -->
     {% if technician %}
     <div class="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-200 border border-indigo-100 dark:border-indigo-900/30 p-4 rounded-r-lg shadow-sm">
         <div class="flex items-center gap-2">
@@ -100,7 +96,6 @@
     </div>
     {% endif %}
 
-    <!-- Feedback List -->
     <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-prime-navy dark:text-white">Customer Feedback</h3>
@@ -113,12 +108,14 @@
         <ul class="divide-y divide-gray-200 dark:divide-gray-700">
             {% for fb in feedback %}
             <li class="p-6 flex items-start gap-4">
-                <!-- Avatar (initials fallback) -->
-                <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
-                    {% if fb.user %}{{ fb.user|slice:":1" }}{% else %}U{% endif %}
-                </div>
-
-                <!-- Feedback Content -->
+                
+                {% if fb.avatar_url %}
+                    <img src="{{ fb.avatar_url }}" alt="{{ fb.user }}" class="h-10 w-10 rounded-full object-cover border border-gray-200 dark:border-gray-600">
+                {% else %}
+                    <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                        {{ fb.user|slice:":1" }}
+                    </div>
+                {% endif %}
                 <div class="flex-1">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -126,11 +123,11 @@
                                 {{ fb.user|default:"User" }}
                             </span>
                             <span class="text-gray-400">•</span>
-                            <span class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ fb.ticket|default:"Ticket" }}
-                            </span>
+                            
+                            <a href="{% url 'ticket_detail' ticket_id=fb.ticket_id %}" class="text-sm text-prime-orange hover:underline">
+                                {{ fb.ticket }}
+                            </a>
                         </div>
-                        <!-- Star Rating -->
                         <div class="flex items-center">
                             {% for i in "12345" %}
                                 {% if fb.rating and fb.rating|add:"0" >= i|add:"0" %}
@@ -146,10 +143,8 @@
                         </div>
                     </div>
 
-                    <!-- Comment -->
                     <p class="text-gray-700 dark:text-gray-300 mt-2">{{ fb.comment|default:"No comment provided." }}</p>
 
-                    <!-- Date (if available) -->
                     {% if fb.date %}
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Submitted: {{ fb.date }}</p>
                     {% endif %}
@@ -169,7 +164,6 @@
         {% endif %}
     </div>
 
-    <!-- Footer Actions -->
     <div class="flex items-center justify-between">
         <a href="{% url 'management_hub' %}" class="text-sm text-prime-orange hover:underline inline-flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -184,7 +178,6 @@
 
 </div>
 
-<!-- Swap Mode Script: Toggle between preset buttons and custom date inputs -->
 <script>
     function toggleCustomRange(forceShow) {
         const presetRow = document.getElementById('date-preset-row');

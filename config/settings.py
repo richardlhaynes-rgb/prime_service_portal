@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'core',
     'service_desk',
     'knowledge_base',
+        'inventory.apps.InventoryConfig',
 ]
 
 MIDDLEWARE = [
@@ -70,8 +71,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'service_desk.context_processors.global_system_health',
-                'service_desk.context_processors.site_configuration',  # ← ADD THIS
+                'service_desk.context_processors.global_system_health',  # Updated function name
+                'service_desk.context_processors.site_configuration',
             ],
         },
     },

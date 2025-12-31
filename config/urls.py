@@ -9,6 +9,7 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('service-desk/', include('service_desk.urls')),
     path('kb/', include('knowledge_base.urls')),
+    path('inventory/', include('inventory.urls')),
 ]
 
 # Serve static and media files in development and production

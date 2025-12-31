@@ -16,60 +16,88 @@ Usage:
 """
 
 from services import ticket_service
-from .models import GlobalSettings
+from service_desk.models import GlobalSettings
 
 
 def global_system_health(request):
     """
-    Injects system health data into every template context.
-    
-    This function is called automatically by Django for every page load,
-    making the system health information available site-wide.
-    
-    Args:
-        request: The HTTP request object (automatically provided by Django)
-    
-    Returns:
-        Dictionary containing:
-            {
-                'system_health': {
-                    'announcement': {
-                        'title': str,
-                        'message': str,
-                        'type': str,  # 'info', 'alert', 'maintenance'
-                        'date': str
-                    },
-                    'vendor_status': [
-                        {'name': str, 'status': str},  # 'Operational', 'Degraded Performance', 'Outage'
-                        ...
-                    ],
-                    'overall_status': str,  # 'All Systems Operational', '1 Service Degraded', etc.
-                    'overall_color': str    # 'text-green-600', 'text-yellow-600', 'text-red-600'
-                }
-            }
-    
-    Example Template Usage:
-        {% if system_health.announcement %}
-        <div class="announcement-bar">
-            <strong>{{ system_health.announcement.title }}</strong>
-            {{ system_health.announcement.message }}
-        </div>
-        {% endif %}
+    Injects global settings and system health data into every template context.
+
+    This function ensures that the GlobalSettings model is used as the single source of truth
+    for system announcements and vendor statuses.
     """
-    # Fetch analytics data from Service Layer (default to 7-day range)
-    analytics = ticket_service.get_dashboard_stats(date_range='7d')
+    # Fetch the GlobalSettings object, or create a default one if it doesn't exist
+    settings = GlobalSettings.objects.first()
+    if not settings:
+        settings = GlobalSettings.objects.create()
+
+    # Define mappings for status priorities and colors (all lowercase keys)
+    status_priority = {
+        'major outage': 3,
+        'partial outage': 2,
+        'degraded performance': 1,
+        'operational': 0,
+    }
+    status_colors = {
+        'operational': 'text-green-500',
+        'degraded performance': 'text-orange-500',
+        'partial outage': 'text-orange-600',
+        'major outage': 'text-red-600',
+    }
+
+    # Initialize vendor summary stats
+    non_operational_count = 0
+    worst_status = 'operational'  # Default to operational
+
+    # robustly handle the list by assigning it locally
+    vendor_list = settings.vendor_status if settings.vendor_status else []
+
+    # Process vendor statuses
+    for vendor in vendor_list:
+        # Normalize status
+        status_key = vendor.get('status', 'operational').lower()
+
+        # Inject UI data (Color and Title Case Text)
+        vendor['ui_color'] = status_colors.get(status_key, 'text-red-600')  # Default to red if unknown
+        vendor['display_status'] = status_key.title()  # Capitalize for display
+
+        # Calculate summary stats
+        priority = status_priority.get(status_key, 0)
+        if priority > 0:  # Non-operational statuses have priority > 0
+            non_operational_count += 1
+            if priority > status_priority[worst_status]:
+                worst_status = status_key
+
+    # Determine summary color and label based on worst status
+    summary_color = status_colors.get(worst_status, 'text-green-500')
     
-    # Extract system health data
-    system_health = analytics.get('system_health', {
-        'announcement': None,
-        'vendor_status': [],
-        'overall_status': 'Unknown',
-        'overall_color': 'text-gray-600'
-    })
-    
-    # Return as a dictionary (Django will merge this into the template context)
+    if worst_status == 'major outage':
+        label = f"{non_operational_count} Service{'s' if non_operational_count > 1 else ''} Down"
+    elif worst_status in ['partial outage', 'degraded performance']:
+        label = f"{non_operational_count} Service{'s' if non_operational_count > 1 else ''} Degraded"
+    else:
+        label = "All Systems Operational"
+
+    # Create the vendor summary dictionary
+    vendor_summary = {
+        "count": non_operational_count,
+        "color": summary_color,
+        "label": label,
+    }
+
+    # Return the context structure
     return {
-        'system_health': system_health
+        'system_health': {
+            'announcement': {
+                'title': settings.announcement_title,
+                'message': settings.announcement_message,
+                'type': settings.announcement_type,
+                'start_datetime': settings.announcement_start,
+                'end_datetime': settings.announcement_end,
+            },
+            'vendor_status': vendor_list,  # Return the modified list
+            'vendor_summary': vendor_summary,
+        }
     }
 
 
@@ -97,17 +125,6 @@ def site_configuration(request):
                     - support_email (str)
                     - support_hours (str)
             }
-    
-    Example Template Usage:
-        {% if site_config.maintenance_mode %}
-            <div class="alert">Site is under maintenance</div>
-        {% endif %}
-        
-        <footer>
-            <p>Need Help? Call {{ site_config.support_phone }}</p>
-            <p>Email: {{ site_config.support_email }}</p>
-            <p>Hours: {{ site_config.support_hours }}</p>
-        </footer>
     """
     # Load the singleton GlobalSettings instance
     config = GlobalSettings.load()

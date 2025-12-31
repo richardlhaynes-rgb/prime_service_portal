@@ -1,32 +1,11 @@
 {
     "announcement": {
-        "title": "Security Alert",
-        "message": "Please be aware of a suspicious email circulating. Do not click links from unknown sources.",
-        "type": "critical",
+        "title": "All Systems Operational",
+        "message": "No known issues at this time.",
+        "type": "info",
         "date": "Today",
         "start_datetime": "",
         "end_datetime": ""
     },
-    "vendor_status": [
-        {
-            "name": "Office 365",
-            "status": "Operational"
-        },
-        {
-            "name": "Autodesk Cloud",
-            "status": "Operational"
-        },
-        {
-            "name": "Bentley ProjectWise",
-            "status": "Operational"
-        },
-        {
-            "name": "Egnyte File Server",
-            "status": "Operational"
-        },
-        {
-            "name": "Bluebeam Studio",
-            "status": "Degraded Performance"
-        }
-    ]
+    "vendor_status": []
 }

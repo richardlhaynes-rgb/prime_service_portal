@@ -6,5 +6,29 @@
         "action": "User Updated",
         "target": "stella.baines",
         "details": "Updated profile for user: stella.baines"
+    },
+    {
+        "id": 2,
+        "timestamp": "2025-12-27T07:34:53.500939Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'Security Alert' with 0 vendor entries"
+    },
+    {
+        "id": 3,
+        "timestamp": "2025-12-27T07:36:21.939469Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'All Systems Operational' with 0 vendor entries"
+    },
+    {
+        "id": 4,
+        "timestamp": "2025-12-27T07:38:29.782320Z",
+        "user": "marty.mcfly",
+        "action": "Update",
+        "target": "System Health",
+        "details": "Announcement set to 'All Systems Operational' with 0 vendor entries"
     }
 ]

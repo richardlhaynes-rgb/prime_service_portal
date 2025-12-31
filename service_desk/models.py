@@ -5,6 +5,7 @@ from django.dispatch import receiver
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from PIL import Image
+from django.contrib.postgres.fields import JSONField
 
 
 # --- FILE VALIDATORS ---
@@ -352,7 +353,7 @@ class GlobalSettings(models.Model):
         help_text="Redirects non-admins to a maintenance page"
     )
     use_mock_data = models.BooleanField(
-        default=True,
+        default=False,
         help_text="Toggle between live data and demo data"
     )
     
@@ -376,7 +377,8 @@ class GlobalSettings(models.Model):
         help_text="Primary support phone number"
     )
     support_email = models.EmailField(
-        default="primeit@primeeng.com",
+        max_length=254,
+        default="support@primeeng.com",
         help_text="Primary support email address"
     )
     support_hours = models.CharField(
@@ -384,7 +386,37 @@ class GlobalSettings(models.Model):
         default="Mon-Fri, 8:00 AM - 5:00 PM EST",
         help_text="Support availability hours"
     )
-    
+
+    # System Health Fields
+    announcement_title = models.CharField(
+        max_length=200,
+        default="All Systems Operational",
+        help_text="Title of the system health announcement"
+    )
+    announcement_message = models.TextField(
+        default="No known issues at this time.",
+        help_text="Message content for the system health announcement"
+    )
+    announcement_type = models.CharField(
+        max_length=50,
+        default="info",
+        help_text="Type of the announcement (e.g., info, warning, alert, critical)"
+    )
+    announcement_start = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Start time for the announcement (optional)"
+    )
+    announcement_end = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="End time for the announcement (optional)"
+    )
+    vendor_status = models.JSONField(
+        default=list,
+        help_text="List of vendor statuses (stored as JSON)"
+    )
+
     # Metadata
     updated_at = models.DateTimeField(auto_now=True)
     

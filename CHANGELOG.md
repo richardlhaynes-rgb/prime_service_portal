@@ -6,6 +6,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [2.5.0] - 2025-12-31 (Notifications & Reporting Stability)
+
+### 🚀 New Features
+- **Notification Workflow:** Replaced the destructive "Clear All" action with a safer "Mark All as Read" button in the dropdown.
+- **Persistent Navigation:** Added a permanent "View All History" footer link to the Notification dropdown, ensuring accessibility even when the queue is empty.
+- **CSAT Visuals:** Added user avatars to the Customer Satisfaction Report feedback list for a more personalized view.
+
+### ⚙️ Backend & Architecture
+- **Legacy URL Routing:** Implemented intelligent URL parsing in `views.py` to automatically correct legacy or seed-data paths (e.g., routing `/ticket/123/` to the correct `/service-desk/ticket/123/`).
+- **Data Simulation:** Updated the ticket seeding script (`seed_tickets.py`) to bypass `auto_now_add` restrictions, allowing for the generation of realistic historical data for analytics testing.
+- **CSRF Hardening:** Secured HTMX actions in the notification dropdown by explicitly injecting CSRF tokens into headers.
+
+### 🎨 UI & UX Polish
+- **Notification Hover:** Fixed a CSS regression where hovering over a single notification would highlight all items in the list (implemented Tailwind "Named Groups").
+- **CSAT Context:** Added a "Filtering by Technician" banner to the CSAT report to provide better context when viewing individual performance stats.
+
+### 🐛 Fixes
+- **CSAT Crashes:** Resolved a `NoReverseMatch` error on the CSAT report by passing raw ticket IDs to the template URL generator.
+- **Scope Leak:** Fixed an issue where the "Global" header would persist even when viewing a specific technician's report.
+- **Data Filters:** Corrected date filtering logic in reports to properly include data from the current day.
+
+---
+
 ## [2.4.2] - 2025-12-26
 
 ### 🚀 New Features

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'inventory:dashboard' %}" class="text-sm text-prime-orange hover:underline flex items-center gap-1 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back to Dashboard</span>
+        </a>
+        <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Add New Hardware</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">Register a new device in the PRIME AE inventory.</p>
+    </div>
+
+    <form method="post" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {% csrf_token %}
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Identification</h3>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Asset Tag</label>
+                        {{ form.asset_tag }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Serial Number</label>
+                        {{ form.serial_number }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                        {{ form.category }}
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Specifications</h3>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Manufacturer</label>
+                        {{ form.manufacturer }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model Number</label>
+                        {{ form.model_number }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Assignment & Lifecycle</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assigned To</label>
+                        {{ form.assigned_to }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Date</label>
+                        {{ form.purchase_date }}
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Internal Notes</label>
+                {{ form.notes }}
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <button type="submit" class="bg-prime-orange text-white px-6 py-2 rounded-md font-bold hover:bg-orange-600 transition-colors">
+                Save Hardware Asset
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

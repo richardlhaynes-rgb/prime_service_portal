@@ -4,13 +4,15 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q, Count, Avg, F
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+import re
+
 from .forms import (
     ApplicationIssueForm, EmailMailboxForm, HardwareIssueForm, PrinterScannerForm,
     SoftwareInstallForm, GeneralQuestionForm, VPResetForm, VPPermissionsForm,
     TicketReplyForm, KBArticleForm, GlobalSettingsForm, CustomUserCreationForm, CustomUserChangeForm
 )
-# FIXED: Added Notification to top-level imports
-from .models import Ticket, Comment, GlobalSettings, Notification, UserProfile
+
+from .models import Ticket, Comment, GlobalSettings, Notification, UserProfile, CSATSurvey
 from services import ticket_service
 from datetime import datetime, timedelta
 import random
@@ -441,7 +443,6 @@ def ticket_survey(request, ticket_id):
             return redirect('ticket_survey', ticket_id=ticket_id)
         
         # Use update_or_create from the specific related model or just create
-        from .models import CSATSurvey
         CSATSurvey.objects.update_or_create(
             ticket=ticket,
             defaults={
@@ -479,9 +480,6 @@ def management_hub(request):
 def manager_dashboard(request):
     """
     Manager Analytics Dashboard.
-    - Preserves existing buttons (Today, Yesterday, 7d, 30d)
-    - Adds logic for 'Custom Range' inputs
-    - Trend Chart dynamically adapts x-axis based on selected duration
     """
     from django.db.models import Count, Avg, F
     from django.contrib.auth.models import Group
@@ -591,15 +589,12 @@ def manager_dashboard(request):
         for member in service_desk.user_set.all():
             open_count = Ticket.objects.filter(technician=member).exclude(status__in=['Resolved', 'Closed']).count()
             
-            # Avatar Logic: Respect prefer_initials setting
+            # Avatar Logic
             if hasattr(member, 'profile') and member.profile.prefer_initials:
-                # User prefers initials - always use UI Avatars
                 avatar = f"https://ui-avatars.com/api/?name={member.first_name}+{member.last_name}&background=random&color=fff"
             elif hasattr(member, 'profile') and member.profile.avatar:
-                # User has an uploaded avatar and doesn't prefer initials
                 avatar = member.profile.avatar.url
             else:
-                # Fallback to UI Avatars (initials)
                 avatar = f"https://ui-avatars.com/api/?name={member.first_name}+{member.last_name}&background=random&color=fff"
             
             roster.append({
@@ -676,8 +671,9 @@ def admin_settings(request):
         for i in range(20):
             name = request.POST.get(f'vendor_name_{i}')
             status = request.POST.get(f'vendor_status_{i}')
+            url = request.POST.get(f'vendor_url_{i}', '')  # Capture the URL
             if name:
-                vendor_status.append({'name': name, 'status': status})
+                vendor_status.append({'name': name, 'status': status, 'url': url})  # Include the URL
 
         new_health_data = {
             'announcement': {
@@ -703,7 +699,6 @@ def admin_settings(request):
 def technician_profile(request, name):
     """
     Displays a detailed profile for a specific technician.
-    Calculates real-time stats (Open, Resolved, CSAT) for the user.
     """
     from django.db.models import Count, Avg, F
     
@@ -735,7 +730,7 @@ def technician_profile(request, name):
     try:
         user = User.objects.get(pk=name)
     except (ValueError, User.DoesNotExist):
-        # Fallback: Try the old service lookup for legacy IDs
+        # Fallback for legacy IDs
         tech = ticket_service.get_technician_details(name)
         if tech:
             return render(request, 'service_desk/technician_profile.html', {'technician': tech})
@@ -756,18 +751,15 @@ def technician_profile(request, name):
             else:
                 avg_res_str = f"{hours:.1f} hours"
 
-    # 4. Avatar Logic: Respect prefer_initials setting
+    # 4. Avatar Logic
     if hasattr(user, 'profile') and user.profile.prefer_initials:
-        # User prefers initials - always use UI Avatars
         avatar_url = f"https://ui-avatars.com/api/?name={user.first_name}+{user.last_name}&background=0D8ABC&color=fff"
     elif hasattr(user, 'profile') and user.profile.avatar:
-        # User has an uploaded avatar and doesn't prefer initials
         avatar_url = user.profile.avatar.url
     else:
-        # Fallback to UI Avatars (initials)
         avatar_url = f"https://ui-avatars.com/api/?name={user.first_name}+{user.last_name}&background=0D8ABC&color=fff"
 
-    # 5. Profile Data Construction (with new fields)
+    # 5. Profile Data Construction
     profile = getattr(user, 'profile', None)
     
     tech_data = {
@@ -785,29 +777,17 @@ def technician_profile(request, name):
             'open_tickets': Ticket.objects.filter(technician=user).exclude(status__in=['Resolved', 'Closed', 'Cancelled']).count(),
             'resolved_this_month': resolved_qs.count(),
             'avg_response': avg_res_str,
-            'csat_score': '4.8/5'  # Placeholder until CSAT model is fully linked
+            'csat_score': '4.8/5'
         },
         'recent_activity': list(Ticket.objects.filter(technician=user).order_by('-updated_at')[:5].values_list('title', flat=True)),
-        'feedback': []  # Placeholder for CSAT feedback
+        'feedback': [] 
     }
 
     return render(request, 'service_desk/technician_profile.html', {'technician': tech_data})
 
 
-@user_passes_test(lambda u: u.is_superuser)
-def csat_report(request, tech_id=None):
-    stats = ticket_service.get_dashboard_stats()
-    csat_data = stats.get('csat_breakdown', {})
-    if tech_id:
-        csat_data = csat_data.get(tech_id, {})
-    return render(request, 'service_desk/csat_report.html', {
-        'csat_data': csat_data,
-        'tech_id': tech_id
-    })
-
-
 # ============================================================================
-# KNOWLEDGE BASE VIEWER (Single Article Detail - CLEAN VERSION)
+# KNOWLEDGE BASE VIEWER
 # ============================================================================
 
 @login_required
@@ -831,7 +811,7 @@ def kb_home(request):
 
     recent_articles = articles[:10]
     
-    # MAGIC: If HTMX request, return only the results list, not the whole page.
+    # HTMX
     if request.headers.get('HX-Request'):
         return render(request, 'knowledge_base/partials/kb_results.html', {
             'recent_articles': recent_articles
@@ -853,7 +833,7 @@ def article_detail(request, article_id=None, pk=None):
 
 
 # ============================================================================
-# KNOWLEDGE BASE MANAGER (ADMIN TABLE)
+# KNOWLEDGE BASE MANAGER
 # ============================================================================
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -863,7 +843,6 @@ def kb_manager(request):
     status_filter = request.GET.get('status', '').strip()
     sort_by = request.GET.get('sort', 'id').strip()
 
-    # Fetch all category names for the dropdown
     categories = KBCategory.objects.values_list('name', flat=True).order_by('name')
 
     articles = Article.objects.all()
@@ -899,7 +878,7 @@ def kb_manager(request):
     else:
         articles = articles.order_by('-updated_at')
 
-    # HTMX: If this is an HTMX request, only return the KB table partial
+    # HTMX
     if request.headers.get('HX-Request') == 'true':
         return render(request, 'knowledge_base/partials/kb_table.html', {
             'articles': articles,
@@ -1028,7 +1007,6 @@ def kb_bulk_action(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def system_logs(request):
-    # 1. Define Timezones
     NA_TIMEZONES = [
         ('America/New_York', 'Eastern Time (ET)'),
         ('America/Chicago', 'Central Time (CT)'),
@@ -1038,24 +1016,20 @@ def system_logs(request):
         ('Pacific/Honolulu', 'Hawaii-Aleutian Time (HST)'),
     ]
 
-    # 2. Get Params
     selected_tz = request.GET.get('timezone', 'America/New_York')
     search_query = request.GET.get('q', '').strip()
     sort_param = request.GET.get('sort', '-timestamp')
-    date_range = request.GET.get('range', '7d') # Default to 7 days
+    date_range = request.GET.get('range', '7d') 
     
-    # Activate Timezone for Display
     try:
         timezone.activate(selected_tz)
     except:
         timezone.activate('America/New_York')
 
-    # 3. Calculate Date Range (Server Time)
     now = timezone.now()
     start_date = now - timedelta(days=7)
     end_date = now
     
-    # Custom Start/End strings for the inputs
     custom_start_str = request.GET.get('start_date', '')
     custom_end_str = request.GET.get('end_date', '')
 
@@ -1075,17 +1049,14 @@ def system_logs(request):
     elif date_range == 'custom':
         if custom_start_str and custom_end_str:
             try:
-                # Parse YYYY-MM-DD inputs
                 s_dt = datetime.strptime(custom_start_str, '%Y-%m-%d')
                 e_dt = datetime.strptime(custom_end_str, '%Y-%m-%d')
-                # Make them aware (using current active timezone logic or server default)
                 current_tz = timezone.get_current_timezone()
                 start_date = timezone.make_aware(s_dt, current_tz)
                 end_date = timezone.make_aware(e_dt, current_tz).replace(hour=23, minute=59, second=59)
             except ValueError:
-                pass # Fallback to default if parse fails
+                pass 
 
-    # 4. Fetch All Logs & Process
     logs = ticket_service.get_system_logs()
     processed_logs = []
     
@@ -1101,15 +1072,12 @@ def system_logs(request):
                 entry['dt_obj'] = timezone.now()
         processed_logs.append(entry)
 
-    # 5. Filter by Date
-    # Note: ensure we compare aware datetimes
     filtered_logs = []
     for log in processed_logs:
         log_dt = log.get('dt_obj')
         if log_dt and start_date <= log_dt <= end_date:
             filtered_logs.append(log)
 
-    # 6. Filter by Search Query
     if search_query:
         query = search_query.lower()
         filtered_logs = [
@@ -1120,7 +1088,6 @@ def system_logs(request):
             or query in str(l.get('details', '')).lower()
         ]
 
-    # 7. Sort
     reverse = sort_param.startswith('-')
     sort_key = sort_param.lstrip('-')
     key_map = {'timestamp': 'timestamp', 'user': 'user', 'action': 'action'}
@@ -1131,20 +1098,17 @@ def system_logs(request):
     except:
         pass 
 
-    # 8. Context
     context = {
         'logs': filtered_logs,
         'na_timezones': NA_TIMEZONES,
         'selected_tz': selected_tz,
         'search_query': search_query,
         'current_sort': sort_param,
-        # New Date Context
         'current_range': date_range,
         'start_date': custom_start_str,
         'end_date': custom_end_str,
     }
     
-    # HTMX: If this is an HTMX request, only return the logs table partial
     if request.headers.get('HX-Request') == 'true':
         return render(request, 'service_desk/partials/logs_table.html', context)
     return render(request, 'service_desk/system_logs.html', context)
@@ -1157,37 +1121,27 @@ def system_logs(request):
 @login_required
 def my_profile(request):
     """
-    Allows users to edit their own profile (Avatar/Initials only).
-    Uses 'user_profile.html' but disables text fields for non-superusers.
-    Manual handling for Avatar file save is crucial here.
+    Allows users to edit their own profile.
     """
     user = request.user
     
     if request.method == 'POST':
         form = CustomUserChangeForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
-            # 1. Save standard User fields (first_name, last_name, etc.)
             user = form.save()
 
-            # -------------- CRITICAL FIX --------------
-            # 2. Manually handle Avatar upload (lives on UserProfile)
             avatar_file = request.FILES.get('avatar')
             if avatar_file:
-                # Ensure profile exists
                 profile, created = UserProfile.objects.get_or_create(user=user)
-                # Save the new file
                 profile.avatar = avatar_file
-                # Turn off initials if uploading a photo
                 profile.prefer_initials = False
                 profile.save()
-            # ------------------------------------------
 
             messages.success(request, "Your profile has been updated.")
             return redirect('my_profile')
     else:
         form = CustomUserChangeForm(instance=user)
 
-    # LOCK DOWN FIELDS: If not a superuser, disable everything except avatar/initials
     if not user.is_superuser:
         allowed_fields = ['avatar', 'prefer_initials']
         for field_name, field in form.fields.items():
@@ -1201,7 +1155,6 @@ def my_profile(request):
         'is_self_profile': True,
         'page_title': 'My Profile'
     }
-    # Note: Using the new unified template filename
     return render(request, 'service_desk/user_profile.html', context)
 
 
@@ -1211,29 +1164,59 @@ def my_profile(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def site_configuration(request):
-    config = GlobalSettings.load()
-    
+    settings_obj = GlobalSettings.objects.first()
+
     if request.method == 'POST':
-        form = GlobalSettingsForm(request.POST, instance=config)
-        if form.is_valid():
-            form.save()
-            ticket_service.log_system_event(
-                user=request.user.username,
-                action='Updated Site Configuration',
-                target='Global Settings',
-                details='Updated global configuration toggles'
-            )
-            messages.success(request, '✅ Site configuration updated successfully!')
-            return redirect('site_configuration')
+        if 'announcement_title' in request.POST:
+            print("--- DEBUG: ENTERING HEALTH SAVE BLOCK ---")
+            
+            settings_obj.announcement_title = request.POST.get('announcement_title')
+            settings_obj.announcement_message = request.POST.get('announcement_message')
+            settings_obj.announcement_type = request.POST.get('announcement_type') or 'info'
+            settings_obj.announcement_start = request.POST.get('start_time') or None
+            settings_obj.announcement_end = request.POST.get('end_time') or None
+
+            vendors = []
+            for key in request.POST:
+                if key.startswith('vendor_name_'):
+                    index = key.split('_')[-1]
+                    name = request.POST.get(f'vendor_name_{index}')
+                    status = request.POST.get(f'vendor_status_{index}')
+                    url = request.POST.get(f'vendor_url_{index}', '') 
+                    if name and status:
+                        vendors.append({'name': name, 'status': status, 'url': url})
+            settings_obj.vendor_status = vendors
+
+            settings_obj.use_mock_data = False
+            settings_obj.save()
+
+            print("--- DEBUG: SAVED HEALTH DATA ---")
+            return redirect(f"{request.path}?tab=health")
+
+        elif 'maintenance_mode' in request.POST or 'support_phone' in request.POST:
+            print("--- DEBUG: ENTERING GENERAL SETTINGS SAVE BLOCK ---")
+            
+            form = GlobalSettingsForm(request.POST, instance=settings_obj)
+            if form.is_valid():
+                form.save()
+                print("--- DEBUG: SAVED GENERAL SETTINGS ---")
+                messages.success(request, '✅ Site configuration updated successfully!')
+            else:
+                print("--- DEBUG: GENERAL SETTINGS FORM INVALID ---")
+                messages.error(request, '❌ Failed to save general settings. Please check the form.')
+
+            return redirect(request.path)
+
     else:
-        form = GlobalSettingsForm(instance=config)
-    
+        form = GlobalSettingsForm(instance=settings_obj)
+
     categories = KBCategory.objects.prefetch_related('subcategories').order_by('sort_order', 'name')
-    
+
     return render(request, 'service_desk/site_configuration.html', {
         'form': form,
-        'config': config,
+        'config': settings_obj,
         'categories': categories,
+        'settings_obj': settings_obj,
     })
 
 
@@ -1249,10 +1232,31 @@ def user_management(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def user_add(request):
+    # FIXED: Replaced CustomUserCreationForm with CustomUserChangeForm
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST, request.FILES)
+        form = CustomUserChangeForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save()
+            # 1. Create user (commit=False)
+            user = form.save(commit=False)
+            
+            # 2. Handle password
+            if not user.password:
+                user.set_unusable_password()
+            
+            # 3. Save User
+            user.save()
+            
+            # 4. Handle Profile/Avatar
+            avatar_file = request.FILES.get('avatar')
+            
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            
+            if avatar_file:
+                profile.avatar = avatar_file
+                profile.prefer_initials = False
+                profile.save()
+
+            # 5. Log Action
             try:
                 LogEntry.objects.log_action(
                     user_id=request.user.id,
@@ -1264,20 +1268,22 @@ def user_add(request):
                 )
             except:
                 pass
+                
             messages.success(request, f'✅ User "{user.username}" created successfully.')
             return redirect('user_management')
     else:
-        form = CustomUserCreationForm()
+        form = CustomUserChangeForm()
     
-    return render(request, 'service_desk/user_profile.html', {'form': form, 'title': 'Add New User'})
+    # We pass 'is_new_user' to context
+    return render(request, 'service_desk/user_profile.html', {
+        'form': form, 
+        'title': 'Add New User',
+        'is_new_user': True 
+    })
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def user_edit(request, user_id):
-    """
-    Admin view to edit any user.
-    Handles standard user data AND manual avatar/profile saves.
-    """
     target_user = get_object_or_404(User, pk=user_id)
 
     # Handle User Deletion
@@ -1291,20 +1297,18 @@ def user_edit(request, user_id):
         log_system_event(
              user=request.user,
              action="User Deleted",
-             target=username,  # <-- FIXED: Added target argument
+             target=username, 
              details=f"Deleted user account: {username}"
         )
         messages.success(request, f"User '{username}' has been deleted.")
         return redirect('user_management')
 
-    # Handle Form Submission (Update User)
+    # Handle Form Submission
     if request.method == 'POST':
         form = CustomUserChangeForm(request.POST, request.FILES, instance=target_user)
         if form.is_valid():
-            # 1. Save standard user fields
             user = form.save()
             
-            # 2. Manually handle avatar upload
             avatar_file = request.FILES.get('avatar')
             if avatar_file:
                 profile, created = UserProfile.objects.get_or_create(user=user)
@@ -1313,9 +1317,9 @@ def user_edit(request, user_id):
                 profile.save()
             
             log_system_event(
-                user=request.user.username,  # <--- CHANGED: .username (String) instead of object
+                user=request.user.username,
                 action="User Updated",
-                target=user.username,        # <--- Ensure this is also a string
+                target=user.username,
                 details=f"Updated profile for user: {user.username}"
             )
             messages.success(request, f"User '{user.username}' has been updated.")
@@ -1436,8 +1440,9 @@ def notification_list(request):
         'notifications': notifications
     })
 
+# RENAMED from clear_notifications
 @login_required
-def clear_notifications(request):
+def mark_all_read(request):
     """
     Marks all notifications as read and returns the empty list.
     """
@@ -1450,31 +1455,32 @@ def clear_notifications(request):
 
 @login_required
 def mark_notification_read(request, notification_id):
-    """
-    The 'Middleman' View:
-    1. Finds the notification.
-    2. Marks it as read.
-    3. Safely redirects the user with feedback if the link is broken.
-    """
     from .models import Notification
     from django.urls import NoReverseMatch
     
     notification = get_object_or_404(Notification, id=notification_id, user=request.user)
     
-    # Mark as read
     if not notification.is_read:
         notification.is_read = True
         notification.save()
     
     target = notification.link
     
-    # Safety Check 1: Explicitly catch empty or dummy links
     if not target or target == '#' or target == 'None':
         messages.warning(request, "This notification was just an informational alert (no specific page attached).")
         return redirect('dashboard')
         
-    # Safety Check 2: Try to redirect, catch any URL errors (like 404s or bad view names)
     try:
+        # --- NEW LINK HANDLING ---
+        # If the link looks like /ticket/123/, we parse it and use Django's URL resolver
+        # to ensure it respects the /service-desk/ prefix or any other root config.
+        if target and target.startswith('/ticket/'):
+            import re
+            match = re.search(r'/ticket/(\d+)/', target)
+            if match:
+                ticket_id = match.group(1)
+                return redirect('ticket_detail', ticket_id=ticket_id)
+        
         return redirect(target)
     except (NoReverseMatch, Exception):
         messages.error(request, "We couldn't take you to that specific page (the link might be outdated), so here is your Dashboard.")
@@ -1482,9 +1488,6 @@ def mark_notification_read(request, notification_id):
 
 @login_required
 def notification_history(request):
-    """
-    Shows all notifications for the user, ordered by newest first.
-    """
     from .models import Notification
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
     
@@ -1495,9 +1498,6 @@ def notification_history(request):
 @login_required
 @require_POST
 def notification_bulk_action(request):
-    """
-    Handles bulk operations (Mark Read / Mark Unread) from the history page.
-    """
     from .models import Notification
     
     action = request.POST.get('action')
@@ -1507,7 +1507,6 @@ def notification_bulk_action(request):
         messages.warning(request, "No notifications selected.")
         return redirect('notification_history')
 
-    # Filter to ensure users can only modify their own notifications
     qs = Notification.objects.filter(id__in=selected_ids, user=request.user)
     count = qs.count()
 
@@ -1524,13 +1523,8 @@ def notification_bulk_action(request):
 @login_required
 @require_POST
 def delete_notifications(request):
-    """
-    Deletes selected notifications.
-    """
-    # The checkboxes in notification_history.html use name="selected_ids"
     notification_ids = request.POST.getlist('selected_ids')
     if notification_ids:
-        # Filter by user to ensure they can only delete their own
         Notification.objects.filter(
             id__in=notification_ids, 
             user=request.user
@@ -1548,16 +1542,11 @@ def delete_notifications(request):
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def kanban_board(request):
-    """
-    Technician Kanban Board.
-    Separates tickets into 3 buckets: New, In Progress, Resolved.
-    """
     tickets = Ticket.objects.all().order_by('-created_at')
     
-    # Bucket Logic
     new_tickets = tickets.filter(status__in=['New', 'Reopened', 'User Commented', 'Awaiting User Reply', 'On Hold'])
     progress_tickets = tickets.filter(status__in=['In Progress', 'Work In Progress', 'Assigned'])
-    done_tickets = tickets.filter(status__in=['Resolved', 'Closed', 'Cancelled'])[:20] # Limit resolved to last 20 for performance
+    done_tickets = tickets.filter(status__in=['Resolved', 'Closed', 'Cancelled'])[:20]
 
     return render(request, 'service_desk/kanban.html', {
         'new_tickets': new_tickets,
@@ -1569,10 +1558,6 @@ def kanban_board(request):
 @user_passes_test(lambda u: u.is_staff)
 @csrf_exempt
 def kanban_update(request):
-    """
-    API Endpoint for Kanban Drag-and-Drop.
-    Updates status and auto-assigns technician if moving to In Progress.
-    """
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -1584,11 +1569,11 @@ def kanban_update(request):
             # 1. Update Status
             ticket.status = new_status
             
-            # 2. Auto-Assign Logic (If moving to 'In Progress' and unassigned)
+            # 2. Auto-Assign Logic
             if new_status == 'In Progress' and not ticket.technician:
                 ticket.technician = request.user
                 
-            # 3. Close Logic (If moving to 'Resolved')
+            # 3. Close Logic
             if new_status == 'Resolved' and not ticket.closed_at:
                 ticket.closed_at = timezone.now()
                 
@@ -1600,3 +1585,85 @@ def kanban_update(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
             
     return JsonResponse({'status': 'invalid method'}, status=400)
+
+
+# ============================================================================
+# CSAT REPORT
+# ============================================================================
+
+@user_passes_test(lambda u: u.is_superuser)
+def csat_report(request, tech_id=None, pk=None, id=None, *args, **kwargs):
+    from .models import CSATSurvey
+    from django.utils import timezone
+    from datetime import datetime, timedelta
+    
+    # 1. SMART ID DETECTION (Fixes the "Global" header issue)
+    # Checks for 'tech_id', 'pk', 'id' in the arguments
+    target_id = tech_id or pk or id or kwargs.get('tech_id') or kwargs.get('pk') or kwargs.get('id')
+    
+    # 2. Date Range Logic
+    date_range = request.GET.get('range', '90d') # Widened default to 90d to catch seed data
+    now = timezone.now()
+    
+    start_date = now - timedelta(days=90) # Default
+    end_date = now + timedelta(days=1) # +1 day to cover future-dated seed data
+
+    if date_range == 'today':
+        start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif date_range == '7d':
+        start_date = now - timedelta(days=7)
+    elif date_range == '30d':
+        start_date = now - timedelta(days=30)
+    elif date_range == 'custom':
+        try:
+            s = request.GET.get('start')
+            e = request.GET.get('end')
+            if s and e:
+                start_date = datetime.strptime(s, '%Y-%m-%d').replace(tzinfo=timezone.get_current_timezone())
+                end_date = datetime.strptime(e, '%Y-%m-%d').replace(hour=23, minute=59, tzinfo=timezone.get_current_timezone())
+        except:
+            pass
+
+    # 3. Query Data
+    surveys = CSATSurvey.objects.filter(
+        submitted_at__gte=start_date, 
+        submitted_at__lte=end_date
+    ).select_related('ticket', 'submitted_by', 'ticket__technician').order_by('-submitted_at')
+
+    # 4. Technician Filter (If an ID was found)
+    technician = None
+    if target_id:
+        surveys = surveys.filter(ticket__technician__id=target_id)
+        user_obj = get_object_or_404(User, pk=target_id)
+        
+        # FIX: Create a dict with '.name' so the template renders it correctly
+        technician = {
+            'name': user_obj.get_full_name() or user_obj.username,
+            'id': user_obj.id
+        }
+
+    # 5. Format List
+    feedback_list = []
+    for s in surveys:
+        user_obj = s.submitted_by
+        avatar_url = None
+        
+        # Pull Avatar if available
+        if user_obj and hasattr(user_obj, 'profile') and user_obj.profile.avatar and not user_obj.profile.prefer_initials:
+            avatar_url = user_obj.profile.avatar.url
+            
+        feedback_list.append({
+            'user': user_obj.get_full_name() if user_obj else "Unknown",
+            'avatar_url': avatar_url,
+            'ticket_id': s.ticket.id,          # <--- PASSED AS RAW INT
+            'ticket': f"#{s.ticket.id}: {s.ticket.title}",
+            'rating': s.rating,
+            'comment': s.comment,
+            'date': s.submitted_at
+        })
+
+    return render(request, 'service_desk/csat_report.html', {
+        'feedback': feedback_list,
+        'current_range': date_range,
+        'technician': technician
+    })
