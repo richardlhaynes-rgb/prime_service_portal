@@ -1,124 +1,288 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="space-y-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- Page Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <a href="{% url 'inventory:dashboard' %}" class="text-sm text-prime-orange hover:text-orange-700 font-medium mb-4 inline-block transition-colors">
+        &larr; Back to Dashboard
+    </a>
+
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
         <div>
-            <a href="{% url 'inventory:dashboard' %}" class="text-sm text-prime-orange hover:underline flex items-center gap-1 mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Dashboard
-            </a>
-            <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Asset Inventory</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">Browse and manage all hardware assets</p>
+            <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Hardware Inventory</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Manage all {{ assets|length }} assets | Track lifecycle and assignments</p>
         </div>
+        <a href="{% url 'inventory:asset_add' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-prime-orange hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-prime-orange transition-colors">
+            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add New Asset
+        </a>
     </div>
 
-    <!-- Filters Bar -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-        <form method="get" class="flex flex-wrap items-center gap-4">
-            <!-- Search -->
-            <div class="flex-1 min-w-[200px]">
-                <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search by asset tag, model, or serial..."
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-prime-orange focus:border-prime-orange">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm px-6 py-4 flex flex-wrap gap-4 justify-between items-center mb-4">
+        <form method="get" class="flex flex-wrap items-center gap-3 w-full">
+            <div class="relative flex-grow min-w-[240px]">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" name="q" value="{{ request.GET.q }}" 
+                       class="block w-full pl-10 pr-3 py-2 border-gray-300 rounded-md focus:ring-prime-orange focus:border-prime-orange dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm" 
+                       placeholder="Search tag, serial, or model...">
             </div>
-            
-            <!-- Status Filter -->
-            <select name="status" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-prime-orange focus:border-prime-orange">
-                <option value="">All Statuses</option>
-                <option value="Available" {% if current_status == 'Available' %}selected{% endif %}>Available</option>
-                <option value="Deployed" {% if current_status == 'Deployed' %}selected{% endif %}>Deployed</option>
-                <option value="Maintenance" {% if current_status == 'Maintenance' %}selected{% endif %}>Maintenance</option>
-                <option value="Retired" {% if current_status == 'Retired' %}selected{% endif %}>Retired</option>
-            </select>
-            
-            <!-- Category Filter -->
-            <select name="category" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-prime-orange focus:border-prime-orange">
+
+            <select name="category" onchange="this.form.submit()" 
+                    class="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-prime-orange focus:border-prime-orange sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <option value="">All Categories</option>
                 {% for category in categories %}
                 <option value="{{ category.name }}" {% if current_category == category.name %}selected{% endif %}>{{ category.name }}</option>
                 {% endfor %}
             </select>
-            
-            <button type="submit" class="bg-prime-orange text-white px-6 py-2 rounded-md font-bold hover:bg-orange-600 transition-colors">
-                Filter
-            </button>
-            
-            {% if search_query or current_status or current_category %}
-            <a href="{% url 'inventory:asset_list' %}" class="text-gray-500 hover:text-prime-orange transition-colors text-sm">
-                Clear Filters
+
+            <select name="status" onchange="this.form.submit()" 
+                    class="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-prime-orange focus:border-prime-orange sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="">All Statuses</option>
+                <option value="available" {% if current_status == 'available' %}selected{% endif %}>Available</option>
+                <option value="deployed" {% if current_status == 'deployed' %}selected{% endif %}>Deployed</option>
+                <option value="maintenance" {% if current_status == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                <option value="retired" {% if current_status == 'retired' %}selected{% endif %}>Retired</option>
+            </select>
+
+            {% if request.GET.q or request.GET.category or request.GET.status %}
+            <a href="{% url 'inventory:asset_list' %}" class="text-sm text-gray-500 hover:text-prime-orange transition-colors">
+                Clear
             </a>
             {% endif %}
         </form>
     </div>
 
-    <!-- Assets Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Asset Tag</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Category</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Model</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Serial Number</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Assigned To</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {% for asset in assets %}
-                    <tr onclick="window.location='{% url 'inventory:asset_detail' asset.asset_tag %}'" 
-                        class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer group">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="font-mono font-bold text-prime-navy dark:text-blue-400 group-hover:text-prime-orange transition-colors">{{ asset.asset_tag }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                            {{ asset.category.name|default:"—" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {{ asset.model|default:"—" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500 dark:text-gray-400">
-                            {{ asset.serial_number|default:"—" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-bold rounded-full
-                                {% if asset.status == 'Available' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
-                                {% elif asset.status == 'Deployed' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
-                                {% elif asset.status == 'Maintenance' %}bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400
-                                {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400{% endif %}">
-                                {{ asset.status }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
-                            {% if asset.assigned_to %}
-                                {{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}
-                            {% else %}
-                                <span class="text-gray-400">—</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                            <div class="flex flex-col items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
-                                <p class="font-medium">No assets found</p>
-                                <p class="text-sm mt-1">Try adjusting your filters or search terms.</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <form id="bulk-form" method="post" action="{% url 'inventory:asset_bulk_action' %}">
+        {% csrf_token %}
+
+        <div id="bulk-toolbar" class="hidden bg-prime-orange bg-opacity-10 border border-prime-orange rounded-lg p-3 mb-4 items-center justify-between transition-all duration-300">
+            <div class="flex items-center gap-2 text-prime-orange font-bold px-2">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span id="selected-count">0</span> assets selected
+            </div>
+            <div class="flex items-center gap-3">
+                <select name="bulk_action" class="block w-64 pl-3 pr-10 py-1.5 text-base border-gray-300 focus:outline-none focus:ring-prime-orange focus:border-prime-orange sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">-- Select Action --</option>
+                    <option value="status_available">Set Status: Available</option>
+                    <option value="status_deployed">Set Status: Deployed</option>
+                    <option value="status_maintenance">Set Status: Maintenance</option>
+                    <option value="status_retired">Set Status: Retired</option>
+                    <option value="delete" class="text-red-600 font-bold">Delete Selected</option>
+                </select>
+                <button type="button" onclick="confirmBulkAction()" class="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-prime-orange hover:bg-orange-700 focus:outline-none">
+                    Apply
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left w-10">
+                                <input type="checkbox" id="select-all" onclick="toggleSelectAll()" class="rounded border-gray-300 text-prime-orange focus:ring-prime-orange h-4 w-4 cursor-pointer">
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asset Tag</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model / Serial</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assigned To</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for asset in assets %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input type="checkbox" name="selected_ids" value="{{ asset.id }}" class="asset-checkbox rounded border-gray-300 text-prime-orange focus:ring-prime-orange h-4 w-4 cursor-pointer" onclick="updateToolbar()">
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <a href="{% url 'inventory:asset_detail' asset.asset_tag %}" class="font-mono font-bold text-prime-navy dark:text-blue-400 hover:text-prime-orange dark:hover:text-prime-orange transition-colors">
+                                    {{ asset.asset_tag }}
+                                </a>
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                {{ asset.category.name }}
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ asset.model_number }}</div>
+                                <div class="text-xs text-gray-500 font-mono">{{ asset.serial_number }}</div>
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap text-center">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if asset.status == 'available' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                    {% elif asset.status == 'deployed' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                                    {% elif asset.status == 'maintenance' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+                                    {{ asset.get_status_display }}
+                                </span>
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                {% if asset.assigned_to %}
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-shrink-0 h-9 w-9">
+                                            {% if asset.assigned_to.profile.avatar %}
+                                                <img class="h-9 w-9 rounded-full object-cover border border-gray-200" src="{{ asset.assigned_to.profile.avatar.url }}" alt="">
+                                            {% else %}
+                                                <div class="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs">
+                                                    {{ asset.assigned_to.first_name|first }}{{ asset.assigned_to.last_name|first }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="font-medium text-gray-900 dark:text-white">
+                                            {{ asset.assigned_to.get_full_name }}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <span class="text-gray-400 italic text-xs pl-2">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            
+                            <td class="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{% url 'inventory:asset_edit' asset.id %}" class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors" title="Edit Asset">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                        </svg>
+                                    </a>
+                                    <button type="button" onclick="openSingleDeleteModal('{{ asset.id }}')" class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Delete Asset">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                    <p class="font-medium">No assets found</p>
+                                    <p class="text-sm mt-1">Try adjusting your filters.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+<form id="single-delete-form" method="post" class="hidden">
+    {% csrf_token %}
+</form>
+
+<div id="delete-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="relative p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800 dark:border-gray-700">
+        <div class="mt-3 text-center">
+            <div id="modal-icon-bg" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Delete Asset?</h3>
+            <p id="modal-message" class="mt-2 text-sm text-gray-600 dark:text-gray-300">Are you sure you want to permanently delete this asset? This cannot be undone.</p>
+            <div class="flex justify-center gap-4 mt-6">
+                <button id="modal-confirm-btn" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none transition-colors">Confirm</button>
+                <button onclick="closeModal()" class="px-4 py-2 bg-white text-gray-700 text-base font-medium rounded-md w-full shadow-sm border border-gray-300 hover:bg-gray-50 focus:outline-none transition-colors dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">Cancel</button>
+            </div>
         </div>
     </div>
-
 </div>
+
+<script>
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.asset-checkbox');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateToolbar();
+    }
+
+    function updateToolbar() {
+        const count = document.querySelectorAll('.asset-checkbox:checked').length;
+        const toolbar = document.getElementById('bulk-toolbar');
+        document.getElementById('selected-count').innerText = count;
+        
+        if (count > 0) {
+            toolbar.classList.remove('hidden');
+            toolbar.classList.add('flex');
+        } else {
+            toolbar.classList.add('hidden');
+            toolbar.classList.remove('flex');
+        }
+    }
+
+    const modal = document.getElementById('delete-modal');
+    const modalBtn = document.getElementById('modal-confirm-btn');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMsg = document.getElementById('modal-message');
+
+    function openSingleDeleteModal(assetId) {
+        const form = document.getElementById('single-delete-form');
+        form.action = "{% url 'inventory:asset_delete' 0 %}".replace('0', assetId);
+        
+        modalTitle.innerText = "Delete Asset?";
+        modalMsg.innerText = "Are you sure you want to delete this asset? This action is permanent.";
+        modalBtn.className = "px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700";
+        modalBtn.onclick = function() { form.submit(); };
+        
+        modal.classList.remove('hidden');
+    }
+
+    function confirmBulkAction() {
+        const actionSelect = document.querySelector('select[name="bulk_action"]');
+        const action = actionSelect.value;
+        const count = document.querySelectorAll('.asset-checkbox:checked').length;
+
+        if (!action) {
+            alert("Please select an action.");
+            return;
+        }
+        if (count === 0) {
+            alert("Please select at least one asset.");
+            return;
+        }
+
+        if (action === 'delete') {
+            modalTitle.innerText = "Delete Multiple Assets?";
+            modalMsg.innerText = `You are about to DELETE ${count} assets. This cannot be undone.`;
+            modalBtn.className = "px-4 py-2 bg-red-600 text-white font-medium rounded-md w-full hover:bg-red-700";
+        } else {
+            modalTitle.innerText = "Update Status?";
+            modalMsg.innerText = `Update status for ${count} assets?`;
+            modalBtn.className = "px-4 py-2 bg-prime-blue text-white font-medium rounded-md w-full hover:bg-blue-700";
+        }
+
+        modalBtn.onclick = function() { document.getElementById('bulk-form').submit(); };
+        modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+</script>
 {% endblock %}

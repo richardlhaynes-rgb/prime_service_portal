@@ -6,6 +6,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [2.6.0] - 2026-01-03 (Asset Inventory Expansion)
+
+### 🚀 New Features
+- **Mobile Asset Workflow:** Introduced dedicated categories and logic for **Smartphones**, **Tablets**, and **Mobile Hotspots**.
+- **Cellular Tracking:** Added a "Mobile Broadband" configuration card capturing IMEI, ICCID, Carrier, Data Plan, and Contract details.
+- **Smart Forms:** Implemented category-driven UI logic that automatically hides irrelevant sections (e.g., hiding "Network Connectivity" for phones, hiding "CPU/GPU" specs for Hotspots).
+- **Dynamic Placeholders:** Input fields now adapt their example text based on the selected category (e.g., showing "iOS 17" for OS when "Smartphone" is selected).
+
+### ⚙️ Backend & Architecture
+- **Data Hygiene Engine:** Added a pre-submission JavaScript layer that wipes data from hidden fields to prevent database pollution when changing asset categories.
+- **Routing Stability:** Patched a critical `404` error on the "Add Asset" screen by restructuring Django URL pattern ordering (Specific > Wildcard).
+- **Schema Evolution:** Expanded the JSON-based `specs` storage to handle mobile-specific data points (`mob_carrier`, `mob_imei`, etc.) alongside traditional computing specs.
+
+### 🎨 UI & UX Polish
+- **Contextual Views:** Refined the Asset Detail page to strictly "Hide if Empty," ensuring clean layouts for assets with missing specs.
+- **Lifecycle Alerts:** Added distinct "EXPIRED" badges for Mobile Contract End Dates to differentiate them from Hardware Warranty status.
+- **Visual Streamlining:** Removed "Desktop-grade" fields (Processor, Graphics, RAM) from the Smartphone view to focus on relevant stats (OS, Storage).
+
+---
+
 ## [2.5.0] - 2025-12-31 (Notifications & Reporting Stability)
 
 ### 🚀 New Features

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
         <a href="{% url 'inventory:dashboard' %}" class="text-sm text-prime-orange hover:underline flex items-center gap-1 mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -9,16 +9,17 @@
             </svg>
             <span>Back to Dashboard</span>
         </a>
-        <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Add New Hardware</h1>
+        <h1 class="text-3xl font-bold text-prime-navy dark:text-white">{{ title|default:"Add New Hardware" }}</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">Register a new device in the PRIME AE inventory.</p>
     </div>
 
     <form method="post" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         {% csrf_token %}
-        <div class="p-6 space-y-6">
+        <div class="p-6 space-y-8">
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Identification</h3>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 pb-2">Identification</h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Asset Tag</label>
                         {{ form.asset_tag }}
@@ -29,12 +30,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                        {{ form.category }}
-                    </div>
+                        {{ form.category }} </div>
                 </div>
 
                 <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">Specifications</h3>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 pb-2">Basic Details</h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Manufacturer</label>
                         {{ form.manufacturer }}
@@ -50,31 +50,115 @@
                 </div>
             </div>
 
-            <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
-                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Assignment & Lifecycle</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assigned To</label>
-                        {{ form.assigned_to }}
+            <div id="specs-section" class="hidden">
+                <h3 class="text-xs font-bold text-prime-orange uppercase tracking-wider border-b border-orange-100 dark:border-gray-700 pb-2 mb-4">
+                    System Configuration
+                </h3>
+                <div class="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-5 border border-gray-100 dark:border-gray-700">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Name</label>
+                            {{ form.device_name }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Operating System</label>
+                            {{ form.os }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Processor</label>
+                            {{ form.cpu }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Graphics Card</label>
+                            {{ form.gpu }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Installed RAM</label>
+                            {{ form.ram }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Storage</label>
+                            {{ form.storage }}
+                        </div>
+                        <div class="md:col-span-2">
+                            <div class="flex items-center gap-2">
+                                {{ form.touch_screen }}
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Touchscreen / Pen Support?</label>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Technical Specs Notes</label>
+                            {{ form.tech_notes }}
+                            <p class="text-xs text-gray-500 mt-1">Add specific details about ports, dongles, or custom configurations here.</p>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 pb-2">Lifecycle</h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Date</label>
                         {{ form.purchase_date }}
                     </div>
                 </div>
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 pb-2">Assignment</h3>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assigned To</label>
+                        {{ form.assigned_to }}
+                    </div>
+                </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Internal Notes</label>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 pb-2 mb-4">General Asset Notes</h3>
                 {{ form.notes }}
+                <p class="text-xs text-gray-500 mt-1">General notes visible for all asset types.</p>
             </div>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <a href="{% url 'inventory:asset_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
+                Cancel
+            </a>
             <button type="submit" class="bg-prime-orange text-white px-6 py-2 rounded-md font-bold hover:bg-orange-600 transition-colors">
-                Save Hardware Asset
+                Save Asset
             </button>
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('id_category');
+        const specsSection = document.getElementById('specs-section');
+        
+        // The categories that trigger the extra fields
+        // Ensure these match your database spelling exactly!
+        const computeCategories = ['Laptops', 'Workstations', 'Tablets', 'Desktops'];
+
+        function toggleSpecs() {
+            if (!categorySelect) return;
+            
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            if (!selectedOption) return;
+
+            const selectedText = selectedOption.text.trim();
+            
+            if (computeCategories.includes(selectedText)) {
+                specsSection.classList.remove('hidden');
+            } else {
+                specsSection.classList.add('hidden');
+            }
+        }
+
+        if(categorySelect) {
+            categorySelect.addEventListener('change', toggleSpecs);
+            // Run once on load to handle Edit mode
+            toggleSpecs();
+        }
+    });
+</script>
 {% endblock %}

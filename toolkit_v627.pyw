@@ -1,5 +1,5 @@
 """
-PRIME Service Portal - Developer Toolkit v6.32
+PRIME Service Portal - Developer Toolkit v6.54
 --------------------------------------------------------------------------------
 App Major Features:
 1. Smart Backup Engine:
@@ -8,16 +8,18 @@ App Major Features:
 2. Recovery Dashboard:
    - List, Restore Guide, and File Browser views.
 
-3. Database Ops Dashboard (STABLE):
-   - Fixed Tuple Unpacking Crash.
-   - "Total Commits" formatted with commas.
+3. Database Ops Dashboard:
+   - Asynchronous polling prevents UI freezes.
 
 4. Dev Tools Cockpit:
-   - Git Status, Environment Info.
-   - SMART COMMIT & PUSH: Forces Credential Manager for OAuth/Google support.
-   - DJANGO SHELL: One-click shell access.
+   - CLEANUP: Removed redundant "Commit & Push" button from top bar.
+   - FIXED "Loading..." Hangs: Background thread robustly handles Git/DB checks.
+   - FIXED Console Visibility: Grid layout ensures bottom console is always seen.
 
-5. Architecture:
+5. Server Control:
+   - Pixel-perfect Grid alignment.
+
+6. Architecture:
    - STRICT "Long-Hand" coding style.
 --------------------------------------------------------------------------------
 """
@@ -32,6 +34,7 @@ import threading
 import ctypes
 import shutil
 import time
+import queue
 import random 
 from datetime import datetime
 from datetime import timedelta
@@ -78,7 +81,7 @@ BACKUP_ROOT = r"G:\My Drive\development\portal_backups"
 os.chdir(SCRIPT_DIR)
 
 try:
-    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.32'
+    my_app_id = 'PRIME.ServicePortal.Toolkit.v6.54'
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(my_app_id)
 except:
     pass
@@ -136,7 +139,6 @@ FONTS = {
     'button': ('Segoe UI', 10, 'bold'),
 }
 
-# Fixed 'django' icon to '>>>' instead of 'DJ'
 ICONS = {
     'play': '▶', 'stop': '⏹', 'refresh': '⟳', 'lightning': '⚡',
     'shield': '🛡', 'database': '🗄', 'terminal': '>_', 'python': '>>>',
@@ -148,7 +150,50 @@ ICONS = {
 }
 
 # =============================================================================
-# 3. TELEMETRY ENGINE
+# 3. GLOBAL STATE & ASYNC DATA STORE
+# =============================================================================
+log_queue = queue.Queue()
+
+ASYNC_DATA = {
+    'git_branch': 'Scanning...',
+    'git_user': 'Scanning...',
+    'git_files': [],
+    'db_metrics': (0, 0, 0, 0, 0, 0, "Checking...", 0),
+    'db_status_text': 'PostgreSQL: Checking...',
+    'debug_text': 'Debug Mode: Checking...'
+}
+
+running_pids = {"PROD": None, "DEV": None}
+pulse_state = 0
+cpu_history = [0] * 60
+ram_history = [0] * 60
+db_tps_history = [0] * 60
+db_read_history = [0] * 60
+db_write_history = [0] * 60
+is_console_expanded = False
+current_browser_path = BACKUP_ROOT 
+tick_counter = 0
+
+status_indicator_prod = None
+status_indicator_dev = None
+status_indicator_canvas_db = None
+status_indicator_text_db = None
+lbl_db_version = None 
+var_card_conns = None
+var_card_size = None
+var_card_cache = None
+var_card_commits = None 
+
+# Source Control UI
+commit_entry_widget = None
+git_files_listbox = None
+lbl_git_identity = None
+lbl_git_branch_badge = None
+lbl_env_db_status = None
+lbl_env_debug_mode = None
+
+# =============================================================================
+# 4. TELEMETRY ENGINE
 # =============================================================================
 class DatabaseMonitor:
     def __init__(self):
@@ -247,31 +292,70 @@ class DatabaseMonitor:
 db_monitor = DatabaseMonitor()
 
 # =============================================================================
-# 4. GLOBAL STATE
+# 5. ASYNC BACKGROUND WORKER (ROBUST & LOGGING)
 # =============================================================================
-running_pids = {"PROD": None, "DEV": None}
-pulse_state = 0
-cpu_history = [0] * 60
-ram_history = [0] * 60
-db_tps_history = [0] * 60
-db_read_history = [0] * 60
-db_write_history = [0] * 60
-is_console_expanded = False
-current_browser_path = BACKUP_ROOT 
-tick_counter = 0
+def run_background_checks():
+    """ Runs slow checks in a separate thread. Logs to queue for UI display. """
+    first_run = True
+    while True:
+        try:
+            if first_run:
+                log_queue.put("Background Thread: Starting system checks...")
+            
+            # 1. GIT INFO (Explicit CWD & Error Handling)
+            try:
+                branch = subprocess.check_output("git rev-parse --abbrev-ref HEAD", shell=True, text=True, cwd=SCRIPT_DIR, creationflags=CREATE_NO_WINDOW, timeout=2).strip()
+                user = subprocess.check_output("git config user.name", shell=True, text=True, cwd=SCRIPT_DIR, creationflags=CREATE_NO_WINDOW, timeout=2).strip()
+                email = subprocess.check_output("git config user.email", shell=True, text=True, cwd=SCRIPT_DIR, creationflags=CREATE_NO_WINDOW, timeout=2).strip()
+                status_raw = subprocess.check_output("git status --porcelain", shell=True, text=True, cwd=SCRIPT_DIR, creationflags=CREATE_NO_WINDOW, timeout=2)
+                files = [line for line in status_raw.splitlines() if line.strip()]
+                
+                ASYNC_DATA['git_branch'] = branch
+                ASYNC_DATA['git_user'] = f"{user} ({email})"
+                ASYNC_DATA['git_files'] = files
+                
+                if first_run: log_queue.put(">> System Check: Git Repository connected.")
+            except Exception as e:
+                ASYNC_DATA['git_branch'] = "Git Error"
+                ASYNC_DATA['git_user'] = "Unknown"
+                ASYNC_DATA['git_files'] = [f"Err: {str(e)[:25]}"]
+                if first_run: log_queue.put(f">> System Check Warning: Git error - {str(e)[:30]}")
 
-status_indicator_canvas_server = None
-status_indicator_text_server = None
-status_indicator_canvas_db = None
-status_indicator_text_db = None
-lbl_db_version = None 
-var_card_conns = None
-var_card_size = None
-var_card_cache = None
-var_card_commits = None 
+            # 2. DB INFO
+            metrics = db_monitor.poll()
+            ASYNC_DATA['db_metrics'] = metrics
+            ASYNC_DATA['db_status_text'] = f"PostgreSQL: {metrics[6]}"
+            if first_run and metrics[6] == "Connected":
+                log_queue.put(">> System Check: Database connected.")
+
+            # 3. DEBUG MODE
+            try:
+                settings_path = os.path.join(SCRIPT_DIR, "prime_service_portal", "settings.py")
+                if os.path.exists(settings_path):
+                    with open(settings_path, "r") as f:
+                        content = f.read()
+                        if re.search(r"^DEBUG\s*=\s*True", content, re.MULTILINE):
+                            ASYNC_DATA['debug_text'] = "Debug Mode: True"
+                        else:
+                            ASYNC_DATA['debug_text'] = "Debug Mode: False"
+                else:
+                    ASYNC_DATA['debug_text'] = "Settings Not Found"
+            except:
+                 ASYNC_DATA['debug_text'] = "Debug Check Failed"
+            
+            first_run = False
+
+        except Exception as e:
+            log_queue.put(f"Background Thread Critical Error: {e}")
+            pass
+            
+        time.sleep(3) 
+
+bg_thread = threading.Thread(target=run_background_checks, daemon=True)
+bg_thread.start()
 
 # =============================================================================
-# 5. CUSTOM WIDGETS
+# 6. CUSTOM WIDGETS
 # =============================================================================
 class TelemetryGraph(tk.Canvas):
     def __init__(self, parent, data_source_key, title, color, unit="%", height=150, responsive_height=False, min_y_max=None):
@@ -303,6 +387,7 @@ class TelemetryGraph(tk.Canvas):
         grid_color = '#334155'
         self.create_text(5, self.pad_top, text=f"{max_val:.1f}{self.unit}", anchor='nw', fill=THEME['text_secondary'], font=('Segoe UI', 8), tags="label")
         self.create_text(5, self.H - self.pad_bottom, text="0", anchor='sw', fill=THEME['text_secondary'], font=('Segoe UI', 8), tags="label")
+        # Added Spacing (4 spaces) after icon placeholder in title
         self.create_text(self.pad_left + 10, 5, text=self.title, anchor='nw', fill=THEME['text_secondary'], font=FONTS['small'], tags="label")
         self.value_text = self.create_text(self.W-10, 5, text=f"0{self.unit}", anchor='ne', fill=self.line_color, font=FONTS['body_bold'], tags="label")
         self.create_line(self.pad_left, self.pad_top, self.W, self.pad_top, fill=grid_color, dash=(2, 4), tags="grid")
@@ -346,7 +431,7 @@ class TelemetryGraph(tk.Canvas):
         self.tag_raise("label")
 
 # =============================================================================
-# 5. CORE FUNCTIONS
+# 7. CORE FUNCTIONS
 # =============================================================================
 def log_message(msg, tag='default', timestamp=True):
     try:
@@ -355,6 +440,7 @@ def log_message(msg, tag='default', timestamp=True):
             now = datetime.now().strftime("%H:%M:%S")
             log_box.insert(tk.END, f"[{now}] ", 'timestamp')
         log_box.insert(tk.END, f"{msg}\n", tag)
+        # FORCE SCROLL TO BOTTOM
         log_box.see(tk.END)
         log_box.config(state='disabled')
         root.update_idletasks()
@@ -394,15 +480,6 @@ def get_network_details():
         return local_ip, mask, gateway
     except: return local_ip, "N/A", "N/A"
 
-def get_git_info():
-    try:
-        branch = subprocess.check_output("git rev-parse --abbrev-ref HEAD", shell=True, text=True, creationflags=CREATE_NO_WINDOW).strip()
-        status = subprocess.check_output("git status --porcelain", shell=True, text=True, creationflags=CREATE_NO_WINDOW)
-        changes = len(status.splitlines())
-        last_commit = subprocess.check_output('git log -1 --format="%s (%h)"', shell=True, text=True, creationflags=CREATE_NO_WINDOW).strip()
-        return branch, changes, last_commit
-    except: return "No Git Repo", 0, "N/A"
-
 def get_db_version():
     if not HAS_PSYCOPG2: return "Driver Missing"
     try:
@@ -423,24 +500,31 @@ def update_heartbeat_and_stats():
     tick_counter += 1
     
     try:
-        active_processes = []
-        for key, pid in running_pids.items():
-            if pid:
-                if HAS_PSUTIL and psutil.pid_exists(pid): active_processes.append(f"{key}:{pid}")
-                else: running_pids[key] = None
-        
-        if active_processes:
-            pulse_state = (pulse_state + 1) % 20
-            b = 0.7 + 0.3 * abs(10 - pulse_state) / 10
-            color = f'#{int(16*b):02x}{int(185*b):02x}{int(129*b):02x}'
-            txt = f"Active: {', '.join(active_processes)}"
-        else:
-            color = THEME['status_idle']; txt = "System Idle"
-        
-        if status_indicator_canvas_server:
-            status_indicator_canvas_server.itemconfig("circle", fill=color, outline=color)
-            status_indicator_text_server.set(txt)
+        # Check queue
+        while not log_queue.empty():
+            msg = log_queue.get()
+            log_raw(msg)
 
+        # 1. SERVER PULSE
+        pulse_state = (pulse_state + 1) % 20
+        b = 0.7 + 0.3 * abs(10 - pulse_state) / 10
+        pulse_color = f'#{int(16*b):02x}{int(185*b):02x}{int(129*b):02x}'
+
+        if status_indicator_prod:
+            if running_pids['PROD'] and HAS_PSUTIL and psutil.pid_exists(running_pids['PROD']):
+                status_indicator_prod.itemconfig("status_light", fill=pulse_color, outline=pulse_color)
+            else:
+                running_pids['PROD'] = None
+                status_indicator_prod.itemconfig("status_light", fill=THEME['status_idle'], outline="")
+
+        if status_indicator_dev:
+            if running_pids['DEV'] and HAS_PSUTIL and psutil.pid_exists(running_pids['DEV']):
+                status_indicator_dev.itemconfig("status_light", fill=pulse_color, outline=pulse_color)
+            else:
+                running_pids['DEV'] = None
+                status_indicator_dev.itemconfig("status_light", fill=THEME['status_idle'], outline="")
+
+        # 2. LOCAL CPU/RAM
         if HAS_PSUTIL:
             cpu = psutil.cpu_percent()
             ram = psutil.virtual_memory().percent
@@ -448,10 +532,13 @@ def update_heartbeat_and_stats():
         
         cpu_history.append(cpu); cpu_history.pop(0)
         ram_history.append(ram); ram_history.pop(0)
-        graph_cpu.update_graph(cpu_history)
-        graph_ram.update_graph(ram_history)
+        
+        if 'graph_cpu' in globals(): graph_cpu.update_graph(cpu_history)
+        if 'graph_ram' in globals(): graph_ram.update_graph(ram_history)
 
-        conns, tps, reads, writes, size_bytes, cache_ratio, status, total_xact = db_monitor.poll()
+        # 3. DB METRICS
+        metrics = ASYNC_DATA['db_metrics']
+        conns, tps, reads, writes, size_bytes, cache_ratio, status, total_xact = metrics
         
         if status_indicator_canvas_db:
             if status == "Connected": db_color = THEME['status_active']; db_txt = "DB Connected"
@@ -467,6 +554,10 @@ def update_heartbeat_and_stats():
             if var_card_size: var_card_size.set(size_str)
             if var_card_cache: var_card_cache.set(f"{cache_ratio:.1f}%")
             if var_card_commits: var_card_commits.set(f"{total_xact:,.0f}")
+            
+        if lbl_env_db_status:
+            color = THEME['status_active'] if status == "Connected" else THEME['status_error']
+            lbl_env_db_status.config(text=ASYNC_DATA['db_status_text'], fg=color)
 
         db_tps_history.append(tps); db_tps_history.pop(0)
         db_read_history.append(reads); db_read_history.pop(0)
@@ -477,26 +568,43 @@ def update_heartbeat_and_stats():
             graph_db_reads.update_graph(db_read_history)
             graph_db_writes.update_graph(db_write_history)
 
-        if 'lbl_git_branch' in globals():
-            branch, changes, last_commit = get_git_info()
-            lbl_git_branch.config(text=f"Branch: {branch}")
-            lbl_git_changes.config(text=f"Changes: {changes} uncommitted files")
-            lbl_git_commit.config(text=f"Last: {last_commit[:30]}...")
+        # 4. GIT & ENVIRONMENT
+        if tick_counter % 2 == 0 and 'lbl_git_branch_badge' in globals() and lbl_git_branch_badge:
+            lbl_git_branch_badge.config(text=ASYNC_DATA['git_branch'])
+            lbl_git_identity.config(text=f"Committing as: {ASYNC_DATA['git_user']}")
+            
+            git_files_listbox.config(state='normal')
+            git_files_listbox.delete(0, tk.END)
+            files = ASYNC_DATA['git_files']
+            if not files:
+                git_files_listbox.insert(tk.END, "  All files up to date.")
+                git_files_listbox.config(fg=THEME['status_active'])
+            else:
+                git_files_listbox.config(fg=THEME['text_secondary'])
+                for f in files:
+                    git_files_listbox.insert(tk.END, f"  {f}")
+            git_files_listbox.config(state='disabled')
+            
+            debug_text = ASYNC_DATA['debug_text']
+            if lbl_env_debug_mode:
+                color = THEME['accent_orange'] if "True" in debug_text else THEME['status_active']
+                lbl_env_debug_mode.config(text=debug_text, fg=color)
 
-    except Exception as e: print(f"Error in update loop: {e}")
+    except Exception as e: print(f"Error in UI Loop: {e}")
     root.after(1000, update_heartbeat_and_stats)
 
 def toggle_console():
     global is_console_expanded
     if not is_console_expanded:
-        console_container.pack_forget() 
+        console_container.grid_remove() # Remove from grid
         console_container.place(x=30, y=130, relwidth=1, width=-60, relheight=1, height=-150)
         console_container.lift() 
         btn_expand.config(text=ICONS['collapse'])
         is_console_expanded = True
     else:
         console_container.place_forget()
-        console_container.pack(fill='both', expand=True, padx=30, pady=(0, 20))
+        # Restore to GRID Row 2
+        console_container.grid(row=2, column=0, sticky='ew', padx=30, pady=(0, 20))
         btn_expand.config(text=ICONS['expand'])
         is_console_expanded = False
 
@@ -710,8 +818,14 @@ def run_command_with_log(cmd, label):
     threading.Thread(target=task, daemon=True).start()
 
 def run_smart_git_push():
-    summary = simpledialog.askstring("Commit & Push", "Enter commit message:", parent=root)
-    if not summary: return
+    # 1. READ FROM EMBEDDED ENTRY
+    summary = commit_entry_widget.get().strip()
+    placeholder = "   Enter commit message..."
+
+    # 2. VALIDATION
+    if not summary or summary == placeholder.strip():
+        messagebox.showwarning("Input Required", "Please enter a commit message in the Source Control card below.")
+        return
     
     def task():
         log_raw("")
@@ -731,11 +845,6 @@ def run_smart_git_push():
             # 3. Push (EXTERNAL WINDOW + VENV ACTIVATION + CREDENTIAL HELPER FORCE)
             log_raw(">> git push (Launching auth window...)")
             
-            # CRITICAL FIXES:
-            # 1. /k ensures window stays open for feedback
-            # 2. Activate Venv (Standardize environment)
-            # 3. -c credential.helper=manager forces Windows Credential Manager (Fixes 'username' prompt issue)
-            
             cmd_str = (
                 'start "Git Push" cmd /k '
                 '"echo Activating Environment... & call venv\\Scripts\\activate.bat & echo. & '
@@ -752,10 +861,21 @@ def run_smart_git_push():
             log_status("External Push Process Launched.")
             log_raw("Please check the popup window for final status.")
 
+            # Clear entry on success-ish launch
+            root.after(0, lambda: reset_commit_entry())
+
         except Exception as e:
             log_error(f"GIT ERROR: {str(e)}")
             
     threading.Thread(target=task, daemon=True).start()
+
+def reset_commit_entry():
+    if commit_entry_widget:
+        commit_entry_widget.delete(0, tk.END)
+        commit_entry_widget.insert(0, "   Enter commit message...")
+        commit_entry_widget.config(fg='grey')
+        # Reset focus to root to remove cursor
+        root.focus()
 
 def run_server(cmd, key, btn_start, btn_stop):
     def task():
@@ -791,20 +911,35 @@ def open_python_shell(): subprocess.Popen(['start', 'cmd', '/k', r'venv\Scripts\
 # 9. UI HELPERS (FACTORIES)
 # =============================================================================
 def create_hero_card(parent, title, subtitle, icon, btn_configs):
+    # RETURNS WIDGETS FOR EXTERNAL GRIDDING
     card = tk.Frame(parent, bg=THEME['bg_card'], bd=0)
-    card.pack(side='left', fill='both', expand=True, padx=(0, 10), pady=0)
-    header = tk.Frame(card, bg=THEME['bg_card']); header.pack(fill='x', padx=20, pady=(20, 10))
+    
+    header = tk.Frame(card, bg=THEME['bg_card'])
+    header.pack(fill='x', padx=20, pady=(20, 10))
+    
     tk.Label(header, text=icon, font=('Segoe UI', 26), fg=THEME['accent_blue'], bg=THEME['bg_card']).pack(side='left', padx=(0, 15))
-    meta = tk.Frame(header, bg=THEME['bg_card']); meta.pack(side='left', fill='x')
+    
+    meta = tk.Frame(header, bg=THEME['bg_card'])
+    meta.pack(side='left', fill='x')
     tk.Label(meta, text=title, font=FONTS['subheader'], fg=THEME['text_primary'], bg=THEME['bg_card']).pack(anchor='w')
     tk.Label(meta, text=subtitle, font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w')
+    
+    # DEDICATED STATUS LIGHT (Top Right)
+    indicator = tk.Canvas(header, width=12, height=12, bg=THEME['bg_card'], highlightthickness=0)
+    indicator.pack(side='right', anchor='n', pady=5)
+    indicator.create_oval(1, 1, 11, 11, fill=THEME['status_idle'], outline="", tags="status_light")
+
     tk.Frame(card, bg=THEME['border'], height=1).pack(fill='x', padx=20, pady=10)
-    btn_frame = tk.Frame(card, bg=THEME['bg_card']); btn_frame.pack(fill='x', padx=20, pady=(0, 20))
+    
+    btn_frame = tk.Frame(card, bg=THEME['bg_card'])
+    btn_frame.pack(fill='x', padx=20, pady=(0, 20))
+    
     created_btns = []
     for cfg in btn_configs:
         btn = tk.Button(btn_frame, text=f"{cfg.get('icon','')} {cfg['text']}", command=cfg['command'], bg=cfg['color'], fg='white', font=FONTS['button'], bd=0, padx=15, pady=8, cursor='hand2', activebackground=cfg['color'])
         btn.original_bg = cfg['color']; btn.pack(fill='x', pady=(0, 5)); created_btns.append(btn)
-    return card, created_btns
+        
+    return card, created_btns, indicator
 
 def create_action_button(parent, text, command, color, icon=''):
     btn = tk.Button(parent, text=f"{icon} {text}" if icon else text, command=command, bg=color, fg='white', font=FONTS['button'], bd=0, padx=16, pady=10, cursor='hand2', activebackground=color)
@@ -847,7 +982,7 @@ def create_metric_card(parent, title, value_var, accent_color):
 # 10. MAIN UI SETUP
 # =============================================================================
 root = tk.Tk()
-root.title("PRIME Service Portal - Developer Toolkit v6.32")
+root.title("PRIME Service Portal - Developer Toolkit v6.54")
 
 # Work Area Centering
 wa_left, wa_top, wa_right, wa_bottom = get_work_area()
@@ -857,8 +992,9 @@ y_pos = wa_top + (wa_bottom - wa_top - W_HEIGHT) // 2
 root.geometry(f'{W_WIDTH}x{W_HEIGHT}+{x_pos}+{y_pos}')
 root.configure(bg=THEME['bg_primary'])
 
-# --- HEADER ---
-header = tk.Frame(root, bg=THEME['bg_primary'], height=90); header.pack(fill='x', padx=30, pady=(20, 0)); header.pack_propagate(False)
+# --- 1. HEADER (Top - Row 0) ---
+header = tk.Frame(root, bg=THEME['bg_primary'], height=90); header.grid(row=0, column=0, sticky='ew', padx=30, pady=(20, 0))
+
 h_left = tk.Frame(header, bg=THEME['bg_primary']); h_left.pack(side='left', fill='y')
 try:
     if HAS_PIL:
@@ -876,7 +1012,7 @@ except: tk.Label(h_left, text="PRIME AE", font=('Arial', 24, 'bold'), fg='white'
 tk.Frame(h_left, bg=THEME['border'], width=2).pack(side='left', fill='y', padx=(0, 20))
 h_titles = tk.Frame(h_left, bg=THEME['bg_primary']); h_titles.pack(side='left')
 tk.Label(h_titles, text="DEVELOPER TOOLKIT", font=FONTS['header'], fg=THEME['accent_blue'], bg=THEME['bg_primary']).pack(anchor='w')
-version_lbl = tk.Label(h_titles, text="v6.32 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
+version_lbl = tk.Label(h_titles, text="v6.54 | Django 5.2 | PostgreSQL 18", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary'], cursor="hand2")
 version_lbl.pack(anchor='w'); version_lbl.bind("<Button-1>", open_changelog)
 tk.Label(h_titles, text="© 2025 | Conceived & Designed by Richard Haynes", font=('Segoe UI', 8), fg=THEME['text_muted'], bg=THEME['bg_primary']).pack(anchor='w', pady=(2,0))
 h_right = tk.Frame(header, bg=THEME['bg_primary']); h_right.pack(side='right', fill='y')
@@ -890,33 +1026,83 @@ ip, mask, gw = get_network_details()
 net_row = tk.Frame(h_right, bg=THEME['bg_primary']); net_row.pack(side='top', anchor='e', pady=(2, 0))
 tk.Label(net_row, text=f"IPv4: {ip} | Mask: {mask} | Gwy: {gw}", font=('Segoe UI', 8), fg=THEME['text_muted'], bg=THEME['bg_primary']).pack(anchor='e', padx=15)
 
-# --- NOTEBOOK TABS ---
+# --- 2. NOTEBOOK TABS (Row 1 - Expands) ---
+root.grid_rowconfigure(1, weight=1) # Allow row 1 to expand
+root.grid_columnconfigure(0, weight=1)
+
 style = ttk.Style(); style.theme_use('default')
 style.layout('Seamless.TNotebook.Tab', [('Notebook.tab', {'sticky': 'nswe', 'children': [('Notebook.padding', {'side': 'top', 'sticky': 'nswe', 'children': [('Notebook.label', {'side': 'top', 'sticky': ''})]})]})])
 style.configure('Seamless.TNotebook', background=THEME['bg_primary'], borderwidth=0)
 style.configure('Seamless.TNotebook.Tab', background=THEME['bg_primary'], foreground=THEME['text_secondary'], font=FONTS['body_bold'], padding=[20, 15], borderwidth=0)
 style.map('Seamless.TNotebook.Tab', background=[('selected', THEME['bg_primary'])], foreground=[('selected', THEME['accent_blue'])])
-notebook = ttk.Notebook(root, style='Seamless.TNotebook'); notebook.pack(fill='both', expand=True, padx=30, pady=(20, 0))
+
+notebook = ttk.Notebook(root, style='Seamless.TNotebook')
+notebook.grid(row=1, column=0, sticky='nsew', padx=30, pady=(20, 0))
+
+# --- 3. CONSOLE (Row 2 - Fixed) ---
+root.grid_rowconfigure(2, weight=0) # Do not expand console row
+
+console_container = tk.Frame(root, bg=THEME['bg_primary']); 
+console_container.grid(row=2, column=0, sticky='ew', padx=30, pady=(0, 20)) # Explicit Grid placement
+tk.Frame(console_container, bg=THEME['border'], height=1).pack(fill='x', pady=0)
+c_header = tk.Frame(console_container, bg=THEME['bg_primary']); c_header.pack(fill='x', pady=(10, 5))
+tk.Label(c_header, text=f"{ICONS['terminal']} CONSOLE OUTPUT", font=FONTS['title'], fg=THEME['text_secondary'], bg=THEME['bg_primary']).pack(side='left')
+btn_expand = tk.Button(c_header, text=ICONS['expand'], command=toggle_console, bg=THEME['bg_primary'], fg=THEME['accent_blue'], bd=0, font=('Segoe UI', 12), cursor='hand2', activebackground=THEME['bg_primary'], activeforeground='white'); btn_expand.place(relx=0.5, rely=0.5, anchor='center')
+clear_box = tk.Frame(c_header, bg=THEME['bg_card'], highlightbackground=THEME['border'], highlightthickness=1, cursor='hand2'); clear_box.pack(side='right')
+c_inner = tk.Frame(clear_box, bg=THEME['bg_card'], cursor='hand2'); c_inner.pack(padx=15, pady=8)
+l_icon = tk.Label(c_inner, text=ICONS['trash'], font=('Segoe UI', 10), fg=THEME['text_primary'], bg=THEME['bg_card'], cursor='hand2'); l_icon.pack(side='left', padx=(0, 8))
+l_text = tk.Label(c_inner, text="Clear", font=FONTS['body_bold'], fg=THEME['text_primary'], bg=THEME['bg_card'], cursor='hand2'); l_text.pack(side='left')
+def on_clear_click(e): clear_console()
+def on_enter_clear(e): clear_box.config(bg=THEME['border']); c_inner.config(bg=THEME['border']); l_icon.config(bg=THEME['border'], fg='white'); l_text.config(bg=THEME['border'], fg='white')
+def on_leave_clear(e): clear_box.config(bg=THEME['bg_card']); c_inner.config(bg=THEME['bg_card']); l_icon.config(bg=THEME['bg_card'], fg=THEME['text_primary']); l_text.config(bg=THEME['bg_card'], fg=THEME['text_primary'])
+for w in [clear_box, c_inner, l_icon, l_text]: w.bind('<Button-1>', on_clear_click); w.bind('<Enter>', on_enter_clear); w.bind('<Leave>', on_leave_clear)
+log_box = scrolledtext.ScrolledText(console_container, bg=THEME['bg_console'], fg=THEME['text_console'], font=FONTS['console'], bd=0, height=10); log_box.pack(fill='both', expand=True, pady=(0, 0))
+log_box.tag_configure('timestamp', foreground=THEME['accent_blue']); log_box.tag_configure('status', foreground='#22c55e'); log_box.tag_configure('error', foreground=THEME['status_error']); log_box.config(state='disabled')
 
 # =============================================================================
 # TAB 1: SERVER CONTROL
 # =============================================================================
-tab_server = tk.Frame(notebook, bg=THEME['bg_primary']); notebook.add(tab_server, text=f"{ICONS['rocket']} SERVER CONTROL")
-status_strip = tk.Frame(tab_server, bg=THEME['bg_primary']); status_strip.pack(fill='x', padx=5, pady=(5, 5))
-status_indicator_text_server = tk.StringVar(value="Idle")
-status_box_server, status_indicator_canvas_server = create_status_badge(status_strip, status_indicator_text_server)
-status_box_server.pack(side='right')
-tk.Label(status_strip, text="PROCESS MANAGEMENT", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary']).pack(side='left', anchor='s', pady=10)
-ctrl_frame = tk.Frame(tab_server, bg=THEME['bg_primary']); ctrl_frame.pack(fill='x', pady=(0, 10))
-prod_c, prod_btns = create_hero_card(ctrl_frame, "Production Server", "Waitress WSGI | Enterprise", ICONS['shield'], [{'text': 'START SERVER', 'command': None, 'color': THEME['btn_success'], 'icon': ICONS['play']}, {'text': 'STOP', 'command': lambda: stop_server("PROD"), 'color': THEME['btn_danger'], 'icon': ICONS['stop']}])
+tab_server = tk.Frame(notebook, bg=THEME['bg_primary'])
+notebook.add(tab_server, text=f"{ICONS['rocket']} SERVER CONTROL")
+
+# Grid Container
+server_grid = tk.Frame(tab_server, bg=THEME['bg_primary'])
+server_grid.pack(fill='both', expand=True, pady=20)
+server_grid.columnconfigure(0, weight=1, uniform='col')
+server_grid.columnconfigure(1, weight=1, uniform='col')
+server_grid.rowconfigure(1, weight=1, uniform='row')
+server_grid.rowconfigure(2, weight=1, uniform='row')
+
+# Header Row (Row 0)
+server_header = tk.Frame(server_grid, bg=THEME['bg_primary'])
+server_header.grid(row=0, column=0, columnspan=2, sticky='ew', pady=(0, 5))
+
+# Header Label with 'nw' anchor
+tk.Label(server_header, text="PROCESS MANAGEMENT", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_primary']).pack(side='left', anchor='nw', pady=(2,0))
+
+# Row 1: Server Cards
+prod_c, prod_btns, status_indicator_prod = create_hero_card(server_grid, "Production Server", "Waitress WSGI | Enterprise", ICONS['shield'], [{'text': 'START SERVER', 'command': None, 'color': THEME['btn_success'], 'icon': ICONS['play']}, {'text': 'STOP', 'command': lambda: stop_server("PROD"), 'color': THEME['btn_danger'], 'icon': ICONS['stop']}])
 prod_btns[0].config(command=lambda: run_server("python run_production.py", "PROD", prod_btns[0], prod_btns[1])); prod_btns[1].config(state='disabled', bg=THEME['btn_secondary'])
-dev_c, dev_btns = create_hero_card(ctrl_frame, "Development Server", "Django Runserver | Debug", ICONS['lightning'], [{'text': 'START SERVER', 'command': None, 'color': THEME['btn_info'], 'icon': ICONS['play']}, {'text': 'STOP', 'command': lambda: stop_server("DEV"), 'color': THEME['btn_danger'], 'icon': ICONS['stop']}])
-dev_btns[0].config(command=lambda: run_server("python manage.py runserver", "DEV", dev_btns[0], dev_btns[1])); dev_btns[1].config(state='disabled', bg=THEME['btn_secondary']); dev_c.pack_configure(padx=0)
-graph_frame = tk.Frame(tab_server, bg=THEME['bg_primary']); graph_frame.pack(fill='both', expand=True, pady=(0, 20))
-tk.Label(graph_frame, text=f"{ICONS['gear']} SYSTEM TELEMETRY (LIVE)", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_primary']).pack(anchor='w', pady=(10, 5))
-g_container = tk.Frame(graph_frame, bg=THEME['bg_primary']); g_container.pack(fill='both', expand=True)
-graph_cpu = TelemetryGraph(g_container, data_source_key='cpu', title=f"{ICONS['cpu']} CPU USAGE HISTORY", color=THEME['accent_blue'], unit="%", height=150, responsive_height=False); graph_cpu.pack(side='left', fill='both', expand=True, padx=(0, 10))
-graph_ram = TelemetryGraph(g_container, data_source_key='ram', title=f"{ICONS['ram']} MEMORY USAGE HISTORY", color='#a78bfa', unit="%", height=150, responsive_height=False); graph_ram.pack(side='left', fill='both', expand=True)
+# Grid: Row 1, Col 0, Gap Right (10px to center, 20px total)
+prod_c.grid(row=1, column=0, sticky='nsew', padx=(0, 10), pady=(0, 10))
+
+dev_c, dev_btns, status_indicator_dev = create_hero_card(server_grid, "Development Server", "Django Runserver | Debug", ICONS['lightning'], [{'text': 'START SERVER', 'command': None, 'color': THEME['btn_info'], 'icon': ICONS['play']}, {'text': 'STOP', 'command': lambda: stop_server("DEV"), 'color': THEME['btn_danger'], 'icon': ICONS['stop']}])
+dev_btns[0].config(command=lambda: run_server("python manage.py runserver", "DEV", dev_btns[0], dev_btns[1])); dev_btns[1].config(state='disabled', bg=THEME['btn_secondary'])
+# Grid: Row 1, Col 1, Gap Left (10px to center)
+dev_c.grid(row=1, column=1, sticky='nsew', padx=(10, 0), pady=(0, 10))
+
+# Row 2: Telemetry Graphs
+# Graph 1 (CPU) - Wrapped in Card Frame
+cpu_card_frame = tk.Frame(server_grid, bg=THEME['bg_card'], bd=0, highlightthickness=0)
+cpu_card_frame.grid(row=2, column=0, sticky='nsew', padx=(0, 10), pady=(10, 0))
+graph_cpu = TelemetryGraph(cpu_card_frame, data_source_key='cpu', title=f"{ICONS['cpu']}   CPU USAGE HISTORY", color=THEME['accent_blue'], unit="%", height=150, responsive_height=True, min_y_max=100.0)
+graph_cpu.pack(fill='both', expand=True)
+
+# Graph 2 (RAM) - Wrapped in Card Frame
+ram_card_frame = tk.Frame(server_grid, bg=THEME['bg_card'], bd=0, highlightthickness=0)
+ram_card_frame.grid(row=2, column=1, sticky='nsew', padx=(10, 0), pady=(10, 0))
+graph_ram = TelemetryGraph(ram_card_frame, data_source_key='ram', title=f"{ICONS['ram']}   MEMORY USAGE HISTORY", color='#a78bfa', unit="%", height=150, responsive_height=True, min_y_max=100.0)
+graph_ram.pack(fill='both', expand=True)
 
 # =============================================================================
 # TAB 2: DATABASE OPS
@@ -951,8 +1137,6 @@ create_action_button(dev_actions, "PYTHON SHELL", open_python_shell, THEME['btn_
 # NEW BUTTON: Django Shell
 create_action_button(dev_actions, "DJANGO SHELL", open_django_shell, THEME['btn_secondary'], ICONS['django']).pack(side='left', padx=20)
 create_action_button(dev_actions, "COLLECT STATIC", lambda: run_command_with_log("python manage.py collectstatic --noinput", "STATIC"), THEME['btn_info'], ICONS['folder']).pack(side='left')
-# UPDATED BUTTON: Commit & Push
-create_action_button(dev_actions, "COMMIT & PUSH", run_smart_git_push, THEME['accent_orange'], ICONS['git']).pack(side='left', padx=20)
 
 dev_mid = tk.Frame(dev_grid, bg=THEME['bg_primary']); dev_mid.pack(fill='both', expand=True)
 lbl_git_branch = tk.Label(None); lbl_git_changes = tk.Label(None); lbl_git_commit = tk.Label(None)
@@ -960,32 +1144,87 @@ git_card = tk.Frame(dev_mid, bg=THEME['bg_card'], padx=20, pady=20); git_card.pa
 tk.Label(git_card, text=f"{ICONS['git']} SOURCE CONTROL", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 10))
 # ADDED REPO INFO
 tk.Label(git_card, text="Repo: richardlhaynes-rgb", font=FONTS['small'], fg=THEME['accent_blue'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 5))
-lbl_git_branch = tk.Label(git_card, text="Branch: Loading...", font=FONTS['title'], fg=THEME['accent_orange'], bg=THEME['bg_card']); lbl_git_branch.pack(anchor='w')
-lbl_git_changes = tk.Label(git_card, text="Changes: ...", font=FONTS['small'], fg=THEME['text_primary'], bg=THEME['bg_card']); lbl_git_changes.pack(anchor='w', pady=(5,0))
-lbl_git_commit = tk.Label(git_card, text="Last: ...", font=FONTS['small'], fg=THEME['text_muted'], bg=THEME['bg_card']); lbl_git_commit.pack(anchor='w')
+branch_frame = tk.Frame(git_card, bg=THEME['accent_orange'], padx=8, pady=2); branch_frame.pack(anchor='w', pady=(0, 5))
+lbl_git_branch_badge = tk.Label(branch_frame, text="Scanning...", font=('Segoe UI', 9, 'bold'), fg='white', bg=THEME['accent_orange']); lbl_git_branch_badge.pack()
 
+# EMBEDDED COMMIT INPUT & BUTTON
+tk.Label(git_card, text="Commit Message:", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(10, 0))
+commit_entry_widget = tk.Entry(git_card, bg=THEME['bg_primary'], fg='grey', insertbackground='white', font=('Segoe UI', 10), bd=0, highlightthickness=1, highlightbackground=THEME['border'])
+commit_entry_widget.pack(fill='x', ipady=5, pady=(5, 0))
+commit_entry_widget.insert(0, "   Enter commit message...")
+
+# MOVED BUTTON HERE
+commit_btn = tk.Button(git_card, text=f"{ICONS['git']} COMMIT & PUSH", command=run_smart_git_push, bg=THEME['accent_orange'], fg='white', font=FONTS['button'], bd=0, padx=10, pady=8, cursor='hand2', activebackground=THEME['accent_orange'])
+commit_btn.pack(fill='x', pady=(10, 0))
+
+def on_entry_click(event):
+    if commit_entry_widget.get().strip() == "Enter commit message...":
+        commit_entry_widget.delete(0, "end")
+        commit_entry_widget.insert(0, "")
+        commit_entry_widget.config(fg=THEME['text_primary'])
+def on_entry_leave(event):
+    if commit_entry_widget.get().strip() == "":
+        commit_entry_widget.insert(0, "   Enter commit message...")
+        commit_entry_widget.config(fg='grey')
+commit_entry_widget.bind('<FocusIn>', on_entry_click)
+commit_entry_widget.bind('<FocusOut>', on_entry_leave)
+
+# STAGING VIEW (File List)
+tk.Label(git_card, text="Staged Changes:", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(15, 5))
+git_files_listbox = tk.Listbox(git_card, bg=THEME['bg_primary'], fg=THEME['text_secondary'], font=('Consolas', 9), bd=0, highlightthickness=0, height=6)
+git_files_listbox.pack(fill='both', expand=True, pady=(0, 10))
+
+# Identity (Moved to Bottom)
+lbl_git_identity = tk.Label(git_card, text="User: Checking...", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
+lbl_git_identity.pack(anchor='w', pady=(0, 10))
+
+# --- ENVIRONMENT CARD ---
 env_card = tk.Frame(dev_mid, bg=THEME['bg_card'], padx=20, pady=20); env_card.pack(side='left', fill='both', expand=True, padx=(0, 10))
 tk.Label(env_card, text=f"{ICONS['code']} ENVIRONMENT", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 10))
 tk.Label(env_card, text=f"Python: {sys.version.split()[0]}", font=FONTS['small'], fg=THEME['text_primary'], bg=THEME['bg_card']).pack(anchor='w')
 tk.Label(env_card, text="Django: 5.2", font=FONTS['small'], fg=THEME['text_primary'], bg=THEME['bg_card']).pack(anchor='w', pady=(5,0))
 tk.Label(env_card, text="Venv: Active", font=FONTS['small'], fg=THEME['status_active'], bg=THEME['bg_card']).pack(anchor='w', pady=(5,0))
+
+# DIVIDER
+tk.Frame(env_card, bg=THEME['border'], height=1).pack(fill='x', pady=15)
+
+# SYSTEM CHECKS SECTION
+tk.Label(env_card, text="SYSTEM STATUS", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 5))
+lbl_env_db_status = tk.Label(env_card, text="PostgreSQL: Checking...", font=FONTS['small'], fg=THEME['text_primary'], bg=THEME['bg_card'])
+lbl_env_db_status.pack(anchor='w')
+lbl_env_debug_mode = tk.Label(env_card, text="Debug Mode: Checking...", font=FONTS['small'], fg=THEME['text_primary'], bg=THEME['bg_card'])
+lbl_env_debug_mode.pack(anchor='w', pady=(5,0))
+
+# --- QUICK EDIT CARD ---
 quick_card = tk.Frame(dev_mid, bg=THEME['bg_card'], padx=20, pady=20); quick_card.pack(side='left', fill='both', expand=True)
 tk.Label(quick_card, text=f"{ICONS['link']} QUICK EDIT", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 10))
+
+tk.Label(quick_card, text="CONFIGURATION", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(0, 5))
 tk.Button(quick_card, text="settings.py", command=lambda: open_file_in_editor("prime_service_portal/settings.py"), bg=THEME['bg_primary'], fg=THEME['accent_blue'], bd=0, padx=10).pack(fill='x', pady=2)
 tk.Button(quick_card, text="urls.py", command=lambda: open_file_in_editor("prime_service_portal/urls.py"), bg=THEME['bg_primary'], fg=THEME['accent_blue'], bd=0, padx=10).pack(fill='x', pady=2)
+
+tk.Label(quick_card, text="APP LOGIC (Service Desk)", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(anchor='w', pady=(15, 5))
 tk.Button(quick_card, text="models.py", command=lambda: open_file_in_editor("inventory/models.py"), bg=THEME['bg_primary'], fg=THEME['accent_blue'], bd=0, padx=10).pack(fill='x', pady=2)
+tk.Button(quick_card, text="views.py", command=lambda: open_file_in_editor("service_desk/views.py"), bg=THEME['bg_primary'], fg=THEME['accent_blue'], bd=0, padx=10).pack(fill='x', pady=2)
+tk.Button(quick_card, text="forms.py", command=lambda: open_file_in_editor("service_desk/forms.py"), bg=THEME['bg_primary'], fg=THEME['accent_blue'], bd=0, padx=10).pack(fill='x', pady=2)
+
 
 # TAB 4: RECOVERY
 tab_rec = tk.Frame(notebook, bg=THEME['bg_primary']); notebook.add(tab_rec, text=f"{ICONS['shield']} RECOVERY")
-r_tools = tk.Frame(tab_rec, bg=THEME['bg_primary']); r_tools.pack(fill='x', padx=5, pady=(10, 5))
-r_t_box = tk.Frame(r_tools, bg=THEME['bg_card']); r_t_box.pack(fill='x', pady=5, ipady=10)
+r_tools = tk.Frame(tab_rec, bg=THEME['bg_primary']); r_tools.pack(fill='x', padx=5, pady=(20, 0)) # Fixed Padding
+
+# ADDED HEADER
+tk.Label(r_tools, text="SNAPSHOT MANAGEMENT", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_primary']).pack(anchor='w', pady=(0, 10))
+
+r_t_box = tk.Frame(r_tools, bg=THEME['bg_card']); r_t_box.pack(fill='x', pady=0, ipady=10) # Fixed Padding
 btn_snap = create_action_button(r_t_box, "TAKE SNAPSHOT", None, THEME['btn_backup'], ICONS['shield']); btn_snap.config(command=lambda: run_smart_backup(btn_snap)); btn_snap.pack(side='left', padx=20)
 create_action_button(r_t_box, "RESTORE", show_restore_guide, THEME['btn_purple'], ICONS['refresh']).pack(side='left')
 create_action_button(r_t_box, "EXPLORE ROOT", show_file_browser_root, THEME['btn_secondary'], ICONS['folder']).pack(side='left', padx=20)
 progress_frame = tk.Frame(r_t_box, bg=THEME['bg_card']); status_label = tk.Label(r_t_box, text="Ready", font=FONTS['small'], fg=THEME['text_secondary'], bg=THEME['bg_card'])
 style.configure("green.Horizontal.TProgressbar", foreground=THEME['status_active'], background=THEME['status_active'])
 progress_bar = ttk.Progressbar(r_t_box, style="green.Horizontal.TProgressbar", mode='determinate', length=200)
-rec_dash = tk.Frame(tab_rec, bg=THEME['bg_primary']); rec_dash.pack(fill='both', expand=True, padx=5, pady=(5, 20))
+
+rec_dash = tk.Frame(tab_rec, bg=THEME['bg_primary']); rec_dash.pack(fill='both', expand=True, padx=5, pady=(20, 20))
 cal_frame = tk.Frame(rec_dash, bg=THEME['bg_card']); cal_frame.pack(side='left', fill='both', expand=True, padx=(0, 10))
 tk.Label(cal_frame, text="SNAPSHOT HISTORY", font=FONTS['body_bold'], fg=THEME['text_secondary'], bg=THEME['bg_card']).pack(pady=10)
 if HAS_CALENDAR:
@@ -1014,26 +1253,18 @@ browser_tree.heading("#0", text="Name", anchor='w'); browser_tree.heading("Type"
 browser_tree.pack(fill='both', expand=True, pady=(10, 0)); browser_tree.bind("<Double-1>", browser_navigate)
 tk.Button(browser_frame, text="CLOSE EXPLORER", command=reset_dashboard_view, bg=THEME['btn_secondary'], fg='white', font=FONTS['button'], bd=0, pady=10).pack(fill='x', pady=(10, 0))
 
-# --- CONSOLE ---
-console_container = tk.Frame(root, bg=THEME['bg_primary']); console_container.pack(fill='both', expand=True, padx=30, pady=(0, 20))
-tk.Frame(console_container, bg=THEME['border'], height=1).pack(fill='x', pady=0)
-c_header = tk.Frame(console_container, bg=THEME['bg_primary']); c_header.pack(fill='x', pady=(10, 5))
-tk.Label(c_header, text=f"{ICONS['terminal']} CONSOLE OUTPUT", font=FONTS['title'], fg=THEME['text_secondary'], bg=THEME['bg_primary']).pack(side='left')
-btn_expand = tk.Button(c_header, text=ICONS['expand'], command=toggle_console, bg=THEME['bg_primary'], fg=THEME['accent_blue'], bd=0, font=('Segoe UI', 12), cursor='hand2', activebackground=THEME['bg_primary'], activeforeground='white'); btn_expand.place(relx=0.5, rely=0.5, anchor='center')
-clear_box = tk.Frame(c_header, bg=THEME['bg_card'], highlightbackground=THEME['border'], highlightthickness=1, cursor='hand2'); clear_box.pack(side='right')
-c_inner = tk.Frame(clear_box, bg=THEME['bg_card'], cursor='hand2'); c_inner.pack(padx=15, pady=8)
-l_icon = tk.Label(c_inner, text=ICONS['trash'], font=('Segoe UI', 10), fg=THEME['text_primary'], bg=THEME['bg_card'], cursor='hand2'); l_icon.pack(side='left', padx=(0, 8))
-l_text = tk.Label(c_inner, text="Clear", font=FONTS['body_bold'], fg=THEME['text_primary'], bg=THEME['bg_card'], cursor='hand2'); l_text.pack(side='left')
-def on_clear_click(e): clear_console()
-def on_enter_clear(e): clear_box.config(bg=THEME['border']); c_inner.config(bg=THEME['border']); l_icon.config(bg=THEME['border'], fg='white'); l_text.config(bg=THEME['border'], fg='white')
-def on_leave_clear(e): clear_box.config(bg=THEME['bg_card']); c_inner.config(bg=THEME['bg_card']); l_icon.config(bg=THEME['bg_card'], fg=THEME['text_primary']); l_text.config(bg=THEME['bg_card'], fg=THEME['text_primary'])
-for w in [clear_box, c_inner, l_icon, l_text]: w.bind('<Button-1>', on_clear_click); w.bind('<Enter>', on_enter_clear); w.bind('<Leave>', on_leave_clear)
-log_box = scrolledtext.ScrolledText(console_container, bg=THEME['bg_console'], fg=THEME['text_console'], font=FONTS['console'], bd=0, height=10); log_box.pack(fill='both', expand=True, pady=(0, 0))
-log_box.tag_configure('timestamp', foreground=THEME['accent_blue']); log_box.tag_configure('status', foreground='#22c55e'); log_box.tag_configure('error', foreground=THEME['status_error']); log_box.config(state='disabled')
-
 # --- INIT ---
 update_heartbeat_and_stats(); refresh_recovery_view()
-log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.32 initialized")
+log_raw(""); log_status(f"PRIME Service Portal Toolkit v6.54 initialized")
+# FORCE SCROLL TO BOTTOM ON START
+def scroll_to_bottom():
+    try:
+        log_box.config(state='normal')
+        log_box.see(tk.END)
+        log_box.config(state='disabled')
+    except: pass
+root.after(500, scroll_to_bottom)
+
 if not HAS_PSUTIL: log_message("Note: 'psutil' not found. Telemetry running in simulation mode.", tag='error')
 if not HAS_PSYCOPG2: log_message("Note: 'psycopg2' not found. Database stats running in simulation mode.", tag='error')
 if not HAS_PIL: log_message("Note: 'Pillow' (PIL) not found. Images disabled.", tag='error')

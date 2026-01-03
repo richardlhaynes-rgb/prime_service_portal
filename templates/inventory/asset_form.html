@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto pb-12">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-prime-navy dark:text-white">{{ title }}</h1>
+        <a href="{% url 'inventory:dashboard' %}" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700 relative">
+        <form method="post" id="asset-form">
+            {% csrf_token %}
+            
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 border-b pb-2 border-gray-100 dark:border-gray-700">Identification</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Asset Tag</label>
+                    {{ form.asset_tag }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Serial Number</label>
+                    {{ form.serial_number }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Manufacturer</label>
+                    {{ form.manufacturer }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model Number</label>
+                    {{ form.model_number }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                    {{ form.category }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                    {{ form.status }}
+                </div>
+            </div>
+
+            <div id="system-config-section" class="hidden bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg mb-6 border border-gray-100 dark:border-gray-700 transition-all duration-300">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">System Configuration</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="wrap_hostname">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Name / Hostname</label>
+                        <input type="text" id="conf_hostname" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div id="wrap_os">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Operating System</label>
+                        <input type="text" id="conf_os" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. iOS 17, Windows 11">
+                    </div>
+                    <div id="wrap_cpu">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Processor (CPU)</label>
+                        <input type="text" id="conf_cpu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div id="wrap_gpu">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Graphics (GPU)</label>
+                        <input type="text" id="conf_gpu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div id="wrap_ram">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RAM</label>
+                        <input type="text" id="conf_ram" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div id="wrap_storage">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Storage / Capacity</label>
+                        <input type="text" id="conf_storage" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. 256 GB">
+                    </div>
+                </div>
+                
+                <div id="mobile-toggle-wrapper" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 hidden">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="mobile_toggle" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-prime-orange"></div>
+                        <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Cellular / Mobile Data Capable</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="mobile-config-section" class="hidden bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg mb-6 border border-gray-100 dark:border-gray-700 transition-all duration-300">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Mobile Broadband</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Carrier Name</label>
+                        <select id="mob_carrier" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Select Carrier --</option>
+                            <option value="Verizon">Verizon Wireless</option>
+                            <option value="AT&T">AT&T</option>
+                            <option value="T-Mobile">T-Mobile</option>
+                            <option value="FirstNet">FirstNet</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                        <input type="text" id="mob_phone" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="(555) 123-4567">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Plan</label>
+                        <input type="text" id="mob_plan" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. Unlimited Enterprise">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contract End Date</label>
+                        <input type="date" id="mob_contract" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Number</label>
+                        <input type="text" id="mob_account" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        <select id="mob_status" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="Active">Active</option>
+                            <option value="Suspended">Suspended</option>
+                            <option value="Decommissioned">Decommissioned</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IMEI (Device ID)</label>
+                        <input type="text" id="mob_imei" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ICCID (SIM ID)</label>
+                        <input type="text" id="mob_iccid" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+            </div>
+
+            <div id="network-config-section" class="hidden bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg mb-6 border border-gray-100 dark:border-gray-700 transition-all duration-300">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Network & Connectivity</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <input type="text" id="net_desc" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. Management Port">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Physical Address (MAC)</label>
+                        <input type="text" id="net_mac" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="00:1A:2B:3C:4D:5E">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN ID</label>
+                        <input type="text" id="net_vlan" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Connected Switch / Port</label>
+                        <input type="text" id="net_port" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-600 pt-4 mt-2">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IP Assignment</label>
+                        <select id="net_assignment" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="DHCP">Automatic (DHCP)</option>
+                            <option value="Manual">Manual (Static)</option>
+                        </select>
+                    </div>
+
+                    <div id="static-ip-fields" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IPv4 Address</label>
+                            <input type="text" id="net_ipv4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subnet Mask</label>
+                            <input type="text" id="net_subnet" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Default Gateway</label>
+                            <input type="text" id="net_gateway" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IPv6 Address</label>
+                            <input type="text" id="net_ipv6" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preferred DNS</label>
+                            <input type="text" id="net_dns_pref" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alternate DNS</label>
+                            <input type="text" id="net_dns_alt" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{ form.specs }}
+
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 border-b pb-2 border-gray-100 dark:border-gray-700">Lifecycle & Assignment</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor / Supplier</label>
+                    {{ form.vendor }} 
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Price ($)</label>
+                    {{ form.cost }} 
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Date</label>
+                    {{ form.purchase_date }}
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Warranty Expiration</label>
+                        {% if form.instance.warranty_expiration and form.instance.warranty_expiration < today %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border border-red-200 dark:border-red-700">
+                                EXPIRED
+                            </span>
+                        {% endif %}
+                    </div>
+                    {{ form.warranty_expiration }}
+                    {% if form.instance.warranty_expiration and form.instance.warranty_expiration < today %}
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                            Warranty expired on {{ form.instance.warranty_expiration|date:"M d, Y" }}.
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assigned User</label>
+                    {{ form.assigned_to }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Notes</label>
+                    {{ form.support_notes }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">General Notes</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+
+            <div class="sticky bottom-0 z-10 -mx-6 -mb-6 px-6 py-4 bg-white/95 dark:bg-gray-800/95 backdrop-blur border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 rounded-b-lg shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                <a href="{% url 'inventory:dashboard' %}" class="px-4 py-2 bg-white text-gray-700 font-medium rounded-md shadow-sm border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors">Cancel</a>
+                <button type="submit" class="px-4 py-2 bg-prime-orange text-white font-medium rounded-md shadow-sm hover:bg-orange-600 focus:outline-none transition-colors">
+                    {{ button_text|default:"Save Asset" }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // --- 1. DEFINITIONS ---
+    const categorySelect = document.getElementById('id_category'); 
+    
+    // System Config Categories
+    const fullSysCats = ['Laptops', 'Desktops', 'Servers', 'Workstations', 'Computing', 'Virtual'];
+    const simpleSysCats = ['Smartphones', 'Tablets'];
+    const sysSection = document.getElementById('system-config-section');
+    
+    // Field Wrappers
+    const wrapHostname = document.getElementById('wrap_hostname');
+    const wrapOs = document.getElementById('wrap_os');
+    const wrapCpu = document.getElementById('wrap_cpu');
+    const wrapGpu = document.getElementById('wrap_gpu');
+    const wrapRam = document.getElementById('wrap_ram');
+    const wrapStorage = document.getElementById('wrap_storage');
+
+    // Mobile Logic Categories
+    const mobileAlwaysCats = ['Smartphones', 'Mobile Hotspots'];
+    const mobileToggleCats = ['Laptops', 'Tablets'];
+    const mobSection = document.getElementById('mobile-config-section');
+    const mobToggleWrapper = document.getElementById('mobile-toggle-wrapper');
+    const mobToggleCheckbox = document.getElementById('mobile_toggle');
+
+    // Network Config Categories - REMOVED Smartphones, Tablets, Hotspots
+    const networkCats = ['Laptops', 'Desktops', 'Servers', 'Workstations', 'Computing', 'Virtual', 'Printers', 'Plotters', 'Routers', 'Switches', 'Firewalls', 'Access Points', 'Network'];
+    const netSection = document.getElementById('network-config-section');
+
+    const assignSelect = document.getElementById('net_assignment');
+    const staticFields = document.getElementById('static-ip-fields');
+
+    // --- 2. LOGIC FUNCTIONS ---
+    
+    // NEW FUNCTION: Dynamically updates placeholders
+    function updatePlaceholders(isMobile) {
+        const osInput = document.getElementById('conf_os');
+        const storageInput = document.getElementById('conf_storage');
+        const vendorInput = document.querySelector('[name="vendor"]');
+        const supportInput = document.querySelector('[name="support_notes"]');
+
+        if (isMobile) {
+            if(osInput) osInput.placeholder = "e.g. iOS 17, Android 14";
+            if(storageInput) storageInput.placeholder = "e.g. 128 GB, 256 GB";
+            if(vendorInput) vendorInput.placeholder = "e.g. Verizon, AT&T, Apple";
+            if(supportInput) supportInput.placeholder = "e.g. AppleCare+, Carrier Protection";
+        } else {
+            if(osInput) osInput.placeholder = "e.g. Windows 11, macOS Sonoma";
+            if(storageInput) storageInput.placeholder = "e.g. 512 GB SSD";
+            if(vendorInput) vendorInput.placeholder = "e.g. Dell, HP, CDW";
+            if(supportInput) supportInput.placeholder = "e.g. Dell ProSupport, HP Care Pack";
+        }
+    }
+
+    function toggleSections() {
+        if (!categorySelect) return;
+        const selectedText = categorySelect.options[categorySelect.selectedIndex].text;
+
+        // Determine if this is a "Mobile" category for placeholder purposes
+        const isMobileCategory = ['Smartphones', 'Tablets', 'Mobile Hotspots'].some(cat => selectedText.includes(cat));
+        updatePlaceholders(isMobileCategory);
+
+        // --- System Config Logic ---
+        const isFullSys = fullSysCats.some(cat => selectedText.includes(cat));
+        const isSimpleSys = simpleSysCats.some(cat => selectedText.includes(cat));
+        
+        if (isFullSys) {
+            sysSection.classList.remove('hidden');
+            sysSection.style.display = 'block';
+            wrapHostname.style.display = 'block';
+            wrapOs.style.display = 'block';
+            wrapCpu.style.display = 'block';
+            wrapGpu.style.display = 'block';
+            wrapRam.style.display = 'block';
+            wrapStorage.style.display = 'block';
+        } else if (isSimpleSys) {
+            sysSection.classList.remove('hidden');
+            sysSection.style.display = 'block';
+            wrapHostname.style.display = 'none';
+            wrapOs.style.display = 'block';
+            wrapCpu.style.display = 'none';
+            wrapGpu.style.display = 'none';
+            wrapRam.style.display = 'none';
+            wrapStorage.style.display = 'block';
+        } else {
+            sysSection.classList.add('hidden');
+            sysSection.style.display = 'none';
+        }
+
+        // --- Network Config Logic ---
+        const showNet = networkCats.some(cat => selectedText.includes(cat));
+        netSection.style.display = showNet ? 'block' : 'none';
+        if(showNet) netSection.classList.remove('hidden');
+
+        // --- Mobile Broadband Logic ---
+        const isAlwaysMobile = mobileAlwaysCats.some(cat => selectedText.includes(cat));
+        const isToggleMobile = mobileToggleCats.some(cat => selectedText.includes(cat));
+
+        if (isAlwaysMobile) {
+            mobSection.classList.remove('hidden');
+            mobSection.style.display = 'block';
+            mobToggleWrapper.classList.add('hidden');
+        } else if (isToggleMobile) {
+            mobToggleWrapper.classList.remove('hidden');
+            if (mobToggleCheckbox.checked) {
+                mobSection.classList.remove('hidden');
+                mobSection.style.display = 'block';
+            } else {
+                mobSection.classList.add('hidden');
+                mobSection.style.display = 'none';
+            }
+        } else {
+            mobSection.classList.add('hidden');
+            mobSection.style.display = 'none';
+            mobToggleWrapper.classList.add('hidden');
+            mobToggleCheckbox.checked = false;
+        }
+    }
+
+    function toggleStaticFields() {
+        if (assignSelect.value === 'Manual') {
+            staticFields.classList.remove('hidden');
+            staticFields.style.display = 'grid';
+        } else {
+            staticFields.classList.add('hidden');
+            staticFields.style.display = 'none';
+        }
+    }
+
+    // --- 3. EVENT LISTENERS ---
+    if (categorySelect) categorySelect.addEventListener('change', toggleSections);
+    if (assignSelect) assignSelect.addEventListener('change', toggleStaticFields);
+    if (mobToggleCheckbox) mobToggleCheckbox.addEventListener('change', toggleSections);
+
+    // --- 4. INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const jsonStr = document.querySelector('[name="specs"]').value;
+            if (jsonStr && jsonStr !== 'null' && jsonStr !== 'None') {
+                const specs = JSON.parse(jsonStr.replace(/'/g, '"'));
+                
+                // System Config
+                document.getElementById('conf_hostname').value = specs.hostname || '';
+                document.getElementById('conf_os').value = specs.os || '';
+                document.getElementById('conf_cpu').value = specs.cpu || '';
+                document.getElementById('conf_gpu').value = specs.gpu || '';
+                document.getElementById('conf_ram').value = specs.ram || '';
+                document.getElementById('conf_storage').value = specs.storage || '';
+
+                // Mobile Config
+                if (specs.mob_enabled === true || specs.mob_enabled === 'true') {
+                    mobToggleCheckbox.checked = true;
+                }
+                document.getElementById('mob_carrier').value = specs.mob_carrier || '';
+                document.getElementById('mob_phone').value = specs.mob_phone || '';
+                document.getElementById('mob_plan').value = specs.mob_plan || '';
+                document.getElementById('mob_contract').value = specs.mob_contract || '';
+                document.getElementById('mob_account').value = specs.mob_account || '';
+                document.getElementById('mob_status').value = specs.mob_status || 'Active';
+                document.getElementById('mob_imei').value = specs.mob_imei || '';
+                document.getElementById('mob_iccid').value = specs.mob_iccid || '';
+
+                // Network Config
+                document.getElementById('net_desc').value = specs.net_desc || '';
+                document.getElementById('net_mac').value = specs.net_mac || '';
+                document.getElementById('net_vlan').value = specs.net_vlan || '';
+                document.getElementById('net_port').value = specs.net_port || '';
+                
+                if (specs.net_assignment) assignSelect.value = specs.net_assignment;
+                
+                document.getElementById('net_ipv4').value = specs.net_ipv4 || '';
+                document.getElementById('net_subnet').value = specs.net_subnet || '';
+                document.getElementById('net_gateway').value = specs.net_gateway || '';
+                document.getElementById('net_ipv6').value = specs.net_ipv6 || '';
+                document.getElementById('net_dns_pref').value = specs.net_dns_pref || '';
+                document.getElementById('net_dns_alt').value = specs.net_dns_alt || '';
+            }
+        } catch (e) {
+            console.error("Error parsing specs JSON:", e);
+        }
+        
+        toggleSections();
+        toggleStaticFields();
+    });
+
+    // --- 5. PACK JSON ---
+    document.getElementById('asset-form').addEventListener('submit', function(e) {
+        const selectedText = categorySelect.options[categorySelect.selectedIndex].text;
+        
+        // Logic Vars
+        const isAlwaysMobile = mobileAlwaysCats.some(cat => selectedText.includes(cat));
+        const isMobileEnabled = isAlwaysMobile || mobToggleCheckbox.checked;
+        const isSimpleSys = simpleSysCats.some(cat => selectedText.includes(cat));
+        const isNoSys = !isSimpleSys && !fullSysCats.some(cat => selectedText.includes(cat));
+        const isNetVisible = netSection.style.display !== 'none';
+
+        // Helper to clear if hidden
+        let hostnameVal = document.getElementById('conf_hostname').value;
+        let cpuVal = document.getElementById('conf_cpu').value;
+        let gpuVal = document.getElementById('conf_gpu').value;
+        let ramVal = document.getElementById('conf_ram').value;
+
+        if (isSimpleSys) {
+            hostnameVal = ''; cpuVal = ''; gpuVal = ''; ramVal = '';
+        } else if (isNoSys) {
+            hostnameVal = ''; cpuVal = ''; gpuVal = ''; ramVal = '';
+        }
+
+        const specs = {
+            // System
+            hostname: hostnameVal,
+            os: document.getElementById('conf_os').value,
+            cpu: cpuVal,
+            gpu: gpuVal,
+            ram: ramVal,
+            storage: document.getElementById('conf_storage').value,
+            
+            // Mobile
+            mob_enabled: isMobileEnabled,
+            mob_carrier: document.getElementById('mob_carrier').value,
+            mob_phone: document.getElementById('mob_phone').value,
+            mob_plan: document.getElementById('mob_plan').value,
+            mob_contract: document.getElementById('mob_contract').value,
+            mob_account: document.getElementById('mob_account').value,
+            mob_status: document.getElementById('mob_status').value,
+            mob_imei: document.getElementById('mob_imei').value,
+            mob_iccid: document.getElementById('mob_iccid').value,
+
+            // Network (Only save if visible)
+            net_desc: isNetVisible ? document.getElementById('net_desc').value : '',
+            net_mac: isNetVisible ? document.getElementById('net_mac').value : '',
+            net_vlan: isNetVisible ? document.getElementById('net_vlan').value : '',
+            net_port: isNetVisible ? document.getElementById('net_port').value : '',
+            net_assignment: isNetVisible ? assignSelect.value : 'DHCP',
+            net_ipv4: isNetVisible ? document.getElementById('net_ipv4').value : '',
+            net_subnet: isNetVisible ? document.getElementById('net_subnet').value : '',
+            net_gateway: isNetVisible ? document.getElementById('net_gateway').value : '',
+            net_ipv6: isNetVisible ? document.getElementById('net_ipv6').value : '',
+            net_dns_pref: isNetVisible ? document.getElementById('net_dns_pref').value : '',
+            net_dns_alt: isNetVisible ? document.getElementById('net_dns_alt').value : ''
+        };
+        document.querySelector('[name="specs"]').value = JSON.stringify(specs);
+    });
+</script>
+{% endblock %}

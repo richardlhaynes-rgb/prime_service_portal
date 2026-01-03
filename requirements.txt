@@ -5,6 +5,7 @@ click==8.3.1
 colorama==0.4.6
 Django==5.2.8
 django-jazzmin==3.0.1
+django_heroicons==0.0.8
 mypy_extensions==1.1.0
 packaging==25.0
 pathspec==0.12.1

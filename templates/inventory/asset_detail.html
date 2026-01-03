@@ -1,147 +1,265 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <nav class="flex text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 gap-2">
-                <a href="{% url 'inventory:dashboard' %}" class="hover:text-prime-orange transition-colors">Inventory</a>
-                <span>/</span>
-                <a href="{% url 'inventory:asset_list' %}" class="hover:text-prime-orange transition-colors">Assets</a>
-                <span>/</span>
-                <span class="text-gray-400">{{ asset.asset_tag }}</span>
-            </nav>
-            <h1 class="text-4xl font-black text-prime-navy dark:text-white flex items-center gap-4">
-                {{ asset.asset_tag }}
-                <span class="text-xs font-bold px-3 py-1 rounded-full uppercase border
-                    {% if asset.status == 'available' %}bg-green-900/30 text-green-400 border-green-800
-                    {% elif asset.status == 'deployed' %}bg-blue-900/30 text-blue-400 border-blue-800
-                    {% elif asset.status == 'maintenance' %}bg-amber-900/30 text-amber-400 border-amber-800
-                    {% else %}bg-gray-700 text-gray-400 border-gray-600{% endif %}">
-                    {{ asset.status }}
-                </span>
-            </h1>
+<div class="max-w-5xl mx-auto pb-12">
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-4">
+            <h1 class="text-4xl font-extrabold text-prime-navy dark:text-white">{{ asset.asset_tag }}</h1>
+            <span class="px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wide
+                {% if asset.status == 'In Stock' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300
+                {% elif asset.status == 'Deployed' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300
+                {% elif asset.status == 'Maintenance' or asset.status == 'Retired' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300
+                {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+                {{ asset.status }}
+            </span>
         </div>
         <div class="flex gap-3">
-            <button class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-bold text-white hover:bg-gray-700 transition-colors">
+            <a href="{% url 'inventory:asset_edit' asset.id %}" class="px-4 py-2 bg-white text-gray-700 font-medium rounded-md shadow-sm border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors">
                 Edit Asset
-            </button>
-            <button class="px-4 py-2 bg-prime-orange text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors">
-                Log Audit
-            </button>
+            </a>
+            
+            <form method="post" action="{% url 'inventory:asset_audit' asset.id %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-prime-orange text-white font-medium rounded-md shadow-sm hover:bg-orange-600 transition-colors flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Log Audit
+                </button>
+            </form>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
         <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
-                    <h3 class="font-bold text-prime-navy dark:text-white uppercase tracking-wider text-xs">Technical Specifications</h3>
-                </div>
-                <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+            
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Technical Specifications</h3>
+                <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <p class="text-[10px] text-gray-500 uppercase font-black mb-1">Manufacturer</p>
-                        <p class="text-lg text-gray-900 dark:text-white font-bold">{{ asset.manufacturer }}</p>
+                        <p class="text-xs text-gray-400 uppercase">Manufacturer</p>
+                        <p class="font-medium text-lg text-prime-navy dark:text-white">{{ asset.manufacturer }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] text-gray-500 uppercase font-black mb-1">Model Number</p>
-                        <p class="text-lg text-gray-900 dark:text-white font-bold">{{ asset.model_number }}</p>
+                        <p class="text-xs text-gray-400 uppercase">Model Number</p>
+                        <p class="font-medium text-lg text-prime-navy dark:text-white">{{ asset.model_number }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] text-prime-orange uppercase font-black mb-1">Hardware Serial Number</p>
-                        <p class="font-mono text-base text-gray-900 dark:text-white select-all">{{ asset.serial_number }}</p>
+                        <p class="text-xs text-gray-400 uppercase text-prime-orange font-bold">Hardware Serial Number</p>
+                        <p class="font-medium text-lg text-gray-700 dark:text-gray-200 font-mono">{{ asset.serial_number }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] text-gray-500 uppercase font-black mb-1">Asset Category</p>
-                        <p class="text-lg text-gray-900 dark:text-white font-bold">{{ asset.category.name }}</p>
+                        <p class="text-xs text-gray-400 uppercase">Asset Category</p>
+                        <p class="font-medium text-lg text-prime-navy dark:text-white">{{ asset.category.name|default:"--" }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
-                <h3 class="font-bold text-prime-navy dark:text-white uppercase tracking-wider text-xs mb-6">Internal Audit Notes</h3>
-                <div class="prose dark:prose-invert max-w-none">
-                    <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                        {{ asset.notes|default:"No technical notes or lifecycle history recorded for this specific unit." }}
-                    </p>
+            {% if asset.specs.hostname or asset.specs.cpu or asset.specs.os %}
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">System Configuration</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    {% if asset.specs.hostname %}
+                        <div><span class="text-gray-400 block text-xs">Hostname</span> <span class="dark:text-white font-medium">{{ asset.specs.hostname }}</span></div>
+                    {% endif %}
+                    {% if asset.specs.os %}
+                        <div><span class="text-gray-400 block text-xs">OS</span> <span class="dark:text-white font-medium">{{ asset.specs.os }}</span></div>
+                    {% endif %}
+                    {% if asset.specs.cpu %}
+                        <div><span class="text-gray-400 block text-xs">Processor</span> <span class="dark:text-white font-medium">{{ asset.specs.cpu }}</span></div>
+                    {% endif %}
+                    {% if asset.specs.ram %}
+                        <div><span class="text-gray-400 block text-xs">RAM</span> <span class="dark:text-white font-medium">{{ asset.specs.ram }}</span></div>
+                    {% endif %}
+                    {% if asset.specs.gpu %}
+                        <div><span class="text-gray-400 block text-xs">Graphics</span> <span class="dark:text-white font-medium">{{ asset.specs.gpu }}</span></div>
+                    {% endif %}
+                    {% if asset.specs.storage %}
+                        <div><span class="text-gray-400 block text-xs">Storage</span> <span class="dark:text-white font-medium">{{ asset.specs.storage }}</span></div>
+                    {% endif %}
                 </div>
             </div>
-        </div>
+            {% endif %}
 
-        <div class="space-y-6">
-            <!-- Current User Assignment -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <!-- Card Header with Status Badge -->
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Current Assignment</h3>
-                    {% if asset.assigned_to %}
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        <svg class="h-1.5 w-1.5 mr-1.5 fill-current" viewBox="0 0 6 6">
-                            <circle cx="3" cy="3" r="3"/>
-                        </svg>
-                        Assigned
-                    </span>
-                    {% else %}
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
-                        Available
+            {% if asset.specs.mob_enabled or asset.specs.mob_carrier or asset.specs.mob_imei %}
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Mobile Broadband</h3>
+                    {% if asset.specs.mob_status %}
+                    <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full {% if asset.specs.mob_status == 'Active' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-500{% endif %}">
+                        {{ asset.specs.mob_status }}
                     </span>
                     {% endif %}
                 </div>
                 
-                {% if asset.assigned_to %}
-                <div class="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <!-- Avatar or Initials (Protected from squash, perfectly centered) -->
-                    {% if asset.assigned_to.profile.avatar and not asset.assigned_to.profile.prefer_initials %}
-                        <img src="{{ asset.assigned_to.profile.avatar.url }}" 
-                             alt="{{ asset.assigned_to.get_full_name }}" 
-                             class="h-12 w-12 rounded-full object-cover object-center border-2 border-white shadow-sm flex-shrink-0">
-                    {% else %}
-                        <div class="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm flex-shrink-0">
-                            {{ asset.assigned_to.first_name|first }}{{ asset.assigned_to.last_name|first }}
+                <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                    <div><span class="text-gray-400 block text-xs">Carrier</span> <span class="dark:text-white font-medium">{{ asset.specs.mob_carrier|default:"--" }}</span></div>
+                    <div><span class="text-gray-400 block text-xs">Phone Number</span> <span class="dark:text-white font-medium">{{ asset.specs.mob_phone|default:"--" }}</span></div>
+
+                    <div><span class="text-gray-400 block text-xs">Data Plan</span> <span class="dark:text-white font-medium">{{ asset.specs.mob_plan|default:"--" }}</span></div>
+                    <div>
+                        <span class="text-gray-400 block text-xs">Contract Ends</span>
+                        <div class="flex items-center gap-2">
+                            <span class="dark:text-white font-medium">{{ asset.specs.mob_contract|default:"--" }}</span>
+                            {% now "Y-m-d" as todays_date %}
+                            {% if asset.specs.mob_contract and asset.specs.mob_contract < todays_date %}
+                                <span class="text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded border border-red-200">EXPIRED</span>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                    
-                    <!-- User Details -->
-                    <div class="min-w-0">
-                        <p class="font-bold text-gray-900 dark:text-white truncate">
-                            {{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}
-                        </p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ asset.assigned_to.email }}</p>
-                        {% if asset.assigned_to.profile.title %}
-                        <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ asset.assigned_to.profile.title }}</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-4 grid grid-cols-2 gap-4 text-sm">
+                    <div><span class="text-gray-400 block text-xs">Account Number</span> <span class="dark:text-white font-medium">{{ asset.specs.mob_account|default:"--" }}</span></div>
+                    <div><span class="text-gray-400 block text-xs">ICCID (SIM)</span> <span class="dark:text-white font-mono text-xs">{{ asset.specs.mob_iccid|default:"--" }}</span></div>
+                    <div class="col-span-2">
+                        <span class="text-gray-400 block text-xs">IMEI (Hardware ID)</span> 
+                        <span class="font-mono text-prime-orange dark:text-prime-orange">{{ asset.specs.mob_imei|default:"--" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if asset.category.name != 'Smartphones' and asset.category.name != 'Tablets' and asset.category.name != 'Mobile Hotspots' %}
+                {% if asset.specs.net_mac or asset.specs.net_assignment %}
+                <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Network & Connectivity</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="col-span-2">
+                            <span class="text-gray-400 block text-xs">Interface Description</span> 
+                            <span class="dark:text-white font-medium">{{ asset.specs.net_desc|default:"Primary Interface" }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 block text-xs">MAC Address</span> 
+                            <span class="font-mono text-prime-orange dark:text-prime-orange">{{ asset.specs.net_mac|default:"--" }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 block text-xs">IP Assignment</span> 
+                            <span class="dark:text-white font-medium">
+                                {% if asset.specs.net_assignment == 'DHCP' %}Automatic (DHCP)
+                                {% else %}Static / Manual{% endif %}
+                            </span>
+                        </div>
+
+                        {% if asset.specs.net_ipv4 %}
+                        <div><span class="text-gray-400 block text-xs">IPv4 Address</span> <span class="dark:text-white font-medium">{{ asset.specs.net_ipv4 }}</span></div>
+                        <div><span class="text-gray-400 block text-xs">Subnet Mask</span> <span class="dark:text-white font-medium">{{ asset.specs.net_subnet }}</span></div>
+                        <div><span class="text-gray-400 block text-xs">Gateway</span> <span class="dark:text-white font-medium">{{ asset.specs.net_gateway }}</span></div>
+                        {% endif %}
+                        
+                        {% if asset.specs.net_vlan %}
+                        <div><span class="text-gray-400 block text-xs">VLAN ID</span> <span class="dark:text-white font-medium">{{ asset.specs.net_vlan }}</span></div>
+                        {% endif %}
+                        {% if asset.specs.net_port %}
+                        <div><span class="text-gray-400 block text-xs">Switch / Port</span> <span class="dark:text-white font-medium">{{ asset.specs.net_port }}</span></div>
                         {% endif %}
                     </div>
                 </div>
+                {% endif %}
+            {% endif %}
+
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">General Notes</h3>
+                {% if asset.notes %}
+                    <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ asset.notes }}</p>
                 {% else %}
-                <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-                    <!-- Placeholder Avatar -->
-                    <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                    <p class="text-gray-400 italic">No notes recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Current Assignment</h3>
+                    <span class="px-2 py-0.5 text-xs font-bold rounded-full {% if asset.assigned_to %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600{% endif %}">
+                        {% if asset.assigned_to %}Assigned{% else %}Available{% endif %}
+                    </span>
+                </div>
+                
+                {% if asset.assigned_to %}
+                    <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div class="h-10 w-10 rounded-full bg-prime-navy text-white flex items-center justify-center font-bold text-lg mr-3">
+                            {{ asset.assigned_to.first_name|slice:":1" }}{{ asset.assigned_to.last_name|slice:":1" }}
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ asset.assigned_to.get_full_name }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ asset.assigned_to.email }}</p>
+                        </div>
                     </div>
-                    <!-- Unassigned Text -->
-                    <div class="min-w-0">
-                        <p class="font-medium text-gray-500 dark:text-gray-400">Unassigned</p>
-                        <p class="text-sm text-gray-400 dark:text-gray-500">This asset is available for deployment</p>
+                {% else %}
+                    <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 border-dashed">
+                        <div class="h-10 w-10 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center mr-3">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Unassigned</p>
+                            <p class="text-xs text-gray-400">Asset available.</p>
+                        </div>
                     </div>
+                {% endif %}
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">Unit Lifecycle</h3>
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between">
+                        <span class="text-xs text-gray-400 uppercase">Vendor</span>
+                        <span class="text-sm font-medium dark:text-white">{{ asset.vendor|default:"--" }}</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span class="text-xs text-gray-400 uppercase">Cost</span>
+                        <span class="text-sm font-medium dark:text-white">{% if asset.cost %}${{ asset.cost }}{% else %}--{% endif %}</span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span class="text-xs text-gray-400 uppercase">Purchased</span>
+                        <span class="text-sm font-medium dark:text-white">{{ asset.purchase_date|date:"M d, Y"|default:"--" }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-gray-400 uppercase">Warranty Ends</span>
+                        <div class="flex items-center justify-end gap-2">
+                            <span class="text-sm font-medium dark:text-white">{{ asset.warranty_expiration|date:"M d, Y"|default:"--" }}</span>
+                            {% now "Y-m-d" as todays_date %}
+                            {% if asset.warranty_expiration and asset.warranty_expiration|date:"Y-m-d" < todays_date %}
+                                <span class="text-[10px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded border border-red-200">EXPIRED</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-100 dark:border-gray-700">
+                        <span class="text-xs text-gray-400 uppercase">Last Verified</span>
+                        {% if asset.audits.exists %}
+                            <div class="text-right">
+                                <span class="text-sm font-bold text-green-600 dark:text-green-400 block">
+                                    {{ asset.audits.first.audit_date|date:"M d, Y" }}
+                                </span>
+                                <span class="text-[10px] text-gray-400 block">
+                                    by {{ asset.audits.first.audited_by.first_name }} {{ asset.audits.first.audited_by.last_name|slice:":1" }}.
+                                </span>
+                            </div>
+                        {% else %}
+                            <span class="text-sm font-medium text-gray-400 italic">Never</span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                {% if asset.support_notes %}
+                <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <p class="text-xs text-gray-400 uppercase mb-1">Support Contract</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">{{ asset.support_notes }}</p>
                 </div>
                 {% endif %}
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h3 class="font-bold text-prime-navy dark:text-white uppercase tracking-wider text-xs mb-4">Unit Lifecycle</h3>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                        <span class="text-xs text-gray-500 font-bold uppercase">Purchased</span>
-                        <span class="text-sm text-gray-900 dark:text-white font-bold">{{ asset.purchase_date|default:"N/A" }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-xs text-gray-500 font-bold uppercase">Last Verified</span>
-                        <span class="text-sm text-gray-900 dark:text-white font-bold">{{ asset.last_audit_date|date:"M j, Y" }}</span>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
