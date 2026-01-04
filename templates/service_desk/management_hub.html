@@ -3,20 +3,16 @@
 {% block content %}
 <div class="max-w-7xl mx-auto">
     
-    <!-- Page Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Management Console</h1>
         <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Central hub for admin tools and configuration</p>
     </div>
 
-    <!-- 6-Card Launchpad Grid (2x3) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
-        <!-- Card 1: Analytics & Reporting (Active) -->
         <a href="{% url 'manager_dashboard' %}" 
            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 hover:shadow-md transition-shadow duration-200 group">
             <div class="flex flex-col items-center text-center">
-                <!-- Icon: chart-bar -->
                 <div class="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-full mb-4 group-hover:bg-blue-100 dark:group-hover:bg-blue-800/30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M8 17V9m4 8V5m4 12v-6" />
@@ -37,11 +33,9 @@
             </div>
         </a>
 
-        <!-- Card 2: Hardware Inventory (Active) -->
-        <a href="{% url 'inventory:dashboard' %}" 
+        <a href="{% url 'inventory:dashboard' %}?sort=tag" 
            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 hover:shadow-md transition-shadow duration-200 group">
             <div class="flex flex-col items-center text-center">
-                <!-- Icon: Cube -->
                 <div class="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-full mb-4 group-hover:bg-slate-100 dark:group-hover:bg-slate-800/30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -62,14 +56,12 @@
             </div>
         </a>
 
-        <!-- Card 3: Knowledge Base Manager (Active) -->
         <a href="{% url 'kb_manager' %}" 
            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 hover:shadow-md transition-shadow duration-200 group">
             <div class="flex flex-col items-center text-center">
-                <!-- Icon: book-open -->
                 <div class="p-4 bg-green-50 dark:bg-green-900/30 rounded-full mb-4 group-hover:bg-green-100 dark:group-hover:bg-green-800/30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h4l2-2h4a2 2 0 002-2V6a2 2 0 00-2-2h-4z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6l-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h4l2-2h4a2 2 0 00-2-2V6a2 2 0 00-2-2h-4z" />
                     </svg>
                 </div>
                 <h3 class="text-xl font-bold text-prime-navy dark:text-white mb-2 group-hover:text-prime-orange transition-colors">
@@ -87,11 +79,9 @@
             </div>
         </a>
 
-        <!-- Card 4: User Management (Active) -->
         <a href="{% url 'user_management' %}" 
            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 hover:shadow-md transition-shadow duration-200 group">
             <div class="flex flex-col items-center text-center">
-                <!-- Icon: users -->
                 <div class="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-full mb-4 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-800/30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11c1.657 0 3-1.567 3-3.5S17.657 4 16 4s-3 1.567-3 3.5 1.343 3.5 3 3.5zm-8 0c1.657 0 3-1.567 3-3.5S9.657 4 8 4 5 5.567 5 7.5 6.343 11 8 11zm0 2c-2.667 0-8 1.333-8 4v1h10v-1c0-2.667-5.333-4-2-4h0zm8 0c3.333 0-2 1.333-2 4v1h10v-1c0-2.667-5.333-4-8-4z" />
@@ -112,11 +102,9 @@
             </div>
         </a>
 
-        <!-- Card 5: Platform Administration (Active) -->
         <a href="{% url 'site_configuration' %}" 
            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 hover:shadow-md transition-shadow duration-200 group">
             <div class="flex flex-col items-center text-center">
-                <!-- Icon: Cog/Settings -->
                 <div class="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-full mb-4 group-hover:bg-purple-100 dark:group-hover:bg-purple-800/30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -138,11 +126,9 @@
             </div>
         </a>
 
-        <!-- Card 6: System Logs (Active, clickable) -->
         <a href="{% url 'system_logs' %}" 
            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 hover:shadow-md transition-shadow duration-200 group">
             <div class="flex flex-col items-center text-center">
-                <!-- Icon: clipboard-document-list -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-full mb-4 group-hover:bg-gray-100 dark:group-hover:bg-gray-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6h8M8 10h8M8 14h5M7 3h10a2 2 0 012 2v16a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />

@@ -28,6 +28,11 @@ def inventory_dashboard(request):
         else:
             assets = assets.filter(status=status_filter)
 
+    # --- CATEGORY FILTERING ---
+    category_filter = request.GET.get('category')
+    if category_filter:
+        assets = assets.filter(category__name=category_filter)
+
     # 3. SEARCH LOGIC
     query = request.GET.get('q')
     if query:
@@ -41,7 +46,9 @@ def inventory_dashboard(request):
         )
 
     # 4. SORTING
-    sort_by = request.GET.get('sort', '-id')
+    # UPDATED: Default is now 'tag' (Asset Tag Ascending: A->Z)
+    sort_by = request.GET.get('sort', 'tag') 
+    
     allowed_sorts = {
         'tag': 'asset_tag', 
         '-tag': '-asset_tag',
@@ -54,7 +61,8 @@ def inventory_dashboard(request):
         'assigned': 'assigned_to__first_name', 
         '-assigned': '-assigned_to__first_name'
     }
-    order_field = allowed_sorts.get(sort_by, '-id')
+    # UPDATED: Fallback is now 'asset_tag'
+    order_field = allowed_sorts.get(sort_by, 'asset_tag')
     assets = assets.order_by(order_field)
 
     # 5. GLOBAL STATS
@@ -85,6 +93,8 @@ def inventory_dashboard(request):
         'maintenance_count': maintenance_count,
         'status_metrics': status_metrics,
         'category_metrics': category_metrics,
+        # DYNAMIC CATEGORIES FOR FILTER DROPDOWN
+        'categories': AssetCategory.objects.all().order_by('name'),
         'current_status': status_filter,
         'current_sort': sort_by,
     }

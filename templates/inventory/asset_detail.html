@@ -69,16 +69,65 @@
                     {% if asset.specs.cpu %}
                         <div><span class="text-gray-400 block text-xs">Processor</span> <span class="dark:text-white font-medium">{{ asset.specs.cpu }}</span></div>
                     {% endif %}
-                    {% if asset.specs.ram %}
-                        <div><span class="text-gray-400 block text-xs">RAM</span> <span class="dark:text-white font-medium">{{ asset.specs.ram }}</span></div>
-                    {% endif %}
                     {% if asset.specs.gpu %}
                         <div><span class="text-gray-400 block text-xs">Graphics</span> <span class="dark:text-white font-medium">{{ asset.specs.gpu }}</span></div>
                     {% endif %}
-                    {% if asset.specs.storage %}
+                    
+                    {% if asset.specs.ram %}
+                        <div>
+                            <span class="text-gray-400 block text-xs">Memory (RAM)</span> 
+                            <span class="dark:text-white font-medium">{{ asset.specs.ram }}</span>
+                            {% if asset.specs.ram_type %}
+                                <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">({{ asset.specs.ram_type }})</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% if asset.specs.storage_pri or asset.specs.storage_sec %}
+                        {% if asset.specs.storage_pri %}
+                            <div><span class="text-gray-400 block text-xs">Primary Storage</span> <span class="dark:text-white font-medium">{{ asset.specs.storage_pri }}</span></div>
+                        {% endif %}
+                        {% if asset.specs.storage_sec and asset.specs.storage_sec != 'None' %}
+                            <div><span class="text-gray-400 block text-xs">Secondary Storage</span> <span class="dark:text-white font-medium">{{ asset.specs.storage_sec }}</span></div>
+                        {% endif %}
+                    {% elif asset.specs.storage %}
                         <div><span class="text-gray-400 block text-xs">Storage</span> <span class="dark:text-white font-medium">{{ asset.specs.storage }}</span></div>
                     {% endif %}
                 </div>
+            </div>
+            {% endif %}
+
+            {% if asset.specs.disp_size or asset.specs.disp_res %}
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-gray-700 pb-2">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide">Display Specifications</h3>
+                    {% if asset.specs.disp_curved %}
+                    <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                        Curved Display
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                    <div><span class="text-gray-400 block text-xs">Screen Size</span> <span class="dark:text-white font-medium">{{ asset.specs.disp_size|default:"--" }}</span></div>
+                    <div><span class="text-gray-400 block text-xs">Resolution</span> <span class="dark:text-white font-medium">{{ asset.specs.disp_res|default:"--" }}</span></div>
+                    <div><span class="text-gray-400 block text-xs">Panel Type</span> <span class="dark:text-white font-medium">{{ asset.specs.disp_panel|default:"--" }}</span></div>
+                    <div><span class="text-gray-400 block text-xs">Refresh Rate</span> <span class="dark:text-white font-medium">{{ asset.specs.disp_refresh|default:"60 Hz" }}</span></div>
+                    <div><span class="text-gray-400 block text-xs">Frame Color</span> <span class="dark:text-white font-medium">{{ asset.specs.disp_color|default:"--" }}</span></div>
+                </div>
+
+                {% if asset.specs.disp_ports %}
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                    <span class="text-gray-400 block text-xs mb-2">Connectivity / Ports</span>
+                    <div class="flex flex-wrap gap-2">
+                        {% for port in asset.specs.disp_ports %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                {{ port }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
             {% endif %}
 
@@ -181,8 +230,16 @@
                 
                 {% if asset.assigned_to %}
                     <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <div class="h-10 w-10 rounded-full bg-prime-navy text-white flex items-center justify-center font-bold text-lg mr-3">
-                            {{ asset.assigned_to.first_name|slice:":1" }}{{ asset.assigned_to.last_name|slice:":1" }}
+                        <div class="h-10 w-10 mr-3 flex-shrink-0">
+                            {% if asset.assigned_to.profile.avatar %}
+                                <img class="h-10 w-10 rounded-full object-cover border border-gray-200" 
+                                     src="{{ asset.assigned_to.profile.avatar.url }}" 
+                                     alt="{{ asset.assigned_to.get_full_name }}">
+                            {% else %}
+                                <div class="h-10 w-10 rounded-full bg-prime-navy text-white flex items-center justify-center font-bold text-lg">
+                                    {{ asset.assigned_to.first_name|slice:":1" }}{{ asset.assigned_to.last_name|slice:":1" }}
+                                </div>
+                            {% endif %}
                         </div>
                         <div>
                             <p class="text-sm font-bold text-gray-900 dark:text-white">{{ asset.assigned_to.get_full_name }}</p>

@@ -6,10 +6,10 @@
 
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-prime-navy">
+            <h1 class="text-3xl font-bold text-prime-navy dark:text-white">
                 {% if technician %}CSAT Report — {{ technician.name }}{% else %}CSAT Report — Global{% endif %}
             </h1>
-            <p class="text-gray-600 mt-1">
+            <p class="text-gray-600 mt-1 dark:text-gray-400">
                 {% if technician %}
                     Viewing customer feedback for {{ technician.name }}.
                 {% else %}

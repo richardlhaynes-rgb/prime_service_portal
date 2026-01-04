@@ -8,15 +8,15 @@
             <p class="text-gray-600 dark:text-gray-400 mt-1">Manage physical assets, assignments, and lifecycle.</p>
         </div>
         <div class="flex gap-3">
-            <div class="relative inline-block text-left" x-data="{ open: false }">
-                <button @click="open = !open" @click.away="open = false" type="button" class="inline-flex justify-center items-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200">
+            <div class="relative inline-block text-left">
+                <button id="manage-btn" type="button" class="inline-flex justify-center items-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200">
                     Manage Assets
                     <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                 </button>
 
-                <div x-show="open" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 dark:bg-gray-700" style="display: none;">
+                <div id="manage-menu" class="dropdown-content origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 dark:bg-gray-700" style="display: none;">
                     <div class="py-1">
                         <a href="{% url 'inventory:asset_add' %}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-400 group-hover:text-prime-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -37,25 +37,25 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <a href="{% url 'inventory:dashboard' %}" class="block group cursor-pointer">
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow">
+        <a href="{% url 'inventory:dashboard' %}?sort=tag{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="block group cursor-pointer">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow {% if not current_status %}ring-2 ring-blue-500{% endif %}">
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Total Assets</p>
                 <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ total_assets }}</p>
             </div>
         </a>
-        <a href="?status=Assigned" class="block group cursor-pointer">
+        <a href="?status=Assigned{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="block group cursor-pointer">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border-l-4 border-green-500 hover:shadow-md transition-shadow {% if current_status == 'Assigned' %}ring-2 ring-green-500{% endif %}">
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Assigned</p>
                 <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ assigned_count }}</p>
             </div>
         </a>
-        <a href="?status=In Stock" class="block group cursor-pointer">
+        <a href="?status=In Stock{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="block group cursor-pointer">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border-l-4 border-yellow-500 hover:shadow-md transition-shadow {% if current_status == 'In Stock' %}ring-2 ring-yellow-500{% endif %}">
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">In Stock</p>
                 <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ in_stock_count }}</p>
             </div>
         </a>
-        <a href="?status=Maintenance_All" class="block group cursor-pointer">
+        <a href="?status=Maintenance_All{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="block group cursor-pointer">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border-l-4 border-red-500 hover:shadow-md transition-shadow {% if current_status == 'Maintenance_All' %}ring-2 ring-red-500{% endif %}">
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase">Maintenance/Retired</p>
                 <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ maintenance_count }}</p>
@@ -63,9 +63,37 @@
         </a>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
-            <h3 class="font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide text-xs">All Assets</h3>
+    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 relative">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center rounded-t-lg">
+            
+            <div class="relative inline-block text-left">
+                <button id="cat-btn" type="button" class="group flex items-center font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide text-xs hover:text-prime-orange focus:outline-none transition-colors">
+                    {% if request.GET.category %}
+                        {{ request.GET.category }}
+                    {% else %}
+                        All Assets
+                    {% endif %}
+                    <svg class="ml-1 h-4 w-4 text-gray-400 group-hover:text-prime-orange" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <div id="cat-menu" class="dropdown-content origin-top-left absolute left-0 mt-2 w-56 max-h-96 overflow-y-auto rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 dark:bg-gray-700" style="display: none;">
+                    <div class="py-1">
+                        <a href="?{% if request.GET.status %}status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600 font-bold border-b border-gray-100 dark:border-gray-600">
+                           All Categories
+                        </a>
+                        
+                        {% for cat in categories %}
+                            <a href="?category={{ cat.name|urlencode }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600">
+                               {{ cat.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
             
             <form method="get" class="relative">
                 <input type="text" name="q" placeholder="Search tag, serial, model..." value="{{ request.GET.q|default:'' }}" 
@@ -74,27 +102,28 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
                 {% if request.GET.status %}<input type="hidden" name="status" value="{{ request.GET.status }}">{% endif %}
+                {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
             </form>
         </div>
         
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-b-lg">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                            <a href="?sort={% if current_sort == 'tag' %}-tag{% else %}tag{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="flex items-center hover:text-prime-orange">Asset Tag</a>
+                            <a href="?sort={% if current_sort == 'tag' %}-tag{% else %}tag{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="flex items-center hover:text-prime-orange">Asset Tag</a>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                            <a href="?sort={% if current_sort == 'model' %}-model{% else %}model{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="flex items-center hover:text-prime-orange">Model</a>
+                            <a href="?sort={% if current_sort == 'model' %}-model{% else %}model{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="flex items-center hover:text-prime-orange">Model</a>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                            <a href="?sort={% if current_sort == 'category' %}-category{% else %}category{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="flex items-center hover:text-prime-orange">Category</a>
+                            <a href="?sort={% if current_sort == 'category' %}-category{% else %}category{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="flex items-center hover:text-prime-orange">Category</a>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                            <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="flex items-center hover:text-prime-orange">Status</a>
+                            <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="flex items-center hover:text-prime-orange">Status</a>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                            <a href="?sort={% if current_sort == 'assigned' %}-assigned{% else %}assigned{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="flex items-center hover:text-prime-orange">Assigned To</a>
+                            <a href="?sort={% if current_sort == 'assigned' %}-assigned{% else %}assigned{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category|urlencode }}{% endif %}" class="flex items-center hover:text-prime-orange">Assigned To</a>
                         </th>
                         <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -134,14 +163,20 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                             {% if asset.assigned_to %}
                                 <div class="flex items-center">
-                                    {% if asset.assigned_to.profile.avatar %}
-                                        <img src="{{ asset.assigned_to.profile.avatar.url }}" alt="User" class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-800 object-cover mr-2">
-                                    {% else %}
-                                        <div class="h-8 w-8 rounded-full bg-prime-orange text-white flex items-center justify-center text-xs font-bold mr-2 shadow-sm border-2 border-white dark:border-gray-800">
-                                            {{ asset.assigned_to.first_name|slice:":1" }}{{ asset.assigned_to.last_name|slice:":1" }}
+                                    <div class="flex-shrink-0 h-9 w-9">
+                                        {% if asset.assigned_to.profile.avatar %}
+                                            <img class="h-9 w-9 rounded-full object-cover border border-gray-200" src="{{ asset.assigned_to.profile.avatar.url }}" alt="">
+                                        {% else %}
+                                            <div class="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs">
+                                                {{ asset.assigned_to.first_name|slice:":1" }}{{ asset.assigned_to.last_name|slice:":1" }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-prime-navy dark:text-white">
+                                            {{ asset.assigned_to.get_full_name }}
                                         </div>
-                                    {% endif %}
-                                    <span class="font-medium">{{ asset.assigned_to.get_full_name }}</span>
+                                    </div>
                                 </div>
                             {% else %}
                                 <span class="text-gray-400 italic text-xs pl-2">-- Unassigned --</span>
@@ -187,21 +222,34 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const dropdownBtn = document.querySelector('[x-data] button');
-        if(dropdownBtn) {
-            const dropdownMenu = dropdownBtn.nextElementSibling;
-            dropdownBtn.addEventListener('click', function(e) {
+        // Generalized function to toggle specific dropdowns
+        function setupDropdown(btnId, menuId) {
+            const btn = document.getElementById(btnId);
+            const menu = document.getElementById(menuId);
+            if (!btn || !menu) return;
+
+            btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                if (dropdownMenu.style.display === 'none' || getComputedStyle(dropdownMenu).display === 'none') {
-                    dropdownMenu.style.display = 'block';
-                } else {
-                    dropdownMenu.style.display = 'none';
-                }
-            });
-            document.addEventListener('click', function() {
-                if(dropdownMenu) dropdownMenu.style.display = 'none';
+                
+                // Check if currently visible
+                const isHidden = menu.style.display === 'none' || getComputedStyle(menu).display === 'none';
+                
+                // Hide ALL dropdowns first (to close others)
+                document.querySelectorAll('.dropdown-content').forEach(el => el.style.display = 'none');
+                
+                // Toggle current
+                menu.style.display = isHidden ? 'block' : 'none';
             });
         }
+
+        // Setup both dropdowns by ID
+        setupDropdown('manage-btn', 'manage-menu');
+        setupDropdown('cat-btn', 'cat-menu');
+
+        // Close all on click outside
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.dropdown-content').forEach(el => el.style.display = 'none');
+        });
     });
 </script>
 {% endblock %}

@@ -1,0 +1,1 @@
+cmd /k "LAUNCH_SEEDER.bat"

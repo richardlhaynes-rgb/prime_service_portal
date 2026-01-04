@@ -44,29 +44,120 @@
             <div id="system-config-section" class="hidden bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg mb-6 border border-gray-100 dark:border-gray-700 transition-all duration-300">
                 <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">System Configuration</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
                     <div id="wrap_hostname">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Name / Hostname</label>
                         <input type="text" id="conf_hostname" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
                     </div>
+                    
                     <div id="wrap_os">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Operating System</label>
-                        <input type="text" id="conf_os" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. iOS 17, Windows 11">
+                        <select id="conf_os" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Select OS --</option>
+                            <optgroup label="Windows Desktop">
+                                <option value="Windows 11 Pro">Windows 11 Pro</option>
+                                <option value="Windows 10 Pro">Windows 10 Pro</option>
+                                <option value="Windows 10 Enterprise">Windows 10 Enterprise</option>
+                            </optgroup>
+                            <optgroup label="Windows Server">
+                                <option value="Windows Server 2025">Windows Server 2025</option>
+                                <option value="Windows Server 2022">Windows Server 2022</option>
+                                <option value="Windows Server 2019">Windows Server 2019</option>
+                            </optgroup>
+                            <optgroup label="Apple">
+                                <option value="macOS Sonoma">macOS Sonoma</option>
+                                <option value="macOS Ventura">macOS Ventura</option>
+                                <option value="iPadOS 17">iPadOS 17</option>
+                                <option value="iOS 17">iOS 17</option>
+                            </optgroup>
+                            <optgroup label="Other">
+                                <option value="Android 14">Android 14</option>
+                                <option value="Linux (Ubuntu)">Linux (Ubuntu)</option>
+                                <option value="Linux (RHEL)">Linux (RHEL)</option>
+                            </optgroup>
+                        </select>
                     </div>
+
                     <div id="wrap_cpu">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Processor (CPU)</label>
-                        <input type="text" id="conf_cpu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        <input type="text" id="conf_cpu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. Intel Core i7-13700H">
                     </div>
                     <div id="wrap_gpu">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Graphics (GPU)</label>
-                        <input type="text" id="conf_gpu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        <input type="text" id="conf_gpu" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. NVIDIA RTX 4050">
                     </div>
+                    
                     <div id="wrap_ram">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RAM</label>
-                        <input type="text" id="conf_ram" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">RAM Capacity</label>
+                        <select id="conf_ram" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Capacity --</option>
+                            <option value="8 GB">8 GB</option>
+                            <option value="16 GB">16 GB</option>
+                            <option value="32 GB">32 GB</option>
+                            <option value="64 GB">64 GB</option>
+                            <option value="128 GB">128 GB</option>
+                            <option value="256 GB">256 GB</option>
+                            <option value="512 GB">512 GB</option>
+                        </select>
                     </div>
-                    <div id="wrap_storage">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Storage / Capacity</label>
-                        <input type="text" id="conf_storage" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. 256 GB">
+
+                    <div id="wrap_ram_type">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Memory Type</label>
+                        <select id="conf_ram_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Type --</option>
+                            <option value="DDR5">DDR5</option>
+                            <option value="DDR4">DDR4</option>
+                            <option value="Unified Memory">Unified Memory (Apple)</option>
+                            <option value="LPDDR5">LPDDR5</option>
+                            <option value="LPDDR4X">LPDDR4X</option>
+                            <option value="ECC">ECC Memory (Server)</option>
+                        </select>
+                    </div>
+
+                    <div id="wrap_storage_pri">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Primary Storage</label>
+                        <div class="flex items-center gap-3">
+                            <select id="conf_storage_pri_size" class="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                                <option value="">-- Size --</option>
+                                <option value="256 GB">256 GB</option>
+                                <option value="512 GB">512 GB</option>
+                                <option value="1 TB">1 TB</option>
+                                <option value="2 TB">2 TB</option>
+                                <option value="4 TB">4 TB</option>
+                            </select>
+                            
+                            <div class="flex items-center">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="conf_storage_pri_type_switch" class="sr-only peer">
+                                    <span class="mr-2 text-xs font-bold text-gray-500 uppercase">SSD</span>
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-prime-orange"></div>
+                                    <span class="ml-2 text-xs font-bold text-gray-500 uppercase">HDD</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="wrap_storage_sec">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Secondary Storage</label>
+                        <div class="flex items-center gap-3">
+                            <select id="conf_storage_sec_size" class="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                                <option value="">-- None --</option>
+                                <option value="1 TB">1 TB</option>
+                                <option value="2 TB">2 TB</option>
+                                <option value="4 TB">4 TB</option>
+                                <option value="8 TB">8 TB</option>
+                                <option value="12 TB">12 TB</option>
+                            </select>
+
+                            <div class="flex items-center">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="conf_storage_sec_type_switch" class="sr-only peer" checked>
+                                    <span class="mr-2 text-xs font-bold text-gray-500 uppercase">SSD</span>
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-prime-orange"></div>
+                                    <span class="ml-2 text-xs font-bold text-gray-500 uppercase">HDD</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -76,6 +167,80 @@
                         <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-prime-orange"></div>
                         <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Cellular / Mobile Data Capable</span>
                     </label>
+                </div>
+            </div>
+
+            <div id="display-config-section" class="hidden bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg mb-6 border border-gray-100 dark:border-gray-700 transition-all duration-300">
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Display Specifications</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Screen Size</label>
+                        <select id="disp_size" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Select Size --</option>
+                            <option value="24-inch">24-inch</option>
+                            <option value="27-inch">27-inch</option>
+                            <option value="32-inch">32-inch</option>
+                            <option value="34-inch Ultrawide">34-inch Ultrawide</option>
+                            <option value="38-inch Ultrawide">38-inch Ultrawide</option>
+                            <option value="49-inch Super Ultrawide">49-inch Super Ultrawide</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Resolution</label>
+                        <select id="disp_res" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Select Resolution --</option>
+                            <option value="1920 x 1080 (FHD)">1920 x 1080 (FHD)</option>
+                            <option value="2560 x 1440 (QHD)">2560 x 1440 (QHD)</option>
+                            <option value="3440 x 1440 (UWQHD)">3440 x 1440 (UWQHD)</option>
+                            <option value="3840 x 2160 (4K UHD)">3840 x 2160 (4K UHD)</option>
+                            <option value="5120 x 1440 (DQHD)">5120 x 1440 (DQHD)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Panel Type</label>
+                        <select id="disp_panel" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Select Type --</option>
+                            <option value="IPS">IPS (Color Accurate)</option>
+                            <option value="TN">TN (Fast Response)</option>
+                            <option value="VA">VA (High Contrast)</option>
+                            <option value="OLED">OLED / QD-OLED</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Refresh Rate</label>
+                        <select id="disp_refresh" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="60 Hz">60 Hz (Standard)</option>
+                            <option value="75 Hz">75 Hz</option>
+                            <option value="120 Hz">120 Hz</option>
+                            <option value="144 Hz">144 Hz</option>
+                            <option value="165 Hz +">165 Hz +</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frame Color</label>
+                        <input type="text" id="disp_color" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. Black, Silver">
+                    </div>
+                    <div class="flex items-end pb-3">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="disp_curved" class="sr-only peer">
+                            <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-prime-orange"></div>
+                            <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Curved Display?</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-600 pt-3">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Ports</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <label class="inline-flex items-center"><input type="checkbox" class="disp-port-chk rounded text-prime-orange focus:ring-prime-orange" value="HDMI"> <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">HDMI</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" class="disp-port-chk rounded text-prime-orange focus:ring-prime-orange" value="DisplayPort"> <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">DisplayPort</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" class="disp-port-chk rounded text-prime-orange focus:ring-prime-orange" value="USB-C / Thunderbolt"> <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">USB-C / Thunderbolt</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" class="disp-port-chk rounded text-prime-orange focus:ring-prime-orange" value="Mini-DP"> <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Mini-DP</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" class="disp-port-chk rounded text-prime-orange focus:ring-prime-orange" value="VGA"> <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">VGA</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" class="disp-port-chk rounded text-prime-orange focus:ring-prime-orange" value="DVI"> <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">DVI</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" class="disp-port-chk rounded text-prime-orange focus:ring-prime-orange" value="USB Hub"> <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">USB Hub</span></label>
+                    </div>
                 </div>
             </div>
 
@@ -103,7 +268,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Plan</label>
-                        <input type="text" id="mob_plan" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white" placeholder="e.g. Unlimited Enterprise">
+                        <select id="mob_plan" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Select Plan --</option>
+                            <option value="Unlimited Enterprise">Unlimited Enterprise</option>
+                            <option value="Pooled 5GB">Pooled 5GB</option>
+                            <option value="Telemetry">Telemetry / IoT</option>
+                            <option value="International Travel">International Travel</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contract End Date</label>
@@ -152,7 +323,15 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">VLAN ID</label>
-                        <input type="text" id="net_vlan" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white">
+                        <select id="net_vlan" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                            <option value="">-- Select VLAN --</option>
+                            <option value="1 (Default)">1 (Default)</option>
+                            <option value="10 (Mgmt)">10 (Mgmt)</option>
+                            <option value="20 (Voice)">20 (Voice)</option>
+                            <option value="30 (Printers)">30 (Printers)</option>
+                            <option value="100 (Guest)">100 (Guest)</option>
+                            <option value="200 (Corp Wi-Fi)">200 (Corp Wi-Fi)</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Connected Switch / Port</label>
@@ -204,7 +383,22 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vendor / Supplier</label>
-                    {{ form.vendor }} 
+                    <select name="vendor" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white bg-white">
+                        <option value="">-- Select Vendor --</option>
+                        <option value="CDW-G">CDW-G</option>
+                        <option value="SHI">SHI</option>
+                        <option value="Insight">Insight</option>
+                        <option value="Dell Technologies">Dell Technologies</option>
+                        <option value="HP Inc.">HP Inc.</option>
+                        <option value="Lenovo">Lenovo</option>
+                        <option value="Cisco">Cisco</option>
+                        <option value="Apple">Apple</option>
+                        <option value="Microsoft">Microsoft (Surface)</option>
+                        <option value="Samsung">Samsung</option>
+                        <option value="Amazon Business">Amazon Business</option>
+                        <option value="Newegg Business">Newegg Business</option>
+                        <option value="Other">Other</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purchase Price ($)</label>
@@ -225,11 +419,6 @@
                         {% endif %}
                     </div>
                     {{ form.warranty_expiration }}
-                    {% if form.instance.warranty_expiration and form.instance.warranty_expiration < today %}
-                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">
-                            Warranty expired on {{ form.instance.warranty_expiration|date:"M d, Y" }}.
-                        </p>
-                    {% endif %}
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assigned User</label>
@@ -270,7 +459,13 @@
     const wrapCpu = document.getElementById('wrap_cpu');
     const wrapGpu = document.getElementById('wrap_gpu');
     const wrapRam = document.getElementById('wrap_ram');
-    const wrapStorage = document.getElementById('wrap_storage');
+    const wrapRamType = document.getElementById('wrap_ram_type');
+    const wrapStoragePri = document.getElementById('wrap_storage_pri');
+    const wrapStorageSec = document.getElementById('wrap_storage_sec');
+
+    // Display Config Categories (Monitors)
+    const displayCats = ['Monitors', 'Displays'];
+    const dispSection = document.getElementById('display-config-section');
 
     // Mobile Logic Categories
     const mobileAlwaysCats = ['Smartphones', 'Mobile Hotspots'];
@@ -279,8 +474,8 @@
     const mobToggleWrapper = document.getElementById('mobile-toggle-wrapper');
     const mobToggleCheckbox = document.getElementById('mobile_toggle');
 
-    // Network Config Categories - REMOVED Smartphones, Tablets, Hotspots
-    const networkCats = ['Laptops', 'Desktops', 'Servers', 'Workstations', 'Computing', 'Virtual', 'Printers', 'Plotters', 'Routers', 'Switches', 'Firewalls', 'Access Points', 'Network'];
+    // Network Config Categories
+    const networkCats = ['Laptops', 'Desktops', 'Servers', 'Workstations', 'Printers', 'Routers', 'Switches', 'Firewalls', 'Access Points', 'Network Infrastructure'];
     const netSection = document.getElementById('network-config-section');
 
     const assignSelect = document.getElementById('net_assignment');
@@ -288,33 +483,9 @@
 
     // --- 2. LOGIC FUNCTIONS ---
     
-    // NEW FUNCTION: Dynamically updates placeholders
-    function updatePlaceholders(isMobile) {
-        const osInput = document.getElementById('conf_os');
-        const storageInput = document.getElementById('conf_storage');
-        const vendorInput = document.querySelector('[name="vendor"]');
-        const supportInput = document.querySelector('[name="support_notes"]');
-
-        if (isMobile) {
-            if(osInput) osInput.placeholder = "e.g. iOS 17, Android 14";
-            if(storageInput) storageInput.placeholder = "e.g. 128 GB, 256 GB";
-            if(vendorInput) vendorInput.placeholder = "e.g. Verizon, AT&T, Apple";
-            if(supportInput) supportInput.placeholder = "e.g. AppleCare+, Carrier Protection";
-        } else {
-            if(osInput) osInput.placeholder = "e.g. Windows 11, macOS Sonoma";
-            if(storageInput) storageInput.placeholder = "e.g. 512 GB SSD";
-            if(vendorInput) vendorInput.placeholder = "e.g. Dell, HP, CDW";
-            if(supportInput) supportInput.placeholder = "e.g. Dell ProSupport, HP Care Pack";
-        }
-    }
-
     function toggleSections() {
         if (!categorySelect) return;
         const selectedText = categorySelect.options[categorySelect.selectedIndex].text;
-
-        // Determine if this is a "Mobile" category for placeholder purposes
-        const isMobileCategory = ['Smartphones', 'Tablets', 'Mobile Hotspots'].some(cat => selectedText.includes(cat));
-        updatePlaceholders(isMobileCategory);
 
         // --- System Config Logic ---
         const isFullSys = fullSysCats.some(cat => selectedText.includes(cat));
@@ -322,31 +493,40 @@
         
         if (isFullSys) {
             sysSection.classList.remove('hidden');
-            sysSection.style.display = 'block';
             wrapHostname.style.display = 'block';
             wrapOs.style.display = 'block';
             wrapCpu.style.display = 'block';
             wrapGpu.style.display = 'block';
             wrapRam.style.display = 'block';
-            wrapStorage.style.display = 'block';
+            if(wrapRamType) wrapRamType.style.display = 'block';
+            wrapStoragePri.style.display = 'block';
+            wrapStorageSec.style.display = 'block';
         } else if (isSimpleSys) {
             sysSection.classList.remove('hidden');
-            sysSection.style.display = 'block';
             wrapHostname.style.display = 'none';
             wrapOs.style.display = 'block';
             wrapCpu.style.display = 'none';
             wrapGpu.style.display = 'none';
             wrapRam.style.display = 'none';
-            wrapStorage.style.display = 'block';
+            if(wrapRamType) wrapRamType.style.display = 'none';
+            wrapStoragePri.style.display = 'block'; 
+            wrapStorageSec.style.display = 'none';
         } else {
             sysSection.classList.add('hidden');
-            sysSection.style.display = 'none';
+        }
+
+        // --- Display Config Logic ---
+        const isDisplay = displayCats.some(cat => selectedText.includes(cat));
+        if (isDisplay) {
+            dispSection.classList.remove('hidden');
+        } else {
+            dispSection.classList.add('hidden');
         }
 
         // --- Network Config Logic ---
         const showNet = networkCats.some(cat => selectedText.includes(cat));
-        netSection.style.display = showNet ? 'block' : 'none';
         if(showNet) netSection.classList.remove('hidden');
+        else netSection.classList.add('hidden');
 
         // --- Mobile Broadband Logic ---
         const isAlwaysMobile = mobileAlwaysCats.some(cat => selectedText.includes(cat));
@@ -354,20 +534,16 @@
 
         if (isAlwaysMobile) {
             mobSection.classList.remove('hidden');
-            mobSection.style.display = 'block';
             mobToggleWrapper.classList.add('hidden');
         } else if (isToggleMobile) {
             mobToggleWrapper.classList.remove('hidden');
             if (mobToggleCheckbox.checked) {
                 mobSection.classList.remove('hidden');
-                mobSection.style.display = 'block';
             } else {
                 mobSection.classList.add('hidden');
-                mobSection.style.display = 'none';
             }
         } else {
             mobSection.classList.add('hidden');
-            mobSection.style.display = 'none';
             mobToggleWrapper.classList.add('hidden');
             mobToggleCheckbox.checked = false;
         }
@@ -388,9 +564,13 @@
     if (assignSelect) assignSelect.addEventListener('change', toggleStaticFields);
     if (mobToggleCheckbox) mobToggleCheckbox.addEventListener('change', toggleSections);
 
-    // --- 4. INITIALIZATION ---
+    // --- 4. INITIALIZATION (UNPACK JSON) ---
     document.addEventListener('DOMContentLoaded', function() {
         try {
+            const vendorSelect = document.querySelector('[name="vendor"]');
+            const vendorVal = "{{ form.vendor.value|default:'' }}"; 
+            if(vendorVal && vendorSelect) vendorSelect.value = vendorVal;
+
             const jsonStr = document.querySelector('[name="specs"]').value;
             if (jsonStr && jsonStr !== 'null' && jsonStr !== 'None') {
                 const specs = JSON.parse(jsonStr.replace(/'/g, '"'));
@@ -401,12 +581,54 @@
                 document.getElementById('conf_cpu').value = specs.cpu || '';
                 document.getElementById('conf_gpu').value = specs.gpu || '';
                 document.getElementById('conf_ram').value = specs.ram || '';
-                document.getElementById('conf_storage').value = specs.storage || '';
-
-                // Mobile Config
-                if (specs.mob_enabled === true || specs.mob_enabled === 'true') {
-                    mobToggleCheckbox.checked = true;
+                document.getElementById('conf_ram_type').value = specs.ram_type || ''; 
+                
+                // Unpack Primary Storage (Size + Toggle)
+                let priStorage = specs.storage_pri || '';
+                const priSwitch = document.getElementById('conf_storage_pri_type_switch');
+                
+                if(priStorage.includes(' HDD')) {
+                    document.getElementById('conf_storage_pri_size').value = priStorage.replace(' HDD', '');
+                    priSwitch.checked = true; // Checked = HDD
+                } else if (priStorage.includes(' SSD')) {
+                    document.getElementById('conf_storage_pri_size').value = priStorage.replace(' SSD', '');
+                    priSwitch.checked = false; // Unchecked = SSD
+                } else {
+                    document.getElementById('conf_storage_pri_size').value = priStorage;
+                    priSwitch.checked = false;
                 }
+
+                // Unpack Secondary Storage (Size + Toggle)
+                let secStorage = specs.storage_sec || '';
+                const secSwitch = document.getElementById('conf_storage_sec_type_switch');
+                
+                if(secStorage.includes(' HDD')) {
+                    document.getElementById('conf_storage_sec_size').value = secStorage.replace(' HDD', '');
+                    secSwitch.checked = true; // Checked = HDD
+                } else if (secStorage.includes(' SSD')) {
+                    document.getElementById('conf_storage_sec_size').value = secStorage.replace(' SSD', '');
+                    secSwitch.checked = false; // Unchecked = SSD
+                } else {
+                    document.getElementById('conf_storage_sec_size').value = secStorage;
+                    secSwitch.checked = true; // Default HDD for secondary
+                }
+
+                // Display Config
+                document.getElementById('disp_size').value = specs.disp_size || '';
+                document.getElementById('disp_res').value = specs.disp_res || '';
+                document.getElementById('disp_panel').value = specs.disp_panel || '';
+                document.getElementById('disp_refresh').value = specs.disp_refresh || '';
+                document.getElementById('disp_color').value = specs.disp_color || '';
+                if(specs.disp_curved) document.getElementById('disp_curved').checked = true;
+                
+                if(specs.disp_ports && Array.isArray(specs.disp_ports)) {
+                    document.querySelectorAll('.disp-port-chk').forEach(cb => {
+                        if(specs.disp_ports.includes(cb.value)) cb.checked = true;
+                    });
+                }
+
+                // Mobile, Network...
+                if (specs.mob_enabled === true || specs.mob_enabled === 'true') mobToggleCheckbox.checked = true;
                 document.getElementById('mob_carrier').value = specs.mob_carrier || '';
                 document.getElementById('mob_phone').value = specs.mob_phone || '';
                 document.getElementById('mob_plan').value = specs.mob_plan || '';
@@ -416,14 +638,11 @@
                 document.getElementById('mob_imei').value = specs.mob_imei || '';
                 document.getElementById('mob_iccid').value = specs.mob_iccid || '';
 
-                // Network Config
                 document.getElementById('net_desc').value = specs.net_desc || '';
                 document.getElementById('net_mac').value = specs.net_mac || '';
                 document.getElementById('net_vlan').value = specs.net_vlan || '';
                 document.getElementById('net_port').value = specs.net_port || '';
-                
                 if (specs.net_assignment) assignSelect.value = specs.net_assignment;
-                
                 document.getElementById('net_ipv4').value = specs.net_ipv4 || '';
                 document.getElementById('net_subnet').value = specs.net_subnet || '';
                 document.getElementById('net_gateway').value = specs.net_gateway || '';
@@ -434,43 +653,62 @@
         } catch (e) {
             console.error("Error parsing specs JSON:", e);
         }
-        
         toggleSections();
         toggleStaticFields();
     });
 
-    // --- 5. PACK JSON ---
+    // --- 5. PACK JSON (SUBMIT) ---
     document.getElementById('asset-form').addEventListener('submit', function(e) {
         const selectedText = categorySelect.options[categorySelect.selectedIndex].text;
         
-        // Logic Vars
+        // Helper Logic
         const isAlwaysMobile = mobileAlwaysCats.some(cat => selectedText.includes(cat));
         const isMobileEnabled = isAlwaysMobile || mobToggleCheckbox.checked;
-        const isSimpleSys = simpleSysCats.some(cat => selectedText.includes(cat));
-        const isNoSys = !isSimpleSys && !fullSysCats.some(cat => selectedText.includes(cat));
-        const isNetVisible = netSection.style.display !== 'none';
+        const isNetVisible = !netSection.classList.contains('hidden');
+        const isDisplayVisible = !dispSection.classList.contains('hidden');
 
-        // Helper to clear if hidden
-        let hostnameVal = document.getElementById('conf_hostname').value;
-        let cpuVal = document.getElementById('conf_cpu').value;
-        let gpuVal = document.getElementById('conf_gpu').value;
-        let ramVal = document.getElementById('conf_ram').value;
+        // Pack Storage: Combine Size + Toggle State
+        let priSize = document.getElementById('conf_storage_pri_size').value;
+        let priIsHDD = document.getElementById('conf_storage_pri_type_switch').checked;
+        let finalPri = priSize ? `${priSize} ${priIsHDD ? 'HDD' : 'SSD'}` : '';
 
-        if (isSimpleSys) {
-            hostnameVal = ''; cpuVal = ''; gpuVal = ''; ramVal = '';
-        } else if (isNoSys) {
-            hostnameVal = ''; cpuVal = ''; gpuVal = ''; ramVal = '';
+        let secSize = document.getElementById('conf_storage_sec_size').value;
+        let secIsHDD = document.getElementById('conf_storage_sec_type_switch').checked;
+        let finalSec = secSize ? `${secSize} ${secIsHDD ? 'HDD' : 'SSD'}` : '';
+
+        // Backward compatibility
+        let combinedStorage = finalPri;
+        if(finalSec) combinedStorage += ` + ${finalSec}`;
+
+        // Gather Ports
+        let ports = [];
+        if(isDisplayVisible) {
+            document.querySelectorAll('.disp-port-chk:checked').forEach(cb => {
+                ports.push(cb.value);
+            });
         }
 
         const specs = {
             // System
-            hostname: hostnameVal,
+            hostname: document.getElementById('conf_hostname').value,
             os: document.getElementById('conf_os').value,
-            cpu: cpuVal,
-            gpu: gpuVal,
-            ram: ramVal,
-            storage: document.getElementById('conf_storage').value,
+            cpu: document.getElementById('conf_cpu').value,
+            gpu: document.getElementById('conf_gpu').value,
+            ram: document.getElementById('conf_ram').value,
+            ram_type: document.getElementById('conf_ram_type').value,
+            storage: combinedStorage, 
+            storage_pri: finalPri,
+            storage_sec: finalSec,
             
+            // Display
+            disp_size: isDisplayVisible ? document.getElementById('disp_size').value : '',
+            disp_res: isDisplayVisible ? document.getElementById('disp_res').value : '',
+            disp_panel: isDisplayVisible ? document.getElementById('disp_panel').value : '',
+            disp_refresh: isDisplayVisible ? document.getElementById('disp_refresh').value : '',
+            disp_color: isDisplayVisible ? document.getElementById('disp_color').value : '',
+            disp_curved: isDisplayVisible ? document.getElementById('disp_curved').checked : false,
+            disp_ports: ports,
+
             // Mobile
             mob_enabled: isMobileEnabled,
             mob_carrier: document.getElementById('mob_carrier').value,
@@ -482,7 +720,7 @@
             mob_imei: document.getElementById('mob_imei').value,
             mob_iccid: document.getElementById('mob_iccid').value,
 
-            // Network (Only save if visible)
+            // Network
             net_desc: isNetVisible ? document.getElementById('net_desc').value : '',
             net_mac: isNetVisible ? document.getElementById('net_mac').value : '',
             net_vlan: isNetVisible ? document.getElementById('net_vlan').value : '',
