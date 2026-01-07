@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6">
+    
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-prime-navy dark:text-white">New Ticket (Agent)</h1>
+        <a href="{% url 'workspace' %}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="agent-ticket-form">
+        {% csrf_token %}
+        
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4 border-b pb-2">1. Classification & Contact</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requester</label>
+                        {{ master_form.contact }}
+                    </div>
+                    
+                    <div id="contact-details" class="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md border border-gray-200 dark:border-gray-600">
+                        <div class="col-span-2">
+                            <label class="block text-xs text-gray-500">Email</label>
+                            <input type="text" disabled class="w-full text-sm bg-transparent border-none p-0 text-gray-700 dark:text-gray-200" placeholder="...">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500">Department</label>
+                            <input type="text" disabled class="w-full text-sm bg-transparent border-none p-0 text-gray-700 dark:text-gray-200" placeholder="...">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500">Location</label>
+                            <input type="text" disabled class="w-full text-sm bg-transparent border-none p-0 text-gray-700 dark:text-gray-200" placeholder="...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Board</label>
+                            {{ master_form.board }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                            {{ master_form.status }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                        <select name="type" id="id_type" class="{{ master_form.type.field.widget.attrs.class }}"
+                                hx-get="{% url 'hx_load_subtypes' %}" hx-target="#id_subtype">
+                            <option value="">-- Select Board First --</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subtype</label>
+                            {{ master_form.subtype }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Item</label>
+                            {{ master_form.item }}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+                            {{ master_form.priority }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
+                            {{ master_form.source }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4 border-b pb-2">2. Ticket Details</h2>
+            
+            <div id="dynamic-form-container">
+                <div class="text-center py-12 text-gray-400">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <p>Select a <strong>Ticket Type</strong> above to load the form.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button type="submit" class="bg-prime-orange text-white px-8 py-3 rounded-md font-bold text-sm shadow-lg hover:bg-orange-600 transition-transform transform active:scale-95">
+                Create Ticket
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Robust listener for Type dropdown changes
+    document.addEventListener('change', function(e) {
+        // Check if the changed element is our Type dropdown
+        if (e.target && e.target.id === 'id_type') {
+            var typeId = e.target.value;
+            var container = document.getElementById('dynamic-form-container');
+            
+            if (typeId) {
+                // Show a simple loading state
+                container.innerHTML = '<div class="text-center py-12 text-gray-400">Loading form...</div>';
+                
+                // Manually trigger HTMX to fetch the form partial
+                // Using the Django URL tag to ensure the path is correct
+                htmx.ajax('GET', '{% url "hx_load_ticket_form" %}?type=' + typeId, {target: '#dynamic-form-container'});
+            } else {
+                // Reset to default empty state if "Select Type" is chosen
+                container.innerHTML = '<div class="text-center py-12 text-gray-400"><svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg><p>Select a <strong>Ticket Type</strong> above to load the form.</p></div>';
+            }
+        }
+    });
+</script>
+{% endblock %}

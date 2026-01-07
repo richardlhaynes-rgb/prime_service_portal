@@ -1,99 +1,157 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block content %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<div class="h-[calc(100vh-80px)] flex flex-col p-6">
+<div class="relative h-[calc(100vh-80px)] overflow-hidden flex flex-col">
     
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-prime-navy dark:text-white">Technician Workspace</h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Drag and drop tickets to update status.</p>
+    <div class="px-6 pt-6 pb-2 shrink-0 z-20 bg-gray-50 dark:bg-gray-900">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-prime-navy dark:text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-prime-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Technician Workspace
+                </h1>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                    Viewing <span class="font-bold text-gray-800 dark:text-gray-200">{{ current_board }}</span> Queue
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Auto-Assign Active</span>
+                <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Auto-Assign Enabled</span>
-            <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+
+        <div class="flex items-center space-x-1 border-b border-gray-200 dark:border-gray-700 overflow-x-auto custom-scrollbar">
+            {% for board_name in boards %}
+            <a href="?board={{ board_name }}" 
+               class="px-4 py-2.5 text-sm font-medium border-b-2 transition-all flex items-center gap-2 whitespace-nowrap
+                      {% if current_board == board_name %}
+                        border-prime-orange text-prime-navy dark:text-white bg-white dark:bg-gray-800 rounded-t-md
+                      {% else %}
+                        border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50 rounded-t-md
+                      {% endif %}">
+                {{ board_name }}
+                {% with count=board_stats|get_item:board_name %}
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] 
+                    {% if current_board == board_name %}bg-prime-orange text-white
+                    {% else %}bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %}">
+                    {{ count }}
+                </span>
+                {% endwith %}
+            </a>
+            {% endfor %}
+            
+            <a href="?board=All" 
+               class="px-4 py-2.5 text-sm font-medium border-b-2 transition-all ml-4 border-l border-gray-200 dark:border-gray-700
+                      {% if current_board == 'All' %}border-prime-orange text-prime-navy dark:text-white{% else %}border-transparent text-gray-400 hover:text-gray-600{% endif %}">
+                All Tickets
+            </a>
         </div>
     </div>
 
-    <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden">
-        
-        <div class="flex flex-col bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 h-full">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 rounded-t-lg flex justify-between items-center">
-                <h3 class="font-bold text-gray-700 dark:text-gray-200">To Do / New</h3>
-                <span class="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-100 py-0.5 px-2 rounded-full text-xs font-bold">{{ new_tickets|length }}</span>
+    <div class="flex-grow p-6 pt-4 overflow-hidden relative">
+        <div class="h-full grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="flex flex-col bg-gray-100 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 h-full backdrop-blur-sm min-h-0">
+                <div class="p-3 border-b border-gray-200 dark:border-gray-700/50 bg-gray-50/95 dark:bg-gray-800/95 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-gray-400"></div>
+                        <h3 class="font-bold text-gray-700 dark:text-gray-200 text-sm uppercase tracking-wide">To Do</h3>
+                    </div>
+                    <span class="bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-0.5 px-2 rounded text-xs font-bold shadow-sm border border-gray-100 dark:border-gray-600">{{ new_tickets|length }}</span>
+                </div>
+                <div id="col-new" class="p-3 flex-grow overflow-y-auto space-y-3 kanban-col custom-scrollbar" data-status="New">
+                    {% for ticket in new_tickets %}
+                        {% include 'service_desk/partials/kanban_card.html' %}
+                    {% endfor %}
+                </div>
             </div>
-            <div id="col-new" class="p-4 flex-grow overflow-y-auto space-y-3 kanban-col" data-status="New">
-                {% for ticket in new_tickets %}
-                    {% include 'service_desk/partials/kanban_card.html' %}
-                {% endfor %}
-            </div>
-        </div>
 
-        <div class="flex flex-col bg-blue-50/50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900/30 h-full">
-            <div class="p-4 border-b border-blue-100 dark:border-blue-900/30 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg flex justify-between items-center">
-                <h3 class="font-bold text-blue-700 dark:text-blue-300">In Progress</h3>
-                <span class="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 py-0.5 px-2 rounded-full text-xs font-bold">{{ progress_tickets|length }}</span>
+            <div class="flex flex-col bg-blue-50/30 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 h-full backdrop-blur-sm min-h-0">
+                <div class="p-3 border-b border-blue-100 dark:border-blue-900/30 bg-blue-50/95 dark:bg-blue-900/20 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                        <h3 class="font-bold text-blue-700 dark:text-blue-300 text-sm uppercase tracking-wide">In Progress</h3>
+                    </div>
+                    <span class="bg-white dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 py-0.5 px-2 rounded text-xs font-bold shadow-sm border border-blue-100 dark:border-blue-800">{{ progress_tickets|length }}</span>
+                </div>
+                <div id="col-progress" class="p-3 flex-grow overflow-y-auto space-y-3 kanban-col custom-scrollbar" data-status="In Progress">
+                    {% for ticket in progress_tickets %}
+                        {% include 'service_desk/partials/kanban_card.html' %}
+                    {% endfor %}
+                </div>
             </div>
-            <div id="col-progress" class="p-4 flex-grow overflow-y-auto space-y-3 kanban-col" data-status="In Progress">
-                {% for ticket in progress_tickets %}
-                    {% include 'service_desk/partials/kanban_card.html' %}
-                {% endfor %}
-            </div>
-        </div>
 
-        <div class="flex flex-col bg-green-50/50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900/30 h-full">
-            <div class="p-4 border-b border-green-100 dark:border-green-900/30 bg-green-50 dark:bg-green-900/20 rounded-t-lg flex justify-between items-center">
-                <h3 class="font-bold text-green-700 dark:text-green-300">Resolved</h3>
-                <span class="bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 py-0.5 px-2 rounded-full text-xs font-bold">{{ done_tickets|length }}</span>
+            <div class="flex flex-col bg-green-50/30 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30 h-full backdrop-blur-sm min-h-0">
+                <div class="p-3 border-b border-green-100 dark:border-green-900/30 bg-green-50/95 dark:bg-green-900/20 rounded-t-xl flex justify-between items-center sticky top-0 z-10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        <h3 class="font-bold text-green-700 dark:text-green-300 text-sm uppercase tracking-wide">Resolved</h3>
+                    </div>
+                    <span class="bg-white dark:bg-green-900/40 text-green-800 dark:text-green-200 py-0.5 px-2 rounded text-xs font-bold shadow-sm border border-green-100 dark:border-green-800">{{ done_tickets|length }}</span>
+                </div>
+                <div id="col-done" class="p-3 flex-grow overflow-y-auto space-y-3 kanban-col custom-scrollbar" data-status="Resolved">
+                    {% for ticket in done_tickets %}
+                        {% include 'service_desk/partials/kanban_card.html' %}
+                    {% endfor %}
+                </div>
             </div>
-            <div id="col-done" class="p-4 flex-grow overflow-y-auto space-y-3 kanban-col" data-status="Resolved">
-                {% for ticket in done_tickets %}
-                    {% include 'service_desk/partials/kanban_card.html' %}
-                {% endfor %}
-            </div>
-        </div>
 
+        </div>
     </div>
+
+    <div id="drawer-backdrop" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm z-40 transition-opacity duration-300 opacity-0 pointer-events-none" onclick="closeDrawer()"></div>
+    <div id="drawer-panel" class="absolute top-0 right-0 h-full w-full md:w-[480px] bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white">Quick View</h2>
+            <button onclick="closeDrawer()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="drawer-content" class="flex-grow overflow-y-auto p-0">
+            <div class="flex items-center justify-center h-full text-gray-400">
+                <svg class="animate-spin h-8 w-8 mr-3" viewBox="0 0 24 24"></svg> Loading...
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // Initialize Drag and Drop
+    function openDrawer() {
+        const backdrop = document.getElementById('drawer-backdrop');
+        const panel = document.getElementById('drawer-panel');
+        backdrop.classList.remove('pointer-events-none', 'opacity-0');
+        backdrop.classList.add('opacity-100');
+        panel.classList.remove('translate-x-full');
+    }
+
+    function closeDrawer() {
+        const backdrop = document.getElementById('drawer-backdrop');
+        const panel = document.getElementById('drawer-panel');
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0', 'pointer-events-none');
+        panel.classList.add('translate-x-full');
+    }
+
     document.querySelectorAll('.kanban-col').forEach(column => {
         new Sortable(column, {
-            group: 'kanban', // Allows dragging between columns
+            group: 'kanban',
             animation: 150,
-            ghostClass: 'bg-prime-orange/20', // Class applied to the placeholder
-            delay: 100, // Slight delay prevents accidental drags on touch
+            ghostClass: 'bg-prime-orange/10',
+            delay: 100,
             delayOnTouchOnly: true,
-            
-            // THE MAGIC: What happens when you drop a card
             onEnd: function (evt) {
-                const itemEl = evt.item;  // The card being dragged
-                const newStatus = evt.to.getAttribute('data-status'); // The column status
-                const ticketId = itemEl.getAttribute('data-ticket-id'); // The Ticket ID
-
-                // If moved to same column, ignore
+                const itemEl = evt.item;
+                const newStatus = evt.to.getAttribute('data-status');
+                const ticketId = itemEl.getAttribute('data-ticket-id');
                 if (evt.to === evt.from) return;
-
-                // Send Update to Django via HTMX (simulated via Fetch for SortableJS)
                 fetch(`{% url 'kanban_update' %}`, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ticket_id: ticketId,
-                        new_status: newStatus
-                    })
-                })
-                .then(response => {
-                    if (response.ok) {
-                        console.log("Ticket updated!");
-                    } else {
-                        console.error("Update failed");
-                    }
+                    headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
+                    body: JSON.stringify({ticket_id: ticketId, new_status: newStatus})
                 });
             }
         });

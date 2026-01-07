@@ -3,7 +3,6 @@
 {% block content %}
 <div class="space-y-8">
     
-    <!-- Page Header with Date Range Controls -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Manager Analytics Dashboard</h1>
@@ -11,7 +10,6 @@
         </div>
         
         <div class="flex items-center gap-3">
-            <!-- Container A: Date Preset Buttons (Default Visible) -->
             <div id="date-preset-row" class="flex items-center space-x-2">
                 <a href="?range=today" 
                    id="btn-today"
@@ -52,7 +50,6 @@
                 </button>
             </div>
 
-            <!-- Container B: Custom Date Input Row (Default Hidden, Swaps In) -->
             <form method="GET" id="custom-input-row" class="hidden flex items-center gap-2">
                 <input type="hidden" name="range" value="custom">
                 
@@ -83,9 +80,7 @@
         </div>
     </div>
 
-    <!-- Summary Stats Row (KPI Cards) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Tickets -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 border-l-4 border-l-blue-500">
             <div class="flex items-center justify-between">
                 <div>
@@ -100,7 +95,6 @@
             </div>
         </div>
 
-        <!-- Avg Resolution -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 border-l-4 border-l-green-500">
             <div class="flex items-center justify-between">
                 <div>
@@ -115,7 +109,6 @@
             </div>
         </div>
 
-        <!-- First Response -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 border-l-4 border-l-purple-500">
             <div class="flex items-center justify-between">
                 <div>
@@ -130,7 +123,6 @@
             </div>
         </div>
 
-        <!-- Priority Escalations -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 border-l-4 border-l-red-500">
             <div class="flex items-center justify-between">
                 <div>
@@ -146,7 +138,6 @@
         </div>
     </div>
 
-    <!-- Priority Attention Box (Red) -->
     {% if analytics.sla_breaches %}
     <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded-lg shadow-sm p-6">
         <div class="flex items-start gap-3">
@@ -174,9 +165,7 @@
     </div>
     {% endif %}
 
-    <!-- Service Desk Team Section -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <!-- Header with Heroicon -->
         <div class="flex items-center gap-2 mb-6">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-prime-navy dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -184,21 +173,17 @@
             <h3 class="text-xl font-bold text-prime-navy dark:text-white">Service Desk Team</h3>
         </div>
         
-        <!-- Team Roster Grid (Compact Horizontal Cards) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for tech in analytics.roster %}
             <a href="{% url 'technician_profile' name=tech.id %}" 
                class="flex flex-row items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-prime-orange transition-all duration-200 cursor-pointer">
-                <!-- Avatar -->
-                <img src="{{ tech.avatar }}" alt="{{ tech.name }}" class="h-12 w-12 rounded-full shadow-sm shrink-0">
+                <img src="{{ tech.avatar }}" alt="{{ tech.name }}" class="h-12 w-12 rounded-full shadow-sm shrink-0 object-cover object-top">
                 
-                <!-- Name & Role -->
                 <div class="ml-4 flex-grow">
                     <h4 class="font-bold text-gray-800 dark:text-white text-sm">{{ tech.name }}</h4>
                     <p class="text-xs text-gray-600 dark:text-gray-400">{{ tech.role }}</p>
                 </div>
                 
-                <!-- Status Badge -->
                 <div class="ml-auto shrink-0">
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
                         {% if tech.stats.open_tickets == 0 %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200
@@ -212,10 +197,8 @@
         </div>
     </div>
 
-    <!-- Performance Charts Section (2x2 Grid with h-80 Constraint) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <!-- Chart 1: Volume by Status (Pie Chart) -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center gap-2 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,7 +212,6 @@
             </div>
         </div>
 
-        <!-- Chart 2: Tickets by Type (Bar Chart) -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center gap-2 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -242,7 +224,6 @@
             </div>
         </div>
 
-        <!-- Chart 3: Trend Over Time (Line Chart) -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center gap-2 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -255,7 +236,6 @@
             </div>
         </div>
 
-        <!-- Chart 4: Avg Resolution Time by Technician (Horizontal Bar) -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center gap-2 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -272,10 +252,8 @@
 
 </div>
 
-<!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Dashboard Scripts -->
 <script>
     // ==========================================
     // DATE RANGE TOGGLE SYSTEM

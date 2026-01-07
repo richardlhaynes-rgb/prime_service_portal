@@ -1,11 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group  # Added Group import
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import FileExtensionValidator, MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from PIL import Image
-from django.contrib.postgres.fields import JSONField
+# Using standard JSONField as we are in a Django environment that supports it
+# (PostgreSQL or SQLite with modern Django versions)
+from django.db.models import JSONField 
 
 
 # --- FILE VALIDATORS ---
@@ -16,53 +18,106 @@ def validate_file_size(value):
         raise ValidationError("Maximum file size is 5 MB.")
 
 
+# --- TAXONOMY MODELS (ConnectWise Architecture) ---
+
+class ServiceType(models.Model):
+    """
+    High-level Ticket Type (e.g., 'Hardware Issue', 'New User').
+    Controls which Form Template renders.
+    """
+    name = models.CharField(max_length=100)
+    # This field tells us which Django Form class to load (e.g., 'HardwareIssueForm')
+    form_class_name = models.CharField(
+        max_length=100, 
+        default='GeneralQuestionForm',
+        help_text="Name of the Django Form class to load for this type."
+    )
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+class ServiceSubtype(models.Model):
+    """
+    Granular categorization (e.g., 'Error', 'Install').
+    Can belong to multiple Types (Many-to-Many).
+    """
+    name = models.CharField(max_length=100)
+    parent_types = models.ManyToManyField(ServiceType, related_name='subtypes')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+class ServiceItem(models.Model):
+    """
+    Specific issue or root cause (e.g., 'Blue Screen', 'Toner Empty').
+    Can belong to multiple Subtypes (Many-to-Many).
+    """
+    name = models.CharField(max_length=100)
+    parent_subtypes = models.ManyToManyField(ServiceSubtype, related_name='items')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+# --- SERVICE BOARD MODEL ---
+class ServiceBoard(models.Model):
+    """
+    Dynamic Service Boards (e.g., Tier 1, Infrastructure, Onboarding).
+    Replaces the hardcoded TicketBoard choices.
+    """
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Access Control: Who can see/work this board?
+    members = models.ManyToManyField(User, related_name='accessible_boards', blank=True)
+    
+    # Links board to specific security groups
+    restricted_groups = models.ManyToManyField(
+        Group, 
+        blank=True, 
+        related_name='service_boards',
+        help_text="If selected, only users in these groups can view this board."
+    )
+    
+    # Hierarchy: Which Types are available on this Board?
+    allowed_types = models.ManyToManyField(ServiceType, related_name='boards', blank=True)
+    
+    # Routing Logic: Legacy JSON field (kept for backward compat or complex routing)
+    auto_route_types = JSONField(default=list, blank=True, help_text="List of Ticket Types that route here by default")
+    
+    # Sorting Field
+    sort_order = models.PositiveIntegerField(default=0, help_text="Order in which to display the board")
+
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
 class Ticket(models.Model):
     """
     Service Ticket model aligned with ConnectWise Manage schema.
+    Updated to use Relational Taxonomy (Foreign Keys).
     """
     
-    # --- Configuration Enums (ConnectWise Aligned) ---
-    class TicketBoard(models.TextChoices):
-        TIER_1 = 'Tier 1', 'Tier 1'
-        TIER_2 = 'Tier 2', 'Tier 2'
-        TIER_3 = 'Tier 3', 'Tier 3'
-    
-    class TicketType(models.TextChoices):
-        APPLICATION = 'Application Problem', 'Application Problem'
-        EMAIL = 'Email/Mailbox Help', 'Email/Mailbox Help'
-        HARDWARE = 'Hardware Issue', 'Hardware Issue'
-        SERVICE_REQUEST = 'IT Service Request', 'IT Service Request'
-        PRINTER = 'Printer / Scanner Issue', 'Printer / Scanner Issue'
-        SOFTWARE = 'Software Installation', 'Software Installation'
-        GENERAL = 'General Question', 'General Question'
-        VP_RESET = 'VP Password Reset', 'VP Password Reset'
-        VP_PERM = 'VP Permissions', 'VP Permissions'
-    
-    class Subtype(models.TextChoices):
-        ERROR = 'Error / Not Working', 'Error / Not Working'
-        INQUIRY = 'General Inquiry', 'General Inquiry'
-        INSTALL = 'Install / Setup', 'Install / Setup'
-        PERMISSIONS = 'Permissions', 'Permissions'
-        REQUEST = 'Request / Change', 'Request / Change'
-    
-    class Item(models.TextChoices):
-        AWAITING_3RD_PARTY = 'Awaiting 3rd Party', 'Awaiting 3rd Party'
-        AWAITING_PART = 'Awaiting Part', 'Awaiting Part'
-        INVESTIGATING = 'Investigating', 'Investigating'
-        MONITORING = 'Monitoring', 'Monitoring'
-        WORKING = 'Working', 'Working'
-        
     class Source(models.TextChoices):
         PORTAL = 'Portal', 'Portal'
         EMAIL = 'Email', 'Email'
         PHONE = 'Phone', 'Phone'
+        WALK_UP = 'Walk-Up', 'Walk-Up'
 
     class Priority(models.TextChoices):
         P1 = 'Priority 1 - Critical', 'Priority 1 - Critical'
         P2 = 'Priority 2 - High', 'Priority 2 - High'
         P3 = 'Priority 3 - Medium', 'Priority 3 - Medium'
         P4 = 'Priority 4 - Low', 'Priority 4 - Low'
-        STANDARD = 'Standard', 'Standard'
 
     class Status(models.TextChoices):
         NEW = 'New', 'New'
@@ -79,43 +134,53 @@ class Ticket(models.Model):
     # --- Core Data ---
     title = models.CharField(max_length=200)
     description = models.TextField()
+    form_data = models.JSONField(default=dict, blank=True, null=True)
     
     # People
     submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submitted_tickets')
     technician = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
     
-    # Categorization (ConnectWise Aligned)
-    board = models.CharField(max_length=20, choices=TicketBoard.choices, default=TicketBoard.TIER_1)
-    ticket_type = models.CharField(max_length=50, choices=TicketType.choices, default=TicketType.SERVICE_REQUEST)
-    subtype = models.CharField(max_length=50, choices=Subtype.choices, blank=True, null=True)
-    item = models.CharField(max_length=50, choices=Item.choices, blank=True, null=True)
+    # Contact Snapshot (Stored at time of creation for history)
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=50, blank=True)
+    contact_department = models.CharField(max_length=100, blank=True)
+    contact_location = models.CharField(max_length=100, blank=True) # Differentiated from 'location' field below
+
+    # Categorization (The Hierarchy)
+    board = models.ForeignKey(
+        ServiceBoard, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='tickets'
+    )
+    
+    # New Taxonomy Foreign Keys
+    type = models.ForeignKey(ServiceType, on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
+    subtype = models.ForeignKey(ServiceSubtype, on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
+    item = models.ForeignKey(ServiceItem, on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
+    
+    # Legacy fields (Renamed to allow migration, eventually deprecate)
+    legacy_ticket_type = models.CharField(max_length=100, blank=True, null=True)
+    legacy_subtype = models.CharField(max_length=100, blank=True, null=True)
+    legacy_item = models.CharField(max_length=100, blank=True, null=True)
+    
     source = models.CharField(max_length=20, choices=Source.choices, default=Source.PORTAL)
     priority = models.CharField(max_length=30, choices=Priority.choices, default=Priority.P3)
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.NEW)
 
     # --- Form-Specific Fields (Sparse Table Pattern) ---
-    # Application Issue Fields
     application_name = models.CharField(max_length=100, blank=True, help_text="Name of the affected application")
     computer_name = models.CharField(max_length=100, blank=True, help_text="Computer name or asset tag")
-    
-    # Hardware Issue Fields
     device_type = models.CharField(max_length=100, blank=True, help_text="Type of hardware device")
     asset_tag = models.CharField(max_length=50, blank=True, help_text="Asset tag or serial number")
     location = models.CharField(max_length=100, blank=True, help_text="Physical location of device")
-    
-    # Printer Issue Fields
     printer_location = models.CharField(max_length=100, blank=True, help_text="Printer/Scanner location")
-    
-    # Email/Mailbox Fields
     email_address = models.EmailField(blank=True, help_text="Affected email address or mailbox")
     mailbox_name = models.CharField(max_length=100, blank=True, help_text="Shared mailbox or distribution list name")
-    
-    # Software Install Fields
     software_name = models.CharField(max_length=100, blank=True, help_text="Name of software to install")
     justification = models.TextField(blank=True, help_text="Business justification for software")
     license_info = models.TextField(blank=True, help_text="License information if known")
-    
-    # VP Reset/Permissions Fields
     deltek_username = models.CharField(max_length=100, blank=True, help_text="Deltek/VP username")
     project_name = models.CharField(max_length=100, blank=True, help_text="Affected project name/number")
     requested_access = models.CharField(max_length=200, blank=True, help_text="Type of access requested")
@@ -158,6 +223,16 @@ class Ticket(models.Model):
     def __str__(self):
         return f"#{self.id} - {self.title}"
 
+    def save(self, *args, **kwargs):
+        # Fallback Logic: If no board is set, try to default to Tier 1
+        if not self.board:
+            # Fallback: Tier 1 (if it exists)
+            t1 = ServiceBoard.objects.filter(name__icontains='Tier 1').first()
+            if t1:
+                self.board = t1
+                    
+        super().save(*args, **kwargs)
+
 
 class Comment(models.Model):
     """
@@ -179,8 +254,6 @@ class Comment(models.Model):
 class UserProfile(models.Model):
     """
     Extended user profile for PRIME Service Portal.
-    Stores additional metadata about users (avatars, titles, contact info).
-    Aligned with ConnectWise Manage contact schema.
     """
     
     # --- Department Choices (ConnectWise Aligned) ---
@@ -253,9 +326,8 @@ class UserProfile(models.Model):
     def save(self, *args, **kwargs):
         """
         Override save to auto-resize avatars to max 300x300 pixels.
-        Maintains aspect ratio and prevents large file uploads.
         """
-        super().save(*args, **kwargs)  # Save first to get the file path
+        super().save(*args, **kwargs)
 
         if self.avatar:
             try:
@@ -274,18 +346,12 @@ class UserProfile(models.Model):
 # --- SIGNALS: Auto-create UserProfile when User is created ---
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    """
-    Signal handler: Automatically create a UserProfile when a new User is created.
-    """
     if created:
         UserProfile.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    """
-    Signal handler: Automatically save the UserProfile when the User is saved.
-    """
     try:
         instance.profile.save()
     except UserProfile.DoesNotExist:
@@ -295,7 +361,6 @@ def save_user_profile(sender, instance, **kwargs):
 class CSATSurvey(models.Model):
     """
     Customer Satisfaction Survey model.
-    One-to-one relationship with Ticket for post-resolution feedback.
     """
     
     ticket = models.OneToOneField(
@@ -344,7 +409,6 @@ class CSATSurvey(models.Model):
 class GlobalSettings(models.Model):
     """
     Singleton model for global site configuration.
-    Only one instance should ever exist (pk=1).
     """
     
     # Feature Toggles
@@ -428,17 +492,13 @@ class GlobalSettings(models.Model):
         return "Site Configuration"
 
     def save(self, *args, **kwargs):
-        """
-        Enforce singleton pattern: Always save to pk=1.
-        """
+        """Enforce singleton pattern: Always save to pk=1."""
         self.pk = 1
         super().save(*args, **kwargs)
 
     @classmethod
     def load(cls):
-        """
-        Load the singleton instance, creating it if it doesn't exist.
-        """
+        """Load the singleton instance, creating it if it doesn't exist."""
         obj, created = cls.objects.get_or_create(pk=1)
         return obj
 
@@ -446,7 +506,6 @@ class GlobalSettings(models.Model):
 class Notification(models.Model):
     """
     User notification model.
-    Stores notifications for users (e.g., ticket updates, new comments).
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=255)
@@ -459,4 +518,4 @@ class Notification(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.username} - {self.title}"
+        return f"Notification for {self.user.username}: {self.title}"

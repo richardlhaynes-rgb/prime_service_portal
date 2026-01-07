@@ -5,14 +5,19 @@ from django.db.models import Q, Count, Avg, F
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 import re
+import sys
 
 from .forms import (
     ApplicationIssueForm, EmailMailboxForm, HardwareIssueForm, PrinterScannerForm,
     SoftwareInstallForm, GeneralQuestionForm, VPResetForm, VPPermissionsForm,
-    TicketReplyForm, KBArticleForm, GlobalSettingsForm, CustomUserCreationForm, CustomUserChangeForm
+    TicketReplyForm, KBArticleForm, GlobalSettingsForm, CustomUserCreationForm, CustomUserChangeForm, AgentTicketForm
 )
 
-from .models import Ticket, Comment, GlobalSettings, Notification, UserProfile, CSATSurvey
+from .models import (
+    Ticket, Comment, GlobalSettings, Notification, UserProfile, 
+    CSATSurvey, ServiceBoard, ServiceType, ServiceSubtype, ServiceItem
+)
+
 from services import ticket_service
 from datetime import datetime, timedelta
 import random
@@ -24,10 +29,14 @@ from django.db import transaction
 import pytz
 from django.utils.dateparse import parse_datetime
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from services.ticket_service import log_system_event
 import os
+
+from inventory.models import HardwareAsset
+from knowledge_base.models import Article
+from django.core.paginator import Paginator
 
 # ============================================================================
 # USER DASHBOARD
@@ -35,14 +44,8 @@ import os
 
 @login_required
 def dashboard(request):
-    """
-    User Dashboard - Shows the logged-in user's tickets and stats.
-    Uses real database data from the Ticket model.
-    """
-    # Fetch all tickets for the current user
     user_tickets = Ticket.objects.filter(submitter=request.user).order_by('-created_at')
     
-    # Calculate ticket stats
     open_statuses = ['New', 'User Commented', 'Work In Progress', 'Reopened', 'Assigned', 'In Progress', 'Awaiting User Reply', 'On Hold']
     resolved_statuses = ['Resolved', 'Cancelled']
     
@@ -50,15 +53,13 @@ def dashboard(request):
     resolved_tickets = user_tickets.filter(status__in=resolved_statuses).count()
     total_tickets = user_tickets.count()
     
-    # Find a resolved ticket that needs feedback (no CSAT survey submitted)
     feedback_ticket = Ticket.objects.filter(
         submitter=request.user,
         status='Resolved'
     ).filter(
-        survey__isnull=True  # No CSATSurvey linked
+        survey__isnull=True
     ).order_by('-updated_at').first()
     
-    # Handle sorting
     sort_param = request.GET.get('sort', '-created_at')
     valid_sort_fields = ['id', '-id', 'title', '-title', 'ticket_type', '-ticket_type', 
                          'priority', '-priority', 'status', '-status', 'created_at', '-created_at']
@@ -78,10 +79,6 @@ def dashboard(request):
 
 @login_required
 def dashboard_stats(request):
-    """
-    HTMX Endpoint: Returns only the dashboard stats cards (Open, Resolved, Total).
-    Called via polling every 30s.
-    """
     user_tickets = Ticket.objects.filter(submitter=request.user)
     
     open_statuses = ['New', 'User Commented', 'Work In Progress', 'Reopened', 'Assigned', 'In Progress', 'Awaiting User Reply', 'On Hold']
@@ -115,7 +112,7 @@ def service_catalog(request):
             recommended_articles = random.sample(articles, k=min(3, len(articles)))
         elif strategy == 'views':
             recommended_articles = sorted(articles, key=lambda a: a.get('views', 0), reverse=True)[:3]
-        else:  # 'updated' or fallback
+        else:
             recommended_articles = sorted(articles, key=lambda a: a.get('updated_at', ''), reverse=True)[:3]
 
     return render(request, 'service_desk/service_catalog.html', {
@@ -124,7 +121,7 @@ def service_catalog(request):
 
 
 # ============================================================================
-# TICKET SUBMISSION FORMS (8 Service Cards)
+# TICKET SUBMISSION FORMS
 # ============================================================================
 
 @login_required
@@ -145,7 +142,7 @@ def report_application_issue(request):
                 submitter=request.user,
                 priority=Ticket.Priority.P3,
                 status=Ticket.Status.NEW,
-                attachment=request.FILES.get('screenshot'),  # <-- Added attachment
+                attachment=request.FILES.get('screenshot'),
             )
             messages.success(request, f'Ticket Submitted: {title}')
             return redirect('dashboard')
@@ -195,7 +192,7 @@ def report_hardware_issue(request):
                 submitter=request.user,
                 priority=Ticket.Priority.P2 if data.get('is_urgent') else Ticket.Priority.P3,
                 status=Ticket.Status.NEW,
-                attachment=request.FILES.get('screenshot'),  # <-- Added attachment (field name is 'screenshot' per form)
+                attachment=request.FILES.get('screenshot'),
             )
             messages.success(request, f'Ticket Submitted: {title}')
             return redirect('dashboard')
@@ -266,7 +263,7 @@ def report_general_question(request):
                 submitter=request.user,
                 priority=Ticket.Priority.P4,
                 status=Ticket.Status.NEW,
-                attachment=request.FILES.get('screenshot'),  # <-- Added attachment (field name is 'screenshot' per form)
+                attachment=request.FILES.get('screenshot'),
             )
             messages.success(request, f'Ticket Submitted: {title}')
             return redirect('dashboard')
@@ -328,25 +325,77 @@ def report_vp_permissions(request):
 
 @login_required
 def ticket_detail(request, ticket_id):
-    """
-    Ticket Detail View - Shows full ticket information and activity log.
-    Handles comments, priority updates, and ticket closure.
-    Uses real database data exclusively.
-    """
     ticket = get_object_or_404(Ticket, id=ticket_id)
-    comments = ticket.comments.all().order_by('created_at')
-
-    # Add this logic before defining the context dictionary
-    if ticket.attachment:
-        ticket.filename = os.path.basename(ticket.attachment.name)
     
     if request.method == 'POST':
         form = TicketReplyForm(request.POST)
         changes_made = False
         action_summary = []
         
+        if request.POST.get('reopen_ticket'):
+            ticket.status = 'Reopened'
+            ticket.closed_at = None
+            action_summary.append('ticket reopened')
+            changes_made = True
+            Comment.objects.create(
+                ticket=ticket,
+                author=request.user,
+                text=f"Ticket reopened by {request.user.get_full_name() or request.user.username}.",
+                is_internal=True
+            )
+
+        elif request.POST.get('close_ticket'):
+            ticket.status = 'Resolved'
+            ticket.closed_at = timezone.now()
+            action_summary.append('ticket marked as Resolved')
+            changes_made = True
+            
+            if not ticket.technician:
+                ticket.technician = request.user
+                action_summary.append(f'assigned to {request.user.get_full_name()}')
+            
+            Comment.objects.create(
+                ticket=ticket,
+                author=request.user,
+                text=f"Ticket closed by {request.user.get_full_name() or request.user.username}.",
+                is_internal=True
+            )
+
+        new_status = request.POST.get('status')
+        if new_status and new_status != ticket.status and not (request.POST.get('close_ticket') or request.POST.get('reopen_ticket')):
+            ticket.status = new_status
+            action_summary.append(f"status updated to {new_status}")
+            changes_made = True
+            if new_status in ['Resolved', 'Closed', 'Cancelled']:
+                ticket.closed_at = timezone.now()
+            elif new_status in ['New', 'Reopened', 'In Progress']:
+                ticket.closed_at = None
+
+        new_priority = request.POST.get('priority')
+        if new_priority and new_priority != ticket.priority:
+            ticket.priority = new_priority
+            action_summary.append(f"priority updated to {new_priority}")
+            changes_made = True
+
+        new_tech_id = request.POST.get('technician')
+        if new_tech_id is not None:
+            if new_tech_id == "":
+                if ticket.technician:
+                    ticket.technician = None
+                    action_summary.append("technician unassigned")
+                    changes_made = True
+            elif str(ticket.technician_id) != new_tech_id:
+                ticket.technician_id = int(new_tech_id)
+                action_summary.append("technician updated")
+                changes_made = True
+
+        new_board_id = request.POST.get('board')
+        if new_board_id and str(ticket.board_id) != new_board_id:
+            ticket.board_id = int(new_board_id)
+            action_summary.append("board moved")
+            changes_made = True
+
         if form.is_valid():
-            # 1. Handle Comment
             comment_text = form.cleaned_data.get('comment', '').strip()
             if comment_text:
                 Comment.objects.create(
@@ -360,65 +409,40 @@ def ticket_detail(request, ticket_id):
                 
                 if ticket.status == 'Awaiting User Reply':
                     ticket.status = 'User Commented'
-            
-            # 2. Handle Priority Update
-            new_priority = request.POST.get('priority')
-            if new_priority and new_priority != ticket.priority:
-                old_priority = ticket.priority
-                ticket.priority = new_priority
-                action_summary.append(f'priority changed from "{old_priority}" to "{new_priority}"')
-                changes_made = True
-            
-            # 3. Handle Ticket Closure
-            close_ticket = request.POST.get('close_ticket')
-            if close_ticket == 'on':
-                ticket.status = 'Resolved'
-                ticket.closed_at = timezone.now() # IMPORTANT: Set closed timestamp
-                action_summary.append('ticket marked as Resolved')
-                changes_made = True
-                
-                if not ticket.technician:
-                    ticket.technician = request.user
-                    action_summary.append(f'assigned to {request.user.get_full_name() or request.user.username}')
-                
-                Comment.objects.create(
-                    ticket=ticket,
-                    author=request.user,
-                    text=f"Ticket closed by {request.user.get_full_name() or request.user.username}.",
-                    is_internal=True
-                )
-            
-            if changes_made:
-                ticket.save()
-                message = f"Ticket updated: {', '.join(action_summary)}."
-                # Only show flash message for standard requests
-                if not request.headers.get('HX-Request'):
-                    messages.success(request, message)
-            else:
-                if not request.headers.get('HX-Request'):
-                    messages.info(request, "No changes were made to the ticket.")
-            
-            # HTMX Response: Return only the updated activity log partial
-            if request.headers.get('HX-Request'):
-                updated_comments = ticket.comments.all().order_by('created_at')
-                return render(request, 'service_desk/partials/ticket_activities.html', {
-                    'comments': updated_comments, 
-                    'request': request
-                })
+                    ticket.save()
 
-            return redirect('ticket_detail', ticket_id=ticket_id)
-        else:
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = TicketReplyForm(initial={'priority': ticket.priority})
+        if changes_made:
+            ticket.save()
+            message = f"Ticket updated: {', '.join(action_summary)}."
+            if not request.headers.get('HX-Request'):
+                messages.success(request, message)
+        
+        if request.headers.get('HX-Request'):
+            updated_comments = ticket.comments.all().order_by('created_at')
+            return render(request, 'service_desk/partials/ticket_activities.html', {
+                'comments': updated_comments, 
+                'request': request
+            })
+
+        return redirect('ticket_detail', ticket_id=ticket_id)
+
+    comments = ticket.comments.all().order_by('created_at')
+    form = TicketReplyForm(initial={'priority': ticket.priority})
     
-    can_reopen = ticket.status in ['Resolved', 'Cancelled']
-    
+    if ticket.attachment:
+        ticket.filename = os.path.basename(ticket.attachment.name)
+
+    technicians = User.objects.filter(groups__name='Service Desk') 
+    boards = ServiceBoard.objects.filter(is_active=True)
+    status_choices = Ticket.Status.choices
+
     context = {
         'ticket': ticket,
         'comments': comments,
         'form': form,
-        'can_reopen': can_reopen,
+        'technicians': technicians,
+        'boards': boards,
+        'status_choices': status_choices,
         'is_demo_mode': False,
     }
     
@@ -442,7 +466,6 @@ def ticket_survey(request, ticket_id):
             messages.error(request, 'Please select a valid rating (1-5 stars).')
             return redirect('ticket_survey', ticket_id=ticket_id)
         
-        # Use update_or_create from the specific related model or just create
         CSATSurvey.objects.update_or_create(
             ticket=ticket,
             defaults={
@@ -478,19 +501,9 @@ def management_hub(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def manager_dashboard(request):
-    """
-    Manager Analytics Dashboard.
-    """
-    from django.db.models import Count, Avg, F
-    from django.contrib.auth.models import Group
-    from datetime import datetime, timedelta
-    from django.utils import timezone
-    
-    # --- 1. Date Range Handling (Presets + Custom) ---
     date_range = request.GET.get('range', '7d')
     now = timezone.now()
     
-    # Defaults
     start_date = now - timedelta(days=7)
     end_date = now 
 
@@ -517,11 +530,9 @@ def manager_dashboard(request):
         except ValueError:
             pass
 
-    # --- 2. Query Tickets in Range ---
     tickets = Ticket.objects.filter(created_at__gte=start_date, created_at__lte=end_date)
     total_tickets = tickets.count()
 
-    # --- 3. Metrics Calculation ---
     resolved = tickets.filter(status__in=['Resolved', 'Closed'], closed_at__isnull=False)
     
     if resolved.exists():
@@ -530,7 +541,6 @@ def manager_dashboard(request):
     else:
         avg_resolution_time = "0 hours"
         
-    # First Response
     responded = tickets.filter(first_response_at__isnull=False)
     if responded.exists():
         avg = responded.aggregate(t=Avg(F('first_response_at') - F('created_at')))['t']
@@ -540,7 +550,6 @@ def manager_dashboard(request):
         
     priority_escalations = tickets.filter(priority__icontains='Critical').exclude(status__in=['Resolved', 'Closed']).count()
     
-    # SLA Breaches
     sla_breaches_qs = tickets.filter(priority__icontains='Critical').exclude(status__in=['Resolved', 'Closed'])
     sla_breaches = []
     for t in sla_breaches_qs[:5]:
@@ -552,7 +561,6 @@ def manager_dashboard(request):
             'technician': t.technician.get_full_name() if t.technician else 'Unassigned'
         })
 
-    # --- 4. Trend Data (Dynamic Labels) ---
     days_in_range = (end_date - start_date).days + 1
     trend_labels = []
     trend_data = []
@@ -561,25 +569,21 @@ def manager_dashboard(request):
         current_day_start = start_date + timedelta(days=i)
         current_day_end = current_day_start + timedelta(days=1)
         
-        # Stop if we hit the future
         if current_day_start > now:
             break
             
-        # Smart Labeling
         if days_in_range <= 2:
-            label = current_day_start.strftime('%b %d')  # Today/Yesterday
+            label = current_day_start.strftime('%b %d') 
         elif days_in_range <= 10:
-            label = current_day_start.strftime('%a')  # Mon, Tue
+            label = current_day_start.strftime('%a')
         else:
-            label = current_day_start.strftime('%b %d')  # Oct 24
+            label = current_day_start.strftime('%b %d')
             
         trend_labels.append(label)
         
-        # Count tickets for this specific slice
         count = Ticket.objects.filter(created_at__gte=current_day_start, created_at__lt=current_day_end).count()
         trend_data.append(count)
 
-    # --- 5. Roster & Charts ---
     roster = []
     res_labels = []
     res_data = []
@@ -589,7 +593,6 @@ def manager_dashboard(request):
         for member in service_desk.user_set.all():
             open_count = Ticket.objects.filter(technician=member).exclude(status__in=['Resolved', 'Closed']).count()
             
-            # Avatar Logic
             if hasattr(member, 'profile') and member.profile.prefer_initials:
                 avatar = f"https://ui-avatars.com/api/?name={member.first_name}+{member.last_name}&background=random&color=fff"
             elif hasattr(member, 'profile') and member.profile.avatar:
@@ -611,16 +614,6 @@ def manager_dashboard(request):
                 res_labels.append(member.first_name)
                 res_data.append(round(avg.total_seconds()/3600, 1))
 
-    # Auto-Heal Bot
-    roster.append({
-        'name': 'Auto-Heal System',
-        'role': 'Automation Bot',
-        'avatar': 'https://ui-avatars.com/api/?name=AH&background=1F2937&color=fff',
-        'stats': {'open_tickets': 0},
-        'id': 'bot'
-    })
-
-    # Simple Charts
     status_counts = tickets.values('status').annotate(c=Count('id'))
     vol_data = {'Open': 0, 'In Progress': 0, 'Resolved': 0, 'Closed': 0}
     for i in status_counts:
@@ -634,7 +627,7 @@ def manager_dashboard(request):
         else:
             vol_data['In Progress'] += i['c']
 
-    type_counts = tickets.values('ticket_type').annotate(c=Count('id')).order_by('-c')[:5]
+    type_counts = tickets.values('type__name').annotate(c=Count('id')).order_by('-c')[:5]
 
     analytics = {
         'total_tickets': total_tickets,
@@ -643,7 +636,10 @@ def manager_dashboard(request):
         'priority_escalations': priority_escalations,
         'sla_breaches': sla_breaches,
         'volume_by_status': {'labels': list(vol_data.keys()), 'data': list(vol_data.values())},
-        'tickets_by_type': {'labels': [x['ticket_type'] for x in type_counts], 'data': [x['c'] for x in type_counts]},
+        'tickets_by_type': {
+            'labels': [x['type__name'] or 'Uncategorized' for x in type_counts], 
+            'data': [x['c'] for x in type_counts]
+        },
         'trend_data': {'labels': trend_labels, 'data': trend_data},
         'avg_resolution_time_by_member': {'labels': res_labels, 'data': res_data},
         'roster': roster
@@ -671,9 +667,9 @@ def admin_settings(request):
         for i in range(20):
             name = request.POST.get(f'vendor_name_{i}')
             status = request.POST.get(f'vendor_status_{i}')
-            url = request.POST.get(f'vendor_url_{i}', '')  # Capture the URL
+            url = request.POST.get(f'vendor_url_{i}', '') 
             if name:
-                vendor_status.append({'name': name, 'status': status, 'url': url})  # Include the URL
+                vendor_status.append({'name': name, 'status': status, 'url': url})
 
         new_health_data = {
             'announcement': {
@@ -697,50 +693,17 @@ def admin_settings(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def technician_profile(request, name):
-    """
-    Displays a detailed profile for a specific technician.
-    """
-    from django.db.models import Count, Avg, F
-    
-    # 1. Handle the "Auto-Heal Bot" Edge Case
-    if name == 'auto_heal_system' or name == 'bot':
-        bot_context = {
-            'id': 'auto_heal_system',
-            'name': 'Auto-Heal System',
-            'role': 'Automation Bot',
-            'title': 'Automation Bot',
-            'company': 'PRIME AE Group, Inc.',
-            'manager_name': 'System',
-            'location': 'Data Center',
-            'email': 'automation@primeeng.com',
-            'phone': 'N/A',
-            'avatar': 'https://ui-avatars.com/api/?name=Auto+Heal&background=1F2937&color=fff',
-            'stats': {
-                'open_tickets': 0,
-                'resolved_this_month': Ticket.objects.filter(technician__isnull=True, status='Resolved').count(),
-                'avg_response': 'Instant',
-                'csat_score': 'N/A'
-            },
-            'recent_activity': ['Automated Password Reset', 'Self-Healing Script', 'Auto-Provisioning'],
-            'feedback': []
-        }
-        return render(request, 'service_desk/technician_profile.html', {'technician': bot_context})
-
-    # 2. Look up the Real User (by ID)
     try:
         user = User.objects.get(pk=name)
     except (ValueError, User.DoesNotExist):
-        # Fallback for legacy IDs
         tech = ticket_service.get_technician_details(name)
         if tech:
             return render(request, 'service_desk/technician_profile.html', {'technician': tech})
         messages.error(request, "Technician not found.")
         return redirect('manager_dashboard')
 
-    # 3. Calculate Real Stats
     resolved_qs = Ticket.objects.filter(technician=user, status__in=['Resolved', 'Closed'])
     
-    # Avg Resolution Calculation
     avg_res_str = "N/A"
     if resolved_qs.filter(closed_at__isnull=False).exists():
         avg_duration = resolved_qs.filter(closed_at__isnull=False).aggregate(t=Avg(F('closed_at') - F('created_at')))['t']
@@ -751,7 +714,9 @@ def technician_profile(request, name):
             else:
                 avg_res_str = f"{hours:.1f} hours"
 
-    # 4. Avatar Logic
+    csat_avg = CSATSurvey.objects.filter(ticket__technician=user).aggregate(avg=Avg('rating'))['avg']
+    csat_score_str = f"{csat_avg:.1f}/5" if csat_avg else "N/A"
+
     if hasattr(user, 'profile') and user.profile.prefer_initials:
         avatar_url = f"https://ui-avatars.com/api/?name={user.first_name}+{user.last_name}&background=0D8ABC&color=fff"
     elif hasattr(user, 'profile') and user.profile.avatar:
@@ -759,7 +724,6 @@ def technician_profile(request, name):
     else:
         avatar_url = f"https://ui-avatars.com/api/?name={user.first_name}+{user.last_name}&background=0D8ABC&color=fff"
 
-    # 5. Profile Data Construction
     profile = getattr(user, 'profile', None)
     
     tech_data = {
@@ -777,7 +741,7 @@ def technician_profile(request, name):
             'open_tickets': Ticket.objects.filter(technician=user).exclude(status__in=['Resolved', 'Closed', 'Cancelled']).count(),
             'resolved_this_month': resolved_qs.count(),
             'avg_response': avg_res_str,
-            'csat_score': '4.8/5'
+            'csat_score': csat_score_str
         },
         'recent_activity': list(Ticket.objects.filter(technician=user).order_by('-updated_at')[:5].values_list('title', flat=True)),
         'feedback': [] 
@@ -811,7 +775,6 @@ def kb_home(request):
 
     recent_articles = articles[:10]
     
-    # HTMX
     if request.headers.get('HX-Request'):
         return render(request, 'knowledge_base/partials/kb_results.html', {
             'recent_articles': recent_articles
@@ -878,7 +841,6 @@ def kb_manager(request):
     else:
         articles = articles.order_by('-updated_at')
 
-    # HTMX
     if request.headers.get('HX-Request') == 'true':
         return render(request, 'knowledge_base/partials/kb_table.html', {
             'articles': articles,
@@ -1120,9 +1082,6 @@ def system_logs(request):
 
 @login_required
 def my_profile(request):
-    """
-    Allows users to edit their own profile.
-    """
     user = request.user
     
     if request.method == 'POST':
@@ -1164,60 +1123,146 @@ def my_profile(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def site_configuration(request):
-    settings_obj = GlobalSettings.objects.first()
+    config = GlobalSettings.load()
+
+    form_class_options = [
+        ('GeneralQuestionForm', 'General Question (Default)'),
+        ('HardwareIssueForm', 'Hardware Issue'),
+        ('PrinterScannerForm', 'Printer & Scanner Issue'),
+        ('EmailMailboxForm', 'Email & Mailbox Help'),
+        ('ApplicationIssueForm', 'Application Problem'),
+        ('SoftwareInstallForm', 'Software Installation'),
+        ('VPResetForm', 'Deltek VP Password Reset'),
+        ('VPPermissionsForm', 'Deltek VP Permissions'),
+    ]
+    
+    service_boards = ServiceBoard.objects.prefetch_related('restricted_groups', 'allowed_types').all().order_by('sort_order', 'name')
+    service_types = ServiceType.objects.prefetch_related('boards', 'subtypes').all().order_by('name')
+    service_subtypes = ServiceSubtype.objects.prefetch_related('parent_types', 'items').all().order_by('name')
+    service_items = ServiceItem.objects.prefetch_related('parent_subtypes').all().order_by('name')
+    
+    categories = KBCategory.objects.prefetch_related('subcategories').all().order_by('name')
+    
+    all_groups = Group.objects.all().order_by('name')
+    
+    form = GlobalSettingsForm(instance=config)
 
     if request.method == 'POST':
-        if 'announcement_title' in request.POST:
-            print("--- DEBUG: ENTERING HEALTH SAVE BLOCK ---")
+        active_tab = request.POST.get('active_tab', 'general')
+        action = request.POST.get('action')
+
+        if action == 'create_board':
+            name = request.POST.get('name')
+            if name:
+                ServiceBoard.objects.get_or_create(name=name, defaults={'sort_order': 99})
+                messages.success(request, f"Board '{name}' created.")
+            return redirect(f"{request.path}?tab=boards")
             
-            settings_obj.announcement_title = request.POST.get('announcement_title')
-            settings_obj.announcement_message = request.POST.get('announcement_message')
-            settings_obj.announcement_type = request.POST.get('announcement_type') or 'info'
-            settings_obj.announcement_start = request.POST.get('start_time') or None
-            settings_obj.announcement_end = request.POST.get('end_time') or None
+        elif action == 'update_board':
+            board = get_object_or_404(ServiceBoard, id=request.POST.get('board_id'))
+            board.name = request.POST.get('name')
+            board.description = request.POST.get('description')
+            board.restricted_groups.set(request.POST.getlist('groups'))
+            board.save()
+            messages.success(request, f"Board '{board.name}' updated.")
+            return redirect(f"{request.path}?tab=boards")
 
-            vendors = []
-            for key in request.POST:
-                if key.startswith('vendor_name_'):
-                    index = key.split('_')[-1]
-                    name = request.POST.get(f'vendor_name_{index}')
-                    status = request.POST.get(f'vendor_status_{index}')
-                    url = request.POST.get(f'vendor_url_{index}', '') 
-                    if name and status:
-                        vendors.append({'name': name, 'status': status, 'url': url})
-            settings_obj.vendor_status = vendors
+        elif action == 'delete_board':
+            board = get_object_or_404(ServiceBoard, id=request.POST.get('board_id'))
+            board.delete()
+            messages.success(request, "Board deleted.")
+            return redirect(f"{request.path}?tab=boards")
 
-            settings_obj.use_mock_data = False
-            settings_obj.save()
+        elif action == 'create_type':
+            name = request.POST.get('name')
+            form_class = request.POST.get('form_class', 'GeneralQuestionForm')
+            if name:
+                new_type = ServiceType.objects.create(name=name, form_class_name=form_class)
+                board_ids = request.POST.getlist('assigned_boards')
+                new_type.boards.set(board_ids)
+                messages.success(request, f"Type '{name}' created.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=types")
 
-            print("--- DEBUG: SAVED HEALTH DATA ---")
-            return redirect(f"{request.path}?tab=health")
+        elif action == 'update_type':
+            obj = get_object_or_404(ServiceType, id=request.POST.get('type_id'))
+            obj.name = request.POST.get('name')
+            obj.form_class_name = request.POST.get('form_class')
+            obj.boards.set(request.POST.getlist('assigned_boards'))
+            obj.save()
+            messages.success(request, f"Type '{obj.name}' updated.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=types")
 
-        elif 'maintenance_mode' in request.POST or 'support_phone' in request.POST:
-            print("--- DEBUG: ENTERING GENERAL SETTINGS SAVE BLOCK ---")
-            
-            form = GlobalSettingsForm(request.POST, instance=settings_obj)
+        elif action == 'delete_type':
+            ServiceType.objects.filter(id=request.POST.get('type_id')).delete()
+            messages.success(request, "Type deleted.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=types")
+
+        elif action == 'create_subtype':
+            name = request.POST.get('name')
+            if name:
+                new_sub = ServiceSubtype.objects.create(name=name)
+                new_sub.parent_types.set(request.POST.getlist('parent_types'))
+                messages.success(request, f"Subtype '{name}' created.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=subtypes")
+
+        elif action == 'update_subtype':
+            obj = get_object_or_404(ServiceSubtype, id=request.POST.get('subtype_id'))
+            obj.name = request.POST.get('name')
+            obj.parent_types.set(request.POST.getlist('parent_types'))
+            obj.save()
+            messages.success(request, f"Subtype '{obj.name}' updated.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=subtypes")
+
+        elif action == 'delete_subtype':
+            ServiceSubtype.objects.filter(id=request.POST.get('subtype_id')).delete()
+            messages.success(request, "Subtype deleted.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=subtypes")
+
+        elif action == 'create_item':
+            name = request.POST.get('name')
+            if name:
+                new_item = ServiceItem.objects.create(name=name)
+                new_item.parent_subtypes.set(request.POST.getlist('parent_subtypes'))
+                messages.success(request, f"Item '{name}' created.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=items")
+
+        elif action == 'update_item':
+            obj = get_object_or_404(ServiceItem, id=request.POST.get('item_id'))
+            obj.name = request.POST.get('name')
+            obj.parent_subtypes.set(request.POST.getlist('parent_subtypes'))
+            obj.save()
+            messages.success(request, f"Item '{obj.name}' updated.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=items")
+
+        elif action == 'delete_item':
+            ServiceItem.objects.filter(id=request.POST.get('item_id')).delete()
+            messages.success(request, "Item deleted.")
+            return redirect(f"{request.path}?tab=service-taxonomy&subtab=items")
+
+        elif request.POST.get('save_settings'):
+            form = GlobalSettingsForm(request.POST, instance=config)
             if form.is_valid():
                 form.save()
-                print("--- DEBUG: SAVED GENERAL SETTINGS ---")
-                messages.success(request, '✅ Site configuration updated successfully!')
-            else:
-                print("--- DEBUG: GENERAL SETTINGS FORM INVALID ---")
-                messages.error(request, '❌ Failed to save general settings. Please check the form.')
+            messages.success(request, "Settings updated.")
+            return redirect('site_configuration')
 
-            return redirect(request.path)
+    active_tab = request.GET.get('tab', 'general')
+    active_subtab = request.GET.get('subtab', 'types')
 
-    else:
-        form = GlobalSettingsForm(instance=settings_obj)
-
-    categories = KBCategory.objects.prefetch_related('subcategories').order_by('sort_order', 'name')
-
-    return render(request, 'service_desk/site_configuration.html', {
+    context = {
+        'site_config': config,
         'form': form,
-        'config': settings_obj,
+        'active_tab': active_tab,
+        'active_subtab': active_subtab,
+        'service_boards': service_boards,
+        'service_types': service_types,
+        'service_subtypes': service_subtypes,
+        'service_items': service_items,
         'categories': categories,
-        'settings_obj': settings_obj,
-    })
+        'all_groups': all_groups,
+        'form_class_options': form_class_options,
+    }
+    return render(request, 'service_desk/site_configuration.html', context)
 
 
 # ============================================================================
@@ -1232,21 +1277,16 @@ def user_management(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def user_add(request):
-    # FIXED: Replaced CustomUserCreationForm with CustomUserChangeForm
     if request.method == 'POST':
         form = CustomUserChangeForm(request.POST, request.FILES)
         if form.is_valid():
-            # 1. Create user (commit=False)
             user = form.save(commit=False)
             
-            # 2. Handle password
             if not user.password:
                 user.set_unusable_password()
             
-            # 3. Save User
             user.save()
             
-            # 4. Handle Profile/Avatar
             avatar_file = request.FILES.get('avatar')
             
             profile, created = UserProfile.objects.get_or_create(user=user)
@@ -1256,7 +1296,6 @@ def user_add(request):
                 profile.prefer_initials = False
                 profile.save()
 
-            # 5. Log Action
             try:
                 LogEntry.objects.log_action(
                     user_id=request.user.id,
@@ -1274,7 +1313,6 @@ def user_add(request):
     else:
         form = CustomUserChangeForm()
     
-    # We pass 'is_new_user' to context
     return render(request, 'service_desk/user_profile.html', {
         'form': form, 
         'title': 'Add New User',
@@ -1286,7 +1324,6 @@ def user_add(request):
 def user_edit(request, user_id):
     target_user = get_object_or_404(User, pk=user_id)
 
-    # Handle User Deletion
     if request.method == 'POST' and 'delete_user' in request.POST:
         if target_user == request.user:
              messages.error(request, "You cannot delete your own account while logged in.")
@@ -1303,7 +1340,6 @@ def user_edit(request, user_id):
         messages.success(request, f"User '{username}' has been deleted.")
         return redirect('user_management')
 
-    # Handle Form Submission
     if request.method == 'POST':
         form = CustomUserChangeForm(request.POST, request.FILES, instance=target_user)
         if form.is_valid():
@@ -1422,9 +1458,6 @@ def kb_update_status(request, pk):
 
 @login_required
 def get_notifications(request):
-    """
-    HTMX Endpoint: Returns ONLY the red dot badge.
-    """
     unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
     return render(request, 'service_desk/partials/notification_badge.html', {
         'unread_count': unread_count
@@ -1432,23 +1465,14 @@ def get_notifications(request):
 
 @login_required
 def notification_list(request):
-    """
-    Returns the HTML list of unread notifications for the dropdown.
-    """
     notifications = Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')[:5]
     return render(request, 'service_desk/partials/notification_list.html', {
         'notifications': notifications
     })
 
-# RENAMED from clear_notifications
 @login_required
 def mark_all_read(request):
-    """
-    Marks all notifications as read and returns the empty list.
-    """
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
-    
-    # Return empty list UI
     return render(request, 'service_desk/partials/notification_list.html', {
         'notifications': []
     })
@@ -1471,9 +1495,6 @@ def mark_notification_read(request, notification_id):
         return redirect('dashboard')
         
     try:
-        # --- NEW LINK HANDLING ---
-        # If the link looks like /ticket/123/, we parse it and use Django's URL resolver
-        # to ensure it respects the /service-desk/ prefix or any other root config.
         if target and target.startswith('/ticket/'):
             import re
             match = re.search(r'/ticket/(\d+)/', target)
@@ -1536,28 +1557,75 @@ def delete_notifications(request):
     return redirect('notification_history')
 
 # ============================================================================
-# KANBAN BOARD
+# TECHNICIAN WORKSPACE
 # ============================================================================
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)
-def kanban_board(request):
-    tickets = Ticket.objects.all().order_by('-created_at')
+def workspace(request):
+    all_boards = ServiceBoard.objects.filter(is_active=True)
     
-    new_tickets = tickets.filter(status__in=['New', 'Reopened', 'User Commented', 'Awaiting User Reply', 'On Hold'])
-    progress_tickets = tickets.filter(status__in=['In Progress', 'Work In Progress', 'Assigned'])
-    done_tickets = tickets.filter(status__in=['Resolved', 'Closed', 'Cancelled'])[:20]
+    selected_board_ids = request.GET.get('boards', '').split(',')
+    selected_board_ids = [int(id) for id in selected_board_ids if id.isdigit()]
+    
+    if not selected_board_ids:
+        user_boards = all_boards.filter(members=request.user)
+        if user_boards.exists():
+            selected_board_ids = list(user_boards.values_list('id', flat=True))
+        else:
+            selected_board_ids = list(all_boards.values_list('id', flat=True))
 
-    return render(request, 'service_desk/kanban.html', {
-        'new_tickets': new_tickets,
-        'progress_tickets': progress_tickets,
-        'done_tickets': done_tickets
-    })
+    view_mode = request.GET.get('view', 'grid') 
+
+    sort_param = request.GET.get('sort', 'created_at') 
+    direction = request.GET.get('direction', 'desc')
+    
+    valid_sorts = {
+        'id': 'id',
+        'title': 'title',
+        'board__name': 'board__name',
+        'status': 'status',
+        'submitter__first_name': 'submitter__first_name',
+        'created_at': 'created_at',
+        'technician__first_name': 'technician__first_name',
+        'priority': 'priority'
+    }
+    
+    db_sort_field = valid_sorts.get(sort_param, 'created_at')
+    
+    if direction == 'desc':
+        db_sort_field = '-' + db_sort_field
+
+    grid_tickets = Ticket.objects.filter(
+        board__id__in=selected_board_ids
+    ).exclude(
+        status__in=['Resolved', 'Closed', 'Cancelled']
+    ).select_related('submitter', 'technician', 'board').order_by(db_sort_field)
+
+    my_tickets = Ticket.objects.filter(technician=request.user).exclude(
+        status__in=['Resolved', 'Closed', 'Cancelled']
+    ).order_by('-priority')
+    
+    kanban_new = my_tickets.filter(status__in=['New', 'Assigned', 'Reopened'])
+    kanban_progress = my_tickets.filter(status__in=['In Progress', 'Work In Progress', 'Waiting on User'])
+    kanban_done = Ticket.objects.filter(technician=request.user, status__in=['Resolved', 'Closed']).order_by('-updated_at')[:10]
+
+    context = {
+        'all_boards': all_boards,
+        'selected_board_ids': selected_board_ids,
+        'grid_tickets': grid_tickets,
+        'view_mode': view_mode,
+        'kanban_new': kanban_new,
+        'kanban_progress': kanban_progress,
+        'kanban_done': kanban_done,
+    }
+
+    return render(request, 'service_desk/workspace.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 @csrf_exempt
-def kanban_update(request):
+def workspace_update(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -1566,14 +1634,11 @@ def kanban_update(request):
             
             ticket = Ticket.objects.get(id=ticket_id)
             
-            # 1. Update Status
+            if ticket.technician != request.user and not request.user.is_superuser:
+                 return JsonResponse({'status': 'error', 'message': 'Not authorized'}, status=403)
+
             ticket.status = new_status
             
-            # 2. Auto-Assign Logic
-            if new_status == 'In Progress' and not ticket.technician:
-                ticket.technician = request.user
-                
-            # 3. Close Logic
             if new_status == 'Resolved' and not ticket.closed_at:
                 ticket.closed_at = timezone.now()
                 
@@ -1586,6 +1651,13 @@ def kanban_update(request):
             
     return JsonResponse({'status': 'invalid method'}, status=400)
 
+@user_passes_test(lambda u: u.is_superuser)
+def manage_service_boards(request):
+    boards = ServiceBoard.objects.all()
+    if request.method == 'POST':
+        pass
+    return render(request, 'service_desk/admin_service_boards.html', {'boards': boards})
+
 
 # ============================================================================
 # CSAT REPORT
@@ -1597,16 +1669,13 @@ def csat_report(request, tech_id=None, pk=None, id=None, *args, **kwargs):
     from django.utils import timezone
     from datetime import datetime, timedelta
     
-    # 1. SMART ID DETECTION (Fixes the "Global" header issue)
-    # Checks for 'tech_id', 'pk', 'id' in the arguments
     target_id = tech_id or pk or id or kwargs.get('tech_id') or kwargs.get('pk') or kwargs.get('id')
     
-    # 2. Date Range Logic
-    date_range = request.GET.get('range', '90d') # Widened default to 90d to catch seed data
+    date_range = request.GET.get('range', '90d')
     now = timezone.now()
     
-    start_date = now - timedelta(days=90) # Default
-    end_date = now + timedelta(days=1) # +1 day to cover future-dated seed data
+    start_date = now - timedelta(days=90)
+    end_date = now + timedelta(days=1)
 
     if date_range == 'today':
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -1624,38 +1693,33 @@ def csat_report(request, tech_id=None, pk=None, id=None, *args, **kwargs):
         except:
             pass
 
-    # 3. Query Data
     surveys = CSATSurvey.objects.filter(
         submitted_at__gte=start_date, 
         submitted_at__lte=end_date
     ).select_related('ticket', 'submitted_by', 'ticket__technician').order_by('-submitted_at')
 
-    # 4. Technician Filter (If an ID was found)
     technician = None
     if target_id:
         surveys = surveys.filter(ticket__technician__id=target_id)
         user_obj = get_object_or_404(User, pk=target_id)
         
-        # FIX: Create a dict with '.name' so the template renders it correctly
         technician = {
             'name': user_obj.get_full_name() or user_obj.username,
             'id': user_obj.id
         }
 
-    # 5. Format List
     feedback_list = []
     for s in surveys:
         user_obj = s.submitted_by
         avatar_url = None
         
-        # Pull Avatar if available
         if user_obj and hasattr(user_obj, 'profile') and user_obj.profile.avatar and not user_obj.profile.prefer_initials:
             avatar_url = user_obj.profile.avatar.url
             
         feedback_list.append({
             'user': user_obj.get_full_name() if user_obj else "Unknown",
             'avatar_url': avatar_url,
-            'ticket_id': s.ticket.id,          # <--- PASSED AS RAW INT
+            'ticket_id': s.ticket.id,
             'ticket': f"#{s.ticket.id}: {s.ticket.title}",
             'rating': s.rating,
             'comment': s.comment,
@@ -1666,4 +1730,268 @@ def csat_report(request, tech_id=None, pk=None, id=None, *args, **kwargs):
         'feedback': feedback_list,
         'current_range': date_range,
         'technician': technician
+    })
+
+# ============================================================================
+# TICKET QUICK VIEW (FOR KANBAN DRAWER)
+# ============================================================================
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def ticket_quick_view(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    comments = ticket.comments.all().order_by('-created_at')
+    
+    from inventory.models import HardwareAsset
+    user_assets = HardwareAsset.objects.filter(assigned_to=ticket.submitter)
+    
+    primary_asset = user_assets.filter(category__name__in=['Laptops', 'Desktops']).first()
+
+    return render(request, 'service_desk/partials/ticket_drawer.html', {
+        'ticket': ticket,
+        'comments': comments,
+        'asset': primary_asset
+    })
+
+
+# ============================================================================
+# AGENT TICKET CREATION (POWER FORM)
+# ============================================================================
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def agent_create_ticket(request):
+    if request.method == 'POST':
+        master_form = AgentTicketForm(request.POST)
+        specific_form = None
+        service_type = None
+        
+        if master_form.is_valid():
+            service_type = master_form.cleaned_data['type']
+            
+            if service_type and service_type.form_class_name:
+                try:
+                    form_class = getattr(sys.modules[__name__], service_type.form_class_name)
+                    specific_form = form_class(request.POST, request.FILES)
+                except AttributeError:
+                    specific_form = GeneralQuestionForm(request.POST, request.FILES)
+            else:
+                specific_form = GeneralQuestionForm(request.POST, request.FILES)
+
+            if specific_form.is_valid():
+                ticket = master_form.save(commit=False)
+                
+                ticket.submitter = master_form.cleaned_data['contact']
+                ticket.technician = request.user
+                
+                profile = getattr(ticket.submitter, 'profile', None)
+                if profile:
+                    ticket.contact_phone = profile.phone_office
+                    ticket.contact_email = ticket.submitter.email
+                    ticket.department = profile.department
+                    ticket.location = profile.location
+
+                specific_data = specific_form.cleaned_data
+                for field, value in specific_data.items():
+                    if hasattr(ticket, field):
+                        setattr(ticket, field, value)
+                
+                if 'title' not in specific_data:
+                    ticket.title = f"{service_type.name} - {specific_data.get('summary', 'No Summary')}"
+                
+                ticket.save()
+                messages.success(request, f"Ticket #{ticket.id} created successfully.")
+                return redirect('workspace')
+    
+    else:
+        master_form = AgentTicketForm()
+
+    return render(request, 'service_desk/agent_create_ticket.html', {
+        'master_form': master_form
+    })
+
+# --- HTMX HELPER ENDPOINTS ---
+
+@login_required
+def hx_load_types(request):
+    board_id = request.GET.get('board')
+    types = ServiceType.objects.filter(boards__id=board_id, is_active=True).order_by('name')
+    return render(request, 'service_desk/partials/options_list.html', {'options': types})
+
+@login_required
+def hx_load_subtypes(request):
+    type_id = request.GET.get('type')
+    subtypes = ServiceSubtype.objects.filter(parent_types__id=type_id, is_active=True).order_by('name')
+    return render(request, 'service_desk/partials/options_list.html', {'options': subtypes})
+
+@login_required
+def hx_load_items(request):
+    subtype_id = request.GET.get('subtype')
+    items = ServiceItem.objects.filter(parent_subtypes__id=subtype_id, is_active=True).order_by('name')
+    return render(request, 'service_desk/partials/options_list.html', {'options': items})
+
+@login_required
+def hx_load_ticket_form(request):
+    type_id = request.GET.get('type')
+    if not type_id:
+        return HttpResponse("") 
+
+    service_type = get_object_or_404(ServiceType, id=type_id)
+    form_class_name = service_type.form_class_name or 'GeneralQuestionForm'
+    
+    try:
+        form_class = getattr(sys.modules[__name__], form_class_name)
+        form = form_class()
+        return render(request, 'service_desk/forms/agent_form_partial.html', {'form': form})
+        
+    except AttributeError:
+        return HttpResponse(f"<p class='text-red-500'>Error: Form '{form_class_name}' not found.</p>")
+
+@login_required
+def hx_get_contact_info(request):
+    user_id = request.GET.get('contact')
+    user = get_object_or_404(User, pk=user_id)
+    profile = user.profile
+    
+    return render(request, 'service_desk/partials/contact_info_inputs.html', {
+        'user': user,
+        'profile': profile
+    })
+
+# --- Omni-Search Engine ---
+def omni_search(request):
+    query = request.GET.get('q', '')
+    
+    if len(query) < 2:
+        return HttpResponse('') 
+
+    tickets = Ticket.objects.filter(
+        Q(id__icontains=query) | 
+        Q(title__icontains=query) | 
+        Q(description__icontains=query)
+    ).distinct()[:5]
+
+    assets = HardwareAsset.objects.filter(
+        Q(asset_tag__icontains=query) | 
+        Q(serial_number__icontains=query) |
+        Q(assigned_to__username__icontains=query) |
+        Q(assigned_to__first_name__icontains=query) |
+        Q(assigned_to__last_name__icontains=query)
+    ).distinct()[:5]
+
+    users = User.objects.filter(
+        Q(username__icontains=query) | 
+        Q(first_name__icontains=query) | 
+        Q(last_name__icontains=query) |
+        Q(email__icontains=query)
+    ).distinct()[:5]
+
+    kb_articles = Article.objects.filter(
+        Q(title__icontains=query) | 
+        Q(problem__icontains=query) | 
+        Q(solution__icontains=query)
+    ).distinct()[:5]
+
+    context = {
+        'query': query,
+        'tickets': tickets,
+        'assets': assets,
+        'users': users,
+        'kb_articles': kb_articles,
+        'total_count': tickets.count() + assets.count() + users.count() + kb_articles.count()
+    }
+
+    return render(request, 'service_desk/partials/omni_search_results.html', context)
+
+# --- Ticket Registry (The "Power" Search) ---
+@login_required
+def ticket_registry(request):
+    tickets = Ticket.objects.all().order_by('-created_at')
+
+    query = request.GET.get('q', '')
+    if query:
+        tickets = tickets.filter(
+            Q(id__icontains=query) |
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(technician__first_name__icontains=query) |
+            Q(technician__last_name__icontains=query) |
+            Q(technician__username__icontains=query) |
+            Q(submitter__first_name__icontains=query) |
+            Q(submitter__last_name__icontains=query) |
+            Q(submitter__username__icontains=query)
+        )
+
+    status = request.GET.get('status', '')
+    if status:
+        tickets = tickets.filter(status=status)
+
+    priority = request.GET.get('priority', '')
+    if priority:
+        tickets = tickets.filter(priority=priority)
+
+    tech_id = request.GET.get('tech', '')
+    if tech_id:
+        tickets = tickets.filter(technician_id=tech_id)
+
+    submitter_id = request.GET.get('submitter', '')
+    if submitter_id:
+        tickets = tickets.filter(submitter_id=submitter_id)
+
+    board_id = request.GET.get('board', '')
+    if board_id:
+        tickets = tickets.filter(board_id=board_id)
+
+    paginator = Paginator(tickets, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'tickets': page_obj,
+        'query': query,
+        'technicians': User.objects.filter(is_staff=True).order_by('first_name'),
+        'boards': ServiceBoard.objects.all(),
+        'statuses': ['New', 'In Progress', 'On Hold', 'Waiting on User', 'Resolved', 'Closed', 'Reopened'], 
+        'priorities': ['P1', 'P2', 'P3', 'P4'],
+    }
+
+    if request.headers.get('HX-Request'):
+        return render(request, 'service_desk/partials/registry_table_rows.html', context)
+
+    return render(request, 'service_desk/ticket_registry.html', context)
+
+# --- Asset Detail View (THE FIX) ---
+def asset_detail(request, asset_id):
+    asset = get_object_or_404(HardwareAsset, id=asset_id)
+    
+    # Find tickets related to this asset (matching by Asset Tag)
+    related_tickets = Ticket.objects.filter(
+        Q(description__icontains=asset.asset_tag) | 
+        Q(title__icontains=asset.asset_tag)
+    ).order_by('-created_at')
+
+    return render(request, 'inventory/asset_detail.html', {
+        'asset': asset,
+        'related_tickets': related_tickets
+    })
+
+# --- User Dossier (Read-Only View) (THE FIX) ---
+@login_required
+def user_dossier(request, user_id):
+    target_user = get_object_or_404(User, pk=user_id)
+    
+    # 1. Fetch Assets assigned to this user
+    assigned_assets = HardwareAsset.objects.filter(assigned_to=target_user)
+    
+    # 2. Fetch recent tickets submitted by this user
+    recent_tickets = Ticket.objects.filter(submitter=target_user).order_by('-created_at')[:5]
+
+    # 3. Check if target is a technician (for the "Performance Metrics" button)
+    is_technician = target_user.groups.filter(name='Service Desk').exists() or target_user.is_staff
+    
+    return render(request, 'service_desk/user_dossier.html', {
+        'target_user': target_user,
+        'assets': assigned_assets,
+        'tickets': recent_tickets,
+        'is_technician': is_technician
     })

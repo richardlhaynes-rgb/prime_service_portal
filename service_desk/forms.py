@@ -1,5 +1,8 @@
 ﻿from django import forms
-from .models import Ticket, Comment, GlobalSettings, UserProfile
+from .models import (
+    Ticket, Comment, GlobalSettings, UserProfile, 
+    ServiceBoard, ServiceType, ServiceSubtype, ServiceItem
+)
 from knowledge_base.models import Article
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm  # Shared auth forms
 from django.contrib.auth.models import User, Group  # User + Groups for checkbox list
@@ -444,3 +447,95 @@ class CustomUserChangeForm(UserChangeForm):
             profile.avatar = self.cleaned_data['avatar']
         profile.save()
         return user
+
+# --- NEW: AGENT MASTER TICKET FORM (Added 2026-01-05) ---
+class AgentTicketForm(forms.ModelForm):
+    """
+    The 'Power Form' for technicians.
+    Includes cascading Classification fields (Board -> Type -> Subtype -> Item).
+    """
+    # 1. Contact Info (Who is this for?)
+    contact = forms.ModelChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=forms.Select(attrs={
+            'class': INPUT_STYLE, 
+            'hx-get': '/service-desk/htmx/get-contact-info/', 
+            'hx-target': '#contact-details'
+        }),
+        label="Contact / User"
+    )
+    
+    # 2. Classification Hierarchy
+    # Note: Querysets for subtype/item are empty initially and filled via HTMX
+    board = forms.ModelChoiceField(
+        queryset=ServiceBoard.objects.filter(is_active=True),
+        widget=forms.Select(attrs={
+            'class': INPUT_STYLE,
+            'hx-get': '/service-desk/htmx/load-types/',
+            'hx-target': '#id_type'
+        })
+    )
+    
+    type = forms.ModelChoiceField(
+        queryset=ServiceType.objects.none(), # Populated by HTMX
+        widget=forms.Select(attrs={
+            'class': INPUT_STYLE,
+            'hx-get': '/service-desk/htmx/load-subtypes/',
+            'hx-target': '#id_subtype',
+            'hx-include': '#id_type', # Pass type ID to the view
+            'hx-swap': 'innerHTML',   # Only swap options, not the select itself
+            # Trigger form load on change:
+            '_': "on change htmx.ajax('GET', '/service-desk/htmx/load-form/?type=' + this.value, '#dynamic-form-container')"
+        })
+    )
+    
+    subtype = forms.ModelChoiceField(
+        queryset=ServiceSubtype.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={
+            'class': INPUT_STYLE,
+            'hx-get': '/service-desk/htmx/load-items/',
+            'hx-target': '#id_item'
+        })
+    )
+    
+    item = forms.ModelChoiceField(
+        queryset=ServiceItem.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={'class': INPUT_STYLE})
+    )
+
+    class Meta:
+        model = Ticket
+        fields = ['contact', 'board', 'type', 'subtype', 'item', 'status', 'priority', 'source']
+        widgets = {
+            'status': forms.Select(attrs={'class': INPUT_STYLE}),
+            'priority': forms.Select(attrs={'class': INPUT_STYLE}),
+            'source': forms.Select(attrs={'class': INPUT_STYLE}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Handling Dynamic Querysets on POST (Form Validation)
+        # Without this, Django rejects the choices because querysets are empty/filtered
+        if 'board' in self.data:
+            try:
+                board_id = int(self.data.get('board'))
+                self.fields['type'].queryset = ServiceType.objects.filter(boards__id=board_id).order_by('name')
+            except (ValueError, TypeError):
+                pass
+        
+        if 'type' in self.data:
+            try:
+                type_id = int(self.data.get('type'))
+                self.fields['subtype'].queryset = ServiceSubtype.objects.filter(parent_types__id=type_id).order_by('name')
+            except (ValueError, TypeError):
+                pass
+                
+        if 'subtype' in self.data:
+            try:
+                subtype_id = int(self.data.get('subtype'))
+                self.fields['item'].queryset = ServiceItem.objects.filter(parent_subtypes__id=subtype_id).order_by('name')
+            except (ValueError, TypeError):
+                pass

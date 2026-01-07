@@ -5,8 +5,6 @@ import os
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
 from django.contrib.auth import get_user_model
-
-# --- UPDATED IMPORTS MATCHING YOUR MODELS.PY ---
 from inventory.models import HardwareAsset, AssetCategory 
 
 User = get_user_model()
@@ -106,7 +104,6 @@ RAM_TYPE_POOLS = ['DDR5', 'DDR4', 'LPDDR5', 'Unified Memory']
 
 # Storage split logic
 STORAGE_PRI_POOLS = ['256 GB SSD', '512 GB SSD', '1 TB SSD', '2 TB SSD']
-# 70% chance of None, 30% chance of extra drive
 STORAGE_SEC_POOLS = ['None', 'None', 'None', 'None', 'None', 'None', 'None', '1 TB HDD', '2 TB HDD', '4 TB HDD']
 SERVER_STORAGE_POOLS = ['2x 480GB SSD (RAID 1)', '4x 1.92TB SSD (RAID 5)', '8x 2.4TB SAS HDD (RAID 6)']
 
@@ -130,10 +127,11 @@ MAC_OUI = {'Dell': '00:14:22', 'HP': 'FC:15:B4', 'Apple': '00:1C:B3', 'Cisco': '
 CARRIERS = ['Verizon Wireless', 'AT&T Business', 'T-Mobile Enterprise']
 
 class Command(BaseCommand):
-    help = 'Wipes the Asset table and seeds 325 realistic items covering ALL categories.'
+    help = 'Wipes the Asset table and seeds 325 realistic items. Use --clear to wipe only.'
 
     def add_arguments(self, parser):
         parser.add_argument('--force', action='store_true', help='Skip safety checks')
+        parser.add_argument('--clear', action='store_true', help='Wipe data only, do not seed.')
 
     def handle(self, *args, **options):
         # 1. VISUALS
@@ -155,6 +153,11 @@ class Command(BaseCommand):
         with connection.cursor() as cursor:
             cursor.execute(f"TRUNCATE TABLE {HardwareAsset._meta.db_table} RESTART IDENTITY CASCADE;")
         self.stdout.write(self.style.SUCCESS("      Database Cleaned."))
+
+        # 3a. EXIT IF CLEAR ONLY
+        if options['clear']:
+            self.stdout.write(self.style.SUCCESS("      Data wipe complete. No assets generated."))
+            return
 
         # 4. CATEGORIES
         self.stdout.write(self.style.MIGRATE_HEADING("[2/4] Building Taxonomy..."))
@@ -192,22 +195,21 @@ class Command(BaseCommand):
             return f"PRIME-{prefix}-{self.tag_counters[prefix]}"
 
         def create_single_asset(cat, user=None):
-            # Fallback to Laptops if cat not found in MODELS_DB (shouldn't happen now)
             model_data = MODELS_DB.get(cat.name, MODELS_DB['Laptops'])
             manuf, model, c_min, c_max = random.choice(model_data)
             
-            # Status Logic: Peripherals are often 'In Stock', Servers usually 'Deployed'
+            # Status Logic
             if cat.name == 'Peripherals':
                 status = 'Deployed' if user else random.choices(['In Stock', 'Maintenance', 'Retired'], weights=[90, 5, 5], k=1)[0]
             elif cat.name == 'Servers':
-                status = 'Deployed' # Servers are rarely just sitting in a box
+                status = 'Deployed' 
             else:
                 status = 'Deployed' if user else random.choices(['In Stock', 'Maintenance', 'Retired'], weights=[85, 10, 5], k=1)[0]
             
             # --- SPECS GENERATION LOGIC ---
             specs = {}
             
-            # A. CLIENT COMPUTING (Laptops, Desktops)
+            # A. CLIENT COMPUTING
             if cat.name in ['Laptops', 'Desktops']:
                 specs['hostname'] = f"CORP-{manuf[:3].upper()}-{random.randint(100,999)}"
                 specs['cpu'] = random.choice(CPU_POOLS)
@@ -225,7 +227,6 @@ class Command(BaseCommand):
                 specs['storage_pri'] = random.choice(STORAGE_PRI_POOLS)
                 specs['storage_sec'] = random.choice(STORAGE_SEC_POOLS)
                 
-                # Backwards compat
                 if specs['storage_sec'] != 'None':
                     specs['storage'] = f"{specs['storage_pri']} + {specs['storage_sec']}"
                 else:
@@ -242,7 +243,7 @@ class Command(BaseCommand):
                 specs['ram'] = random.choice(SERVER_RAM_POOLS)
                 specs['ram_type'] = 'ECC DDR5'
                 specs['storage_pri'] = random.choice(SERVER_STORAGE_POOLS)
-                specs['storage'] = specs['storage_pri'] # Servers usually have one big array
+                specs['storage'] = specs['storage_pri']
                 
                 specs['net_assignment'] = 'Manual'
                 specs['net_ipv4'] = f"10.50.10.{random.randint(10, 50)}"
@@ -288,18 +289,18 @@ class Command(BaseCommand):
                 specs['mob_imei'] = str(random.randint(100000000000000, 999999999999999))
                 specs['mob_status'] = 'Active'
 
-            # E. INFRASTRUCTURE & PRINTERS (Static IPs)
+            # E. INFRASTRUCTURE & PRINTERS
             elif cat.name in ['Network Infrastructure', 'Printers & Plotters']:
                 specs['net_mac'] = f"{MAC_OUI.get(manuf, '00:00:00')}:{random.randint(10,99)}:{random.randint(10,99)}:{random.randint(10,99)}"
                 specs['net_assignment'] = 'Manual'
-                ip_subnet = 1 if cat.name == 'Network Infrastructure' else 50 # Printers on .50.x
+                ip_subnet = 1 if cat.name == 'Network Infrastructure' else 50
                 specs['net_ipv4'] = f"10.50.{ip_subnet}.{random.randint(2,250)}"
                 if cat.name == 'Network Infrastructure':
                     specs['net_vlan'] = "1 (Mgmt)"
                 else:
                     specs['net_vlan'] = "30 (Printers)"
 
-            # F. AV & VR (Simple)
+            # F. AV & VR
             elif cat.name == 'AV & VR Equipment':
                 specs['notes'] = "Assigned to Conference Room or VR Lab."
 
@@ -331,9 +332,9 @@ class Command(BaseCommand):
             create_single_asset(categories['Laptops'], user)
             create_single_asset(categories['Docking Stations'], user)
             create_single_asset(categories['Monitors'], user)
-            create_single_asset(categories['Peripherals'], user) # New: Mouse/Keyboard
+            create_single_asset(categories['Peripherals'], user) 
             
-            # VIPs get extra stuff (randomly)
+            # VIPs get extra stuff
             if random.random() > 0.8:
                 create_single_asset(categories['Tablets'], user)
             if random.random() > 0.9:
@@ -345,14 +346,11 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS(f"\n      {count} Assets Deployed."))
 
-        # 7. FILLER (Weighted to include new categories)
+        # 7. FILLER
         remaining = TARGET_TOTAL - count
         if remaining > 0:
             self.stdout.write(self.style.MIGRATE_HEADING(f"[4/4] Stocking {remaining} Spare Items..."))
             for _ in range(remaining):
-                # Weighted to ensure we see EVERYTHING
-                # Laptops(15), Desktops(5), Servers(2), Phones(5), Tablets(5), Hotspots(2)
-                # Monitors(20), Docks(10), Net(3), Printers(3), AV(5), Peripherals(25)
                 cat = random.choices(
                     list(categories.values()), 
                     weights=[15, 5, 2, 5, 5, 2, 20, 10, 3, 3, 5, 25], 

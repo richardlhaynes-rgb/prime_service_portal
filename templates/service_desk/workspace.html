@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+<div class="flex flex-col h-[calc(100vh-80px)] overflow-hidden bg-gray-50 dark:bg-gray-900">
+
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-20">
+        <div class="px-6 py-3 flex items-center justify-between gap-4">
+            
+            <div class="flex items-center space-x-4">
+                {% if view_mode == 'grid' %}
+                <div class="relative inline-block text-left" x-data="{ open: false }">
+                    <button type="button" @click="open = !open" 
+                            class="inline-flex justify-between items-center w-52 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-3 py-2 bg-gray-50 dark:bg-gray-700 text-[11px] font-black uppercase tracking-widest text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-prime-orange transition-all">
+                        <span class="truncate">
+                            {% if selected_board_ids|length == all_boards|length %}All Boards{% elif selected_board_ids|length == 0 %}No Boards{% else %}{{ selected_board_ids|length }} Boards Active{% endif %}
+                        </span>
+                        <svg class="ml-2 h-4 w-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+
+                    <div x-show="open" @click.away="open = false" x-transition class="origin-top-left absolute left-0 mt-2 w-72 rounded-md shadow-2xl bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50 focus:outline-none" style="display: none;">
+                        <div class="p-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Service Boards</span>
+                            <button type="button" onclick="selectAllBoards(true)" class="text-[10px] font-bold text-prime-orange hover:underline uppercase">Select All</button>
+                        </div>
+                        <div class="p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
+                            {% for board in all_boards %}
+                            <label class="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md cursor-pointer group">
+                                <input type="checkbox" value="{{ board.id }}" class="board-checkbox form-checkbox h-4 w-4 text-prime-orange rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-prime-orange" {% if board.id in selected_board_ids %}checked{% endif %}>
+                                <span class="ml-3 font-medium group-hover:text-prime-orange transition-colors">{{ board.name }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <div class="border-t border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-b-md flex gap-2">
+                            <button type="button" onclick="applyFilters()" class="flex-1 bg-prime-orange hover:bg-orange-600 text-white text-xs font-bold uppercase py-2 rounded shadow-sm transition-colors">Apply</button>
+                            <button type="button" @click="open = false" class="px-3 py-2 text-xs font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 uppercase border border-gray-300 dark:border-gray-600 rounded">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <nav class="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                    <a href="?view=grid&boards={{ selected_board_ids|join:',' }}" 
+                       class="px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter rounded-md transition-all {% if view_mode == 'grid' %}bg-white dark:bg-gray-600 text-prime-orange shadow-sm{% else %}text-gray-500 hover:text-gray-700 dark:text-gray-400{% endif %}">
+                        Grid View
+                    </a>
+                    <a href="?view=kanban" 
+                       class="px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter rounded-md transition-all {% if view_mode == 'kanban' %}bg-white dark:bg-gray-600 text-prime-orange shadow-sm{% else %}text-gray-500 hover:text-gray-700 dark:text-gray-400{% endif %}">
+                        My Queue
+                    </a>
+                </nav>
+            </div>
+
+            <div class="absolute left-1/2 transform -translate-x-1/2">
+                <h1 class="text-sm font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
+                    {% if view_mode == 'grid' %}Service Grid{% else %}Task Queue{% endif %}
+                </h1>
+            </div>
+
+            <div class="flex items-center">
+                <a href="{% url 'ticket_registry' %}" class="mr-3 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 px-4 py-2 rounded-md text-xs font-bold uppercase tracking-wider shadow-sm transition-all">
+                    Ticket Registry
+                </a>
+
+                <a href="{% url 'agent_create_ticket' %}" class="bg-prime-orange hover:bg-orange-600 text-white px-5 py-2 rounded-md text-xs font-black uppercase tracking-wider shadow-lg transition-all transform hover:scale-105 active:scale-95">
+                    + New Ticket
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-grow overflow-auto p-6">
+        
+        {% if view_mode == 'grid' %}
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left w-10 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('priority')">
+                                <div class="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    !
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-4 py-3 text-left w-20 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('id')">
+                                <div class="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    ID
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-4 py-3 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('title')">
+                                <div class="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    Summary
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-4 py-3 text-left w-40 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('board__name')">
+                                <div class="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    Board
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-4 py-3 text-center w-24 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('status')">
+                                <div class="flex items-center justify-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    Status
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-4 py-3 text-left w-48 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('submitter__first_name')">
+                                <div class="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    Contact
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-4 py-3 text-left w-32 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('created_at')">
+                                <div class="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    Age
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-4 py-3 text-right w-16 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group" onclick="sortGrid('technician__first_name')">
+                                <div class="flex items-center justify-end gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                    Res
+                                    <svg class="w-3 h-3 text-gray-300 opacity-0 group-hover:opacity-100" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        {% for ticket in grid_tickets %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer group"
+                            hx-get="{% url 'ticket_quick_view' ticket.id %}" hx-target="#drawer-content" onclick="openDrawer()">
+                            
+                            <td class="px-4 py-3 whitespace-nowrap"><div class="w-2.5 h-2.5 rounded-full {% if 'Critical' in ticket.priority %}bg-red-500 shadow-sm shadow-red-500/50{% elif 'High' in ticket.priority %}bg-orange-500{% elif 'Medium' in ticket.priority %}bg-blue-500{% else %}bg-gray-400{% endif %}" title="{{ ticket.priority }}"></div></td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-mono text-gray-500 dark:text-gray-400">#{{ ticket.id }}</td>
+                            <td class="px-4 py-3"><div class="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-prime-orange transition-colors line-clamp-1">{{ ticket.title }}</div><div class="text-xs text-gray-500 line-clamp-1">{{ ticket.ticket_type }}</div></td>
+                            <td class="px-4 py-3 whitespace-nowrap"><span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">{{ ticket.board.name }}</span></td>
+
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <div class="flex justify-center w-full">
+                                    <span class="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0
+                                        {% if ticket.status == 'New' or ticket.status == 'User Commented' or ticket.status == 'Reopened' %}bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400
+                                        {% elif ticket.status == 'In Progress' or ticket.status == 'Work In Progress' or ticket.status == 'Assigned' or ticket.status == 'Awaiting User Reply' or ticket.status == 'On Hold' %}bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400
+                                        {% elif ticket.status == 'Resolved' or ticket.status == 'Cancelled' %}bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400
+                                        {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400{% endif %}"
+                                        title="Status: {{ ticket.status }}">
+                                        {% if ticket.status == 'New' or ticket.status == 'User Commented' or ticket.status == 'Reopened' %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                        {% elif ticket.status == 'In Progress' or ticket.status == 'Work In Progress' or ticket.status == 'Assigned' %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 animate-spin-slow" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                                        {% elif ticket.status == 'Awaiting User Reply' or ticket.status == 'On Hold' %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                        {% elif ticket.status == 'Resolved' %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                        {% else %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9 7a1 1 0 012 0v5a1 1 0 01-2 0V7zm1 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </td>
+
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ ticket.submitter.get_full_name }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">{{ ticket.created_at|timesince }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-right">
+                                {% if ticket.technician %}<img class="h-7 w-7 rounded-full border-2 border-white dark:border-gray-700 shadow-sm" src="{% if ticket.technician.profile.avatar %}{{ ticket.technician.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ ticket.technician.first_name }}+{{ ticket.technician.last_name }}&background=0D8ABC&color=fff{% endif %}" title="{{ ticket.technician.get_full_name }}">{% else %}<div class="h-7 w-7 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-[8px] text-gray-400 uppercase font-bold">Open</div>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="h-full grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flex flex-col bg-gray-100 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 h-full min-h-0">
+                    <div class="p-3 border-b border-gray-200 dark:border-gray-700/50 bg-gray-50/95 dark:bg-gray-800/95 rounded-t-xl flex justify-between items-center sticky top-0 z-10"><h3 class="font-bold text-gray-700 dark:text-gray-200 text-sm uppercase tracking-wide">My To Do</h3><span class="bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-0.5 px-2 rounded text-xs font-bold shadow-sm border border-gray-100 dark:border-gray-600">{{ kanban_new|length }}</span></div>
+                    <div class="p-3 flex-grow overflow-y-auto space-y-3 kanban-col custom-scrollbar" data-status="New">{% for ticket in kanban_new %}{% include 'service_desk/partials/kanban_card.html' %}{% endfor %}</div>
+                </div>
+                <div class="flex flex-col bg-blue-50/30 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 h-full min-h-0">
+                    <div class="p-3 border-b border-blue-100 dark:border-blue-900/30 bg-blue-50/95 dark:bg-blue-900/20 rounded-t-xl flex justify-between items-center sticky top-0 z-10"><h3 class="font-bold text-blue-700 dark:text-blue-300 text-sm uppercase tracking-wide">Working</h3><span class="bg-white dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 py-0.5 px-2 rounded text-xs font-bold shadow-sm border border-blue-100 dark:border-blue-800">{{ kanban_progress|length }}</span></div>
+                    <div class="p-3 flex-grow overflow-y-auto space-y-3 kanban-col custom-scrollbar" data-status="In Progress">{% for ticket in kanban_progress %}{% include 'service_desk/partials/kanban_card.html' %}{% endfor %}</div>
+                </div>
+                <div class="flex flex-col bg-green-50/30 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30 h-full min-h-0">
+                    <div class="p-3 border-b border-green-100 dark:border-green-900/30 bg-green-50/95 dark:bg-green-900/20 rounded-t-xl flex justify-between items-center sticky top-0 z-10"><h3 class="font-bold text-green-700 dark:text-green-300 text-sm uppercase tracking-wide">Done (Recent)</h3><span class="bg-white dark:bg-green-900/40 text-green-800 dark:text-green-200 py-0.5 px-2 rounded text-xs font-bold shadow-sm border border-green-100 dark:border-green-800">{{ kanban_done|length }}</span></div>
+                    <div class="p-3 flex-grow overflow-y-auto space-y-3 kanban-col custom-scrollbar" data-status="Resolved">{% for ticket in kanban_done %}{% include 'service_desk/partials/kanban_card.html' %}{% endfor %}</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="drawer-backdrop" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm z-40 transition-opacity duration-300 opacity-0 pointer-events-none" onclick="closeDrawer()"></div>
+    <div id="drawer-panel" class="absolute top-0 right-0 h-full w-full md:w-[480px] bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 translate-x-full border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"><h2 class="text-lg font-bold text-gray-800 dark:text-white">Quick View</h2><button onclick="closeDrawer()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>
+        <div id="drawer-content" class="flex-grow overflow-y-auto p-0"><div class="flex items-center justify-center h-full text-gray-400"><svg class="animate-spin h-8 w-8 mr-3" viewBox="0 0 24 24"></svg> Loading...</div></div>
+    </div>
+</div>
+
+<script>
+    function openDrawer() {
+        document.getElementById('drawer-backdrop').classList.remove('pointer-events-none', 'opacity-0');
+        document.getElementById('drawer-backdrop').classList.add('opacity-100');
+        document.getElementById('drawer-panel').classList.remove('translate-x-full');
+    }
+    function closeDrawer() {
+        document.getElementById('drawer-backdrop').classList.remove('opacity-100');
+        document.getElementById('drawer-backdrop').classList.add('opacity-0', 'pointer-events-none');
+        document.getElementById('drawer-panel').classList.add('translate-x-full');
+    }
+    function selectAllBoards(check) {
+        document.querySelectorAll('.board-checkbox').forEach(cb => cb.checked = check);
+    }
+    function applyFilters() {
+        const checkboxes = document.querySelectorAll('.board-checkbox:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        const url = new URL(window.location.href);
+        url.searchParams.set('view', 'grid');
+        if (selectedIds.length > 0) { url.searchParams.set('boards', selectedIds.join(',')); } 
+        else { url.searchParams.delete('boards'); }
+        window.location.href = url.toString();
+    }
+    
+    // NEW SORTING FUNCTION
+    function sortGrid(field) {
+        const url = new URL(window.location.href);
+        const currentSort = url.searchParams.get('sort');
+        const currentDir = url.searchParams.get('direction');
+        
+        let newDir = 'asc';
+        // If clicking the same column that is currently sorted ascending, switch to descending
+        if (currentSort === field && currentDir === 'asc') {
+            newDir = 'desc';
+        }
+        
+        url.searchParams.set('sort', field);
+        url.searchParams.set('direction', newDir);
+        window.location.href = url.toString();
+    }
+
+    if (document.querySelector('.kanban-col')) {
+        document.querySelectorAll('.kanban-col').forEach(column => {
+            new Sortable(column, {
+                group: 'kanban',
+                animation: 150,
+                ghostClass: 'bg-prime-orange/10',
+                delay: 100,
+                onEnd: function (evt) {
+                    if (evt.to === evt.from) return;
+                    fetch(`{% url 'workspace_update' %}`, {
+                        method: 'POST',
+                        headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json'},
+                        body: JSON.stringify({ticket_id: evt.item.getAttribute('data-ticket-id'), new_status: evt.to.getAttribute('data-status')})
+                    });
+                }
+            });
+        });
+    }
+</script>
+
+<style>
+    .animate-spin-slow { animation: spin 3s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+{% endblock %}

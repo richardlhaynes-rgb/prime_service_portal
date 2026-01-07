@@ -1,0 +1,113 @@
+{% if total_count == 0 %}
+    <div class="py-10 text-center">
+        <p class="text-sm text-gray-500 dark:text-gray-400">No results found for "<span class="font-bold text-gray-900 dark:text-white">{{ query }}</span>".</p>
+        <p class="text-xs text-gray-400 mt-1">Try a different keyword or ID.</p>
+    </div>
+{% else %}
+
+    {% if tickets %}
+    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-y border-gray-100 dark:border-gray-700">
+        <h3 class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tickets</h3>
+    </div>
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+        {% for ticket in tickets %}
+        <li>
+            <a href="{% url 'ticket_detail' ticket.id %}" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="px-2 py-0.5 rounded text-xs font-bold bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-200">#{{ ticket.id }}</span>
+                        <div>
+                            <p class="text-sm font-medium text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">{{ ticket.title }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ ticket.status }} • {{ ticket.submitter.get_full_name|default:ticket.submitter.username }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if assets %}
+    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-y border-gray-100 dark:border-gray-700">
+        <h3 class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Assets</h3>
+    </div>
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+        {% for asset in assets %}
+        <li>
+            <a href="{% url 'asset_detail' asset.id %}" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group">
+                <div class="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">{{ asset.model_number }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Tag: <span class="font-mono">{{ asset.asset_tag }}</span> • Serial: {{ asset.serial_number }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if kb_articles %}
+    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-y border-gray-100 dark:border-gray-700">
+        <h3 class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Knowledge Base</h3>
+    </div>
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+        {% for article in kb_articles %}
+        <li>
+            <a href="{% url 'article_detail' article.id %}" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group">
+                <div class="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">{{ article.title }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ article.category }}</p>
+                    </div>
+                </div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if users %}
+    <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-y border-gray-100 dark:border-gray-700">
+        <h3 class="text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Users</h3>
+    </div>
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+        {% for u in users %}
+        <li>
+            <a href="{% url 'user_dossier' u.id %}" class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group">
+                <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded-full bg-prime-navy text-white flex items-center justify-center text-xs font-bold">
+                        {{ u.first_name|first }}{{ u.last_name|first }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-prime-navy dark:text-white group-hover:text-prime-orange transition-colors">{{ u.get_full_name }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ u.email }}</p>
+                    </div>
+                </div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="p-3 bg-gray-50 dark:bg-slate-700 border-t border-gray-200 dark:border-gray-600 text-center sticky bottom-0">
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+            Looking for more? 
+            <a href="{% url 'ticket_registry' %}?q={{ query }}" class="font-bold text-prime-orange hover:underline">
+                Open Ticket Registry
+            </a>
+        </span>
+    </div>
+
+{% endif %}

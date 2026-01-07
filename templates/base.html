@@ -17,6 +17,9 @@
     <link rel="icon" type="image/png" href="{% static 'images/logo_color.png' %}">
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -116,7 +119,7 @@
                         Knowledge Base
                     </a>
 
-                    <a href="{% url 'kanban_board' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors group">
+                    <a href="{% url 'workspace' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium flex items-center transition-colors group">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2 text-orange-500 group-hover:text-white transition-colors">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
                         </svg>
@@ -126,6 +129,14 @@
             </div>
 
             <div class="flex items-center gap-2">
+                
+                <button onclick="toggleSpotlight()" title="Search (Ctrl+K)"
+                        class="text-gray-400 hover:text-white rounded-full hover:bg-gray-700 p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                </button>
+
                 {% include 'service_desk/partials/notification_bell.html' %}
                 
                 {% if user.is_superuser %}
@@ -271,28 +282,35 @@
                     </div>
                     <div class="max-h-80 overflow-y-auto">
                         {% for vendor in system_health.vendor_status %}
-                        <div class="px-4 py-3 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                        <a href="{{ vendor.url }}" target="_blank" class="block px-4 py-3 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors group">
                             <div class="flex items-center justify-between">
-                                
                                 <div class="flex items-center gap-3">
-                                    <svg class="h-2.5 w-2.5 {{ vendor.ui_color }} fill-current" viewBox="0 0 8 8">
+                                    <svg class="h-2.5 w-2.5 fill-current 
+                                        {% if vendor.status == 'Operational' %}text-green-500
+                                        {% elif vendor.status == 'Maintenance' %}text-blue-500
+                                        {% elif vendor.status == 'Degraded Performance' %}text-yellow-500
+                                        {% elif vendor.status == 'Partial Outage' %}text-orange-500
+                                        {% elif vendor.status == 'Major Outage' %}text-red-500
+                                        {% else %}text-gray-400{% endif %}" viewBox="0 0 8 8">
                                         <circle cx="4" cy="4" r="3" />
                                     </svg>
                                     
-                                    {% if vendor.url %}
-                                        <a href="{{ vendor.url }}" target="_blank" class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap hover:underline hover:text-prime-orange dark:hover:text-prime-orange transition-colors">
-                                            {{ vendor.name }}
-                                        </a>
-                                    {% else %}
-                                        <span class="text-sm font-medium text-gray-800 dark:text-gray-100 whitespace-nowrap">
-                                            {{ vendor.name }}
-                                        </span>
-                                    {% endif %}
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-100 group-hover:text-prime-orange transition-colors">
+                                        {{ vendor.name }}
+                                    </span>
                                 </div>
                                 
-                                <span class="text-sm {{ vendor.ui_color }}">{{ vendor.display_status }}</span>
+                                <span class="text-xs font-bold uppercase tracking-wide
+                                    {% if vendor.status == 'Operational' %}text-green-600 dark:text-green-400
+                                    {% elif vendor.status == 'Maintenance' %}text-blue-600 dark:text-blue-400
+                                    {% elif vendor.status == 'Degraded Performance' %}text-yellow-600 dark:text-yellow-400
+                                    {% elif vendor.status == 'Partial Outage' %}text-orange-600 dark:text-orange-400
+                                    {% elif vendor.status == 'Major Outage' %}text-red-600 dark:text-red-400
+                                    {% else %}text-gray-500{% endif %}">
+                                    {{ vendor.status }}
+                                </span>
                             </div>
-                        </div>
+                        </a>
                         {% endfor %}
                     </div>
                 </div>
@@ -354,6 +372,46 @@
     <form id="logout-form" action="{% url 'logout' %}" method="post" style="display:none;">
         {% csrf_token %}
     </form>
+
+    <div id="spotlight-modal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" onclick="toggleSpotlight()"></div>
+
+        <div class="flex min-h-full items-start justify-center p-4 text-center sm:p-0 pt-20">
+            <div class="relative transform overflow-hidden rounded-xl bg-white dark:bg-slate-800 text-left shadow-2xl transition-all sm:w-full sm:max-w-2xl border border-gray-200 dark:border-slate-700">
+                
+                <div class="relative border-b border-gray-100 dark:border-slate-700">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <input type="text" 
+                           id="spotlight-search-input"
+                           name="q"
+                           hx-get="{% url 'omni_search' %}"
+                           hx-trigger="keyup changed delay:300ms, search"
+                           hx-target="#spotlight-results"
+                           class="h-14 w-full border-0 bg-transparent pl-11 pr-4 text-gray-900 dark:text-white placeholder:text-gray-400 focus:ring-0 sm:text-sm focus:outline-none" 
+                           placeholder="Search tickets, assets, users..."
+                           autocomplete="off">
+                   <button onclick="toggleSpotlight()" type="button" class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-prime-orange transition-colors focus:outline-none">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                       </svg>
+                    </button>
+                </div>
+
+                <div id="spotlight-results" class="max-h-[60vh] overflow-y-auto">
+                    <div class="py-14 text-center sm:px-14">
+                        <svg class="mx-auto h-6 w-6 text-gray-400 text-opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">Type to search across the entire portal.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         function toggleAnnouncement() {
@@ -438,6 +496,38 @@
                         setTimeout(() => { alert.remove(); }, 500);
                     }, 5000);
                 });
+            }
+        });
+
+        // 3. Omni-Search Logic
+        function toggleSpotlight() {
+            const modal = document.getElementById('spotlight-modal');
+            const input = document.getElementById('spotlight-search-input');
+            const isHidden = modal.classList.contains('hidden');
+            
+            if (isHidden) {
+                modal.classList.remove('hidden');
+                // Prevent body scroll when modal is open
+                document.body.style.overflow = 'hidden';
+                // Focus input after a tiny delay to ensure visibility
+                setTimeout(() => input.focus(), 50);
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Keyboard Shortcuts (Ctrl+K, Cmd+K, Esc)
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                toggleSpotlight();
+            }
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('spotlight-modal');
+                if (!modal.classList.contains('hidden')) {
+                    toggleSpotlight();
+                }
             }
         });
     </script>

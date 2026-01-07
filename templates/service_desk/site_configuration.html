@@ -11,7 +11,7 @@
             <span>Back to Management Hub</span>
         </a>
         <h1 class="text-3xl font-bold text-prime-navy dark:text-white">Site Configuration</h1>
-        <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Manage global settings and knowledge base taxonomy</p>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Manage global settings, service architecture, and knowledge base taxonomy.</p>
     </div>
 
     <div class="flex flex-col md:flex-row gap-6 items-start">
@@ -31,6 +31,26 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <span>General Settings</span>
+                    </button>
+
+                    <button 
+                        onclick="switchTab('boards', this)" 
+                        class="tab-btn w-full text-left px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 group"
+                        data-tab="boards">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500 dark:text-gray-400 group-hover:text-prime-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <span>Service Routing</span>
+                    </button>
+
+                    <button 
+                        onclick="switchTab('service-taxonomy', this)" 
+                        class="tab-btn w-full text-left px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 group"
+                        data-tab="service-taxonomy">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500 dark:text-gray-400 group-hover:text-prime-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span>Service Taxonomy</span>
                     </button>
 
                     <button 
@@ -171,6 +191,328 @@
                 </form>
             </div>
 
+            <div id="panel-boards" class="panel-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-prime-navy dark:text-white">Service Boards & Routing</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Manage queues and restrict access using Security Groups.</p>
+                        </div>
+                        
+                        <div x-data="{ showBoardModal: false }">
+                            <button @click="showBoardModal = true" class="bg-prime-orange text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider shadow hover:bg-orange-600 transition-colors">
+                                + Create Board
+                            </button>
+
+                            <div x-show="showBoardModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+                                <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                    <div x-show="showBoardModal" @click="showBoardModal = false" class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75"></div>
+                                    <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full border border-gray-200 dark:border-gray-700">
+                                        <form method="post" action="">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="active_tab" value="boards">
+                                            <input type="hidden" name="action" value="create_board">
+                                            
+                                            <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                <h3 class="text-lg leading-6 font-bold text-prime-navy dark:text-white mb-4">Create New Service Board</h3>
+                                                <div class="space-y-4">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Board Name</label>
+                                                        <input type="text" name="name" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                                                        <textarea name="description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-prime-orange focus:ring focus:ring-prime-orange focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200 dark:border-gray-700">
+                                                <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-prime-orange text-base font-medium text-white hover:bg-orange-600 sm:ml-3 sm:w-auto sm:text-sm">Create Board</button>
+                                                <button type="button" @click="showBoardModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for board in service_boards %}
+                        <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group" x-data="{ editMode: false }">
+                            
+                            <div x-show="!editMode" class="flex justify-between items-start">
+                                
+                                <div class="flex gap-4 items-start">
+                                    <div class="flex flex-col gap-1 mt-1 text-gray-400">
+                                        <form method="post" class="contents">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="active_tab" value="boards">
+                                            <input type="hidden" name="action" value="reorder_board">
+                                            <input type="hidden" name="board_id" value="{{ board.id }}">
+                                            <input type="hidden" name="direction" value="up">
+                                            <button type="submit" class="hover:text-prime-orange disabled:opacity-20 disabled:cursor-not-allowed transition-colors" {% if forloop.first %}disabled{% endif %} title="Move Up">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                                                </svg>
+                                            </button>
+                                        </form>
+
+                                        <form method="post" class="contents">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="active_tab" value="boards">
+                                            <input type="hidden" name="action" value="reorder_board">
+                                            <input type="hidden" name="board_id" value="{{ board.id }}">
+                                            <input type="hidden" name="direction" value="down">
+                                            <button type="submit" class="hover:text-prime-orange disabled:opacity-20 disabled:cursor-not-allowed transition-colors" {% if forloop.last %}disabled{% endif %} title="Move Down">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center gap-3">
+                                            <h4 class="text-md font-bold text-prime-navy dark:text-white">{{ board.name }}</h4>
+                                            {% if not board.is_active %}
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800 uppercase">Inactive</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ board.description|default:"No description provided." }}</p>
+                                        
+                                        <div class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                            {% if board.restricted_groups.exists %}
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500 dark:text-gray-300">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                </svg>
+                                                <span>Restricted: 
+                                                    {% for group in board.restricted_groups.all %}
+                                                        {{ group.name }}{% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                </span>
+                                            {% else %}
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-gray-500 dark:text-gray-300">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                                                </svg>
+                                                <span>Open to All Staff</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <button @click="editMode = true" class="text-gray-400 hover:text-indigo-600 transition-colors p-2" title="Edit Board">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                        </svg>
+                                    </button>
+
+                                    <form method="post" action="" onsubmit="return confirm('Delete this board? Tickets associated with it may be orphaned.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="active_tab" value="boards">
+                                        <input type="hidden" name="action" value="delete_board">
+                                        <input type="hidden" name="board_id" value="{{ board.id }}">
+                                        <button type="submit" class="text-gray-400 hover:text-red-600 transition-colors p-2" title="Delete Board">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div x-show="editMode" class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600 mt-2">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="active_tab" value="boards">
+                                    <input type="hidden" name="action" value="update_board">
+                                    <input type="hidden" name="board_id" value="{{ board.id }}">
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Board Name</label>
+                                            <input type="text" name="name" value="{{ board.name }}" class="w-full text-sm rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-prime-orange">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                                            <input type="text" name="description" value="{{ board.description }}" class="w-full text-sm rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-prime-orange">
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Restricted Access (Select Groups)</label>
+                                        <div class="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded p-3 bg-white dark:bg-gray-700 grid grid-cols-2 gap-2">
+                                            {% for group in all_groups %}
+                                            <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-200 cursor-pointer">
+                                                <input type="checkbox" name="groups" value="{{ group.id }}" 
+                                                       class="rounded text-prime-orange focus:ring-prime-orange border-gray-300 dark:border-gray-500 dark:bg-gray-600"
+                                                       {% if group in board.restricted_groups.all %}checked{% endif %}>
+                                                <span>{{ group.name }}</span>
+                                            </label>
+                                            {% empty %}
+                                            <p class="col-span-2 text-xs text-gray-400 italic">No security groups defined.</p>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                            <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Create & Assign New Group</label>
+                                            <div class="flex gap-2">
+                                                <input type="text" name="new_group_inline" placeholder="e.g. Tier 4 Specialists" class="flex-1 text-xs rounded border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-prime-orange">
+                                            </div>
+                                            <p class="text-[10px] text-gray-400 mt-1">Entering a name here will create the group and automatically assign it to this board.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-end gap-2">
+                                        <button type="button" @click="editMode = false" class="px-3 py-1.5 text-xs font-bold text-gray-500 uppercase border border-gray-300 dark:border-gray-500 rounded bg-white dark:bg-gray-700">Cancel</button>
+                                        <button type="submit" class="px-3 py-1.5 text-xs font-bold text-white uppercase bg-prime-orange rounded hover:bg-orange-600">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
+                        {% empty %}
+                        <div class="p-8 text-center text-gray-500 dark:text-gray-400 italic">
+                            No service boards defined. Click "+ Create Board" to start routing tickets.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-service-taxonomy" class="panel-content hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+                    <div class="border-b border-gray-200 dark:border-gray-700">
+                        <nav class="-mb-px flex">
+                            <button onclick="switchSubTab('types')" class="subtab-btn w-1/3 py-4 text-center text-sm font-medium text-prime-orange border-b-2 border-prime-orange" data-subtab="types">
+                                Types
+                            </button>
+                            <button onclick="switchSubTab('subtypes')" class="subtab-btn w-1/3 py-4 text-center text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent" data-subtab="subtypes">
+                                Subtypes
+                            </button>
+                            <button onclick="switchSubTab('items')" class="subtab-btn w-1/3 py-4 text-center text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent" data-subtab="items">
+                                Items
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div id="subpanel-types" class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-700 dark:text-gray-200">Service Types</h3>
+                            <button onclick="openModal('modal-type')" class="bg-prime-orange text-white px-3 py-1.5 rounded text-xs font-bold uppercase hover:bg-orange-600">+ Add Type</button>
+                        </div>
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Form Template</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Boards</th>
+                                        <th class="px-6 py-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {% for type in service_types %}
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ type.name }}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">{{ type.form_class_name }}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">{{ type.boards.count }} Boards</td>
+                                        <td class="px-6 py-4 text-right text-sm font-medium">
+                                            <form method="post" action="" class="inline" onsubmit="return confirm('Delete this Type?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="active_tab" value="service-taxonomy">
+                                                <input type="hidden" name="subtab" value="types">
+                                                <input type="hidden" name="action" value="delete_type">
+                                                <input type="hidden" name="type_id" value="{{ type.id }}">
+                                                <button type="submit" class="text-red-600 hover:text-red-900 ml-2">Delete</button>
+                                            </form>
+                                            <button onclick="editType('{{ type.id }}', '{{ type.name }}', '{{ type.form_class_name }}', [{% for b in type.boards.all %}'{{ b.id }}',{% endfor %}])" class="text-indigo-600 hover:text-indigo-900 ml-2">Edit</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="subpanel-subtypes" class="p-6 hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-700 dark:text-gray-200">Service Subtypes</h3>
+                            <button onclick="openModal('modal-subtype')" class="bg-prime-orange text-white px-3 py-1.5 rounded text-xs font-bold uppercase hover:bg-orange-600">+ Add Subtype</button>
+                        </div>
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subtype Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Parent Types</th>
+                                        <th class="px-6 py-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {% for sub in service_subtypes %}
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ sub.name }}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">{{ sub.parent_types.count }} Types</td>
+                                        <td class="px-6 py-4 text-right text-sm font-medium">
+                                            <form method="post" action="" class="inline" onsubmit="return confirm('Delete this Subtype?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="active_tab" value="service-taxonomy">
+                                                <input type="hidden" name="subtab" value="subtypes">
+                                                <input type="hidden" name="action" value="delete_subtype">
+                                                <input type="hidden" name="subtype_id" value="{{ sub.id }}">
+                                                <button type="submit" class="text-red-600 hover:text-red-900 ml-2">Delete</button>
+                                            </form>
+                                            <button onclick="editSubtype('{{ sub.id }}', '{{ sub.name }}', [{% for t in sub.parent_types.all %}'{{ t.id }}',{% endfor %}])" class="text-indigo-600 hover:text-indigo-900 ml-2">Edit</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="subpanel-items" class="p-6 hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-700 dark:text-gray-200">Service Items</h3>
+                            <button onclick="openModal('modal-item')" class="bg-prime-orange text-white px-3 py-1.5 rounded text-xs font-bold uppercase hover:bg-orange-600">+ Add Item</button>
+                        </div>
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-700">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Parent Subtypes</th>
+                                        <th class="px-6 py-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {% for item in service_items %}
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{{ item.name }}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">{{ item.parent_subtypes.count }} Subtypes</td>
+                                        <td class="px-6 py-4 text-right text-sm font-medium">
+                                            <form method="post" action="" class="inline" onsubmit="return confirm('Delete this Item?');">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="active_tab" value="service-taxonomy">
+                                                <input type="hidden" name="subtab" value="items">
+                                                <input type="hidden" name="action" value="delete_item">
+                                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                                <button type="submit" class="text-red-600 hover:text-red-900 ml-2">Delete</button>
+                                            </form>
+                                            <button onclick="editItem('{{ item.id }}', '{{ item.name }}', [{% for s in item.parent_subtypes.all %}'{{ s.id }}',{% endfor %}])" class="text-indigo-600 hover:text-indigo-900 ml-2">Edit</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="panel-taxonomy" class="panel-content hidden">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[600px] flex overflow-hidden">
                     <div class="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -282,52 +624,99 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-prime-navy dark:text-white mb-2">Announcement Title <span class="text-red-500">*</span></label>
-                                <input type="text" name="announcement_title" id="announcement_title" value="{{ settings_obj.announcement_title }}" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange dark:bg-gray-700 dark:text-white" required>
+                                <input type="text" name="announcement_title" id="announcement_title" value="{{ site_config.announcement_title }}" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange dark:bg-gray-700 dark:text-white" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-prime-navy dark:text-white mb-2">Announcement Message <span class="text-red-500">*</span></label>
-                                <textarea name="announcement_message" id="announcement_message" rows="4" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange dark:bg-gray-700 dark:text-white" required>{{ settings_obj.announcement_message }}</textarea>
+                                <textarea name="announcement_message" id="announcement_message" rows="4" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange dark:bg-gray-700 dark:text-white" required>{{ site_config.announcement_message }}</textarea>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-prime-navy dark:text-white mb-2">Announcement Type <span class="text-red-500">*</span></label>
                                 <select name="announcement_type" id="announcement_type" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange dark:bg-gray-700 dark:text-white">
-                                    <option value="info" {% if settings_obj.announcement_type == 'info' %}selected{% endif %}>ℹ️ Info (Blue)</option>
-                                    <option value="maintenance" {% if settings_obj.announcement_type == 'maintenance' %}selected{% endif %}>🔧 Maintenance (Yellow)</option>
-                                    <option value="alert" {% if settings_obj.announcement_type == 'alert' %}selected{% endif %}>⚠️ Alert (Orange)</option>
-                                    <option value="critical" {% if settings_obj.announcement_type == 'critical' %}selected{% endif %}>🔴 Critical (Red)</option>
+                                    <option value="info" {% if site_config.announcement_type == 'info' %}selected{% endif %}>ℹ️ Info (Blue)</option>
+                                    <option value="maintenance" {% if site_config.announcement_type == 'maintenance' %}selected{% endif %}>🔧 Maintenance (Yellow)</option>
+                                    <option value="alert" {% if site_config.announcement_type == 'alert' %}selected{% endif %}>⚠️ Alert (Orange)</option>
+                                    <option value="critical" {% if site_config.announcement_type == 'critical' %}selected{% endif %}>🔴 Critical (Red)</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                            <h3 class="text-lg font-bold text-prime-navy dark:text-white flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-                                </svg>
-                                Vendor Service Status
-                            </h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Update the real-time status of critical third-party services.</p>
-                        </div>
-                        <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                            {% for vendor in settings_obj.vendor_status %}
-                            <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <span class="h-2.5 w-2.5 rounded-full {% if vendor.status == 'Operational' %}bg-green-500{% elif vendor.status == 'Degraded Performance' %}bg-yellow-500{% elif vendor.status == 'Partial Outage' %}bg-orange-500{% else %}bg-red-500{% endif %}"></span>
-                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ vendor.name }}</span>
-                                </div>
-                                <input type="hidden" name="vendor_name_{{ forloop.counter0 }}" value="{{ vendor.name }}">
-                                <input type="hidden" name="vendor_url_{{ forloop.counter0 }}" value="{{ vendor.url }}">
-                                <select name="vendor_status_{{ forloop.counter0 }}" class="pl-3 pr-10 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-prime-orange dark:bg-gray-700 dark:text-white w-64">
-                                    <option value="Operational" {% if vendor.status == 'Operational' %}selected{% endif %}>✅ Operational</option>
-                                    <option value="Degraded Performance" {% if vendor.status == 'Degraded Performance' %}selected{% endif %}>⚠️ Degraded Performance</option>
-                                    <option value="Partial Outage" {% if vendor.status == 'Partial Outage' %}selected{% endif %}>🟠 Partial Outage</option>
-                                    <option value="Major Outage" {% if vendor.status == 'Major Outage' %}selected{% endif %}>🔴 Major Outage</option>
-                                </select>
+                    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                         x-data="{ 
+                            vendors: {{ site_config.vendor_status|safe|default:'[]' }},
+                            addVendor() {
+                                this.vendors.push({ name: '', status: 'Operational', url: '' });
+                            },
+                            removeVendor(index) {
+                                this.vendors.splice(index, 1);
+                            },
+                            moveVendor(fromIndex, toIndex) {
+                                if (toIndex < 0 || toIndex >= this.vendors.length) return;
+                                const item = this.vendors.splice(fromIndex, 1)[0];
+                                this.vendors.splice(toIndex, 0, item);
+                            }
+                         }">
+                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-bold text-prime-navy dark:text-white flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-prime-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                    Vendor Service Status
+                                </h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Manage the real-time status details shown in the global header.</p>
                             </div>
-                            {% endfor %}
+                            <button type="button" @click="addVendor()" class="text-xs font-bold text-prime-orange hover:underline uppercase">+ Add Service</button>
+                        </div>
+
+                        <input type="hidden" name="vendor_status_json" :value="JSON.stringify(vendors)">
+
+                        <div class="p-6 space-y-3">
+                            <template x-for="(vendor, index) in vendors" :key="index">
+                                <div class="group flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-prime-orange/50 transition-colors">
+                                    
+                                    <div class="flex flex-col gap-1 text-gray-400">
+                                        <button type="button" @click="moveVendor(index, index - 1)" :disabled="index === 0" 
+                                                class="hover:text-prime-orange disabled:opacity-30 disabled:cursor-not-allowed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                                            </svg>
+                                        </button>
+                                        <button type="button" @click="moveVendor(index, index + 1)" :disabled="index === vendors.length - 1"
+                                                class="hover:text-prime-orange disabled:opacity-30 disabled:cursor-not-allowed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <div class="flex-grow grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <input type="text" x-model="vendor.name" placeholder="Service Name (e.g. Microsoft 365)" 
+                                               class="text-xs w-full rounded border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-prime-orange">
+                                        <input type="url" x-model="vendor.url" placeholder="Status Page URL (e.g. status.office.com)" 
+                                               class="text-xs w-full rounded border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-prime-orange">
+                                        <select x-model="vendor.status" 
+                                                class="text-xs w-full rounded border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-prime-orange">
+                                            <option value="Operational">Operational</option>
+                                            <option value="Maintenance">Maintenance</option>
+                                            <option value="Degraded Performance">Degraded Performance</option>
+                                            <option value="Partial Outage">Partial Outage</option>
+                                            <option value="Major Outage">Major Outage</option>
+                                        </select>
+                                    </div>
+                                    <button type="button" @click="removeVendor(index)" class="text-gray-400 hover:text-red-500 transition-colors ml-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                            
+                            <div x-show="vendors.length === 0" class="text-center py-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                                <p class="text-xs text-gray-400 italic">No vendor services configured. Click "+ Add Service" to begin.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -339,7 +728,7 @@
                             </div>
                             <button type="submit" id="save-button" class="bg-prime-orange text-white px-6 py-2 rounded-md font-bold transition-all duration-200 flex items-center gap-2 hover:bg-orange-600 shadow-md">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                                 <span>Save Changes</span>
                             </button>
@@ -352,28 +741,256 @@
     </div>
 </div>
 
+<div id="modal-type" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-lg shadow-lg p-6">
+        <h3 class="text-lg font-bold mb-4 dark:text-white" id="modal-type-title">Add/Edit Service Type</h3>
+        <form method="post" id="form-type" onsubmit="selectAllOptions('shuttle-type-dest')">
+            {% csrf_token %}
+            <input type="hidden" name="active_tab" value="service-taxonomy">
+            <input type="hidden" name="action" value="create_type" id="type-action">
+            <input type="hidden" name="type_id" id="type-id">
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Type Name</label>
+                    <input type="text" name="name" id="type-name" class="w-full border rounded p-2 dark:bg-gray-700 dark:text-white" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Form Template</label>
+                    <select name="form_class" id="type-class" class="w-full border rounded p-2 dark:bg-gray-700 dark:text-white focus:ring-prime-orange">
+                        {% for class_name, friendly_name in form_class_options %}
+                            <option value="{{ class_name }}">{{ friendly_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Associate with Boards</label>
+            <div class="flex gap-4 items-center mb-6">
+                <select id="shuttle-type-src" multiple class="w-1/2 h-40 border rounded p-2 dark:bg-gray-700 dark:text-white text-sm">
+                    {% for board in service_boards %}
+                        <option value="{{ board.id }}">{{ board.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="flex flex-col justify-center gap-2 px-2">
+                    <button type="button" onclick="moveOptions('shuttle-type-src', 'shuttle-type-dest')" class="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300" title="Add Selected">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button type="button" onclick="moveOptions('shuttle-type-dest', 'shuttle-type-src')" class="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300" title="Remove Selected">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M19 19l-7-7 7-7"></path></svg>
+                    </button>
+                </div>
+                <select id="shuttle-type-dest" name="assigned_boards" multiple class="w-1/2 h-40 border rounded p-2 dark:bg-gray-700 dark:text-white text-sm"></select>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeModal('modal-type')" class="px-4 py-2 bg-gray-200 rounded text-gray-700">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-prime-orange text-white rounded">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-subtype" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-lg shadow-lg p-6">
+        <h3 class="text-lg font-bold mb-4 dark:text-white">Add/Edit Subtype</h3>
+        <form method="post" id="form-subtype" onsubmit="selectAllOptions('shuttle-sub-dest')">
+            {% csrf_token %}
+            <input type="hidden" name="active_tab" value="service-taxonomy">
+            <input type="hidden" name="action" value="create_subtype" id="subtype-action">
+            <input type="hidden" name="subtype_id" id="subtype-id">
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Subtype Name</label>
+                <input type="text" name="name" id="subtype-name" class="w-full border rounded p-2 dark:bg-gray-700 dark:text-white" required>
+            </div>
+
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Associate with Parent Types</label>
+            <div class="flex gap-4 items-center mb-6">
+                <select id="shuttle-sub-src" multiple class="w-1/2 h-40 border rounded p-2 dark:bg-gray-700 dark:text-white text-sm">
+                    {% for type in service_types %}
+                        <option value="{{ type.id }}">{{ type.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="flex flex-col justify-center gap-2 px-2">
+                    <button type="button" onclick="moveOptions('shuttle-sub-src', 'shuttle-sub-dest')" class="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300" title="Add Selected">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button type="button" onclick="moveOptions('shuttle-sub-dest', 'shuttle-sub-src')" class="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300" title="Remove Selected">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M19 19l-7-7 7-7"></path></svg>
+                    </button>
+                </div>
+                <select id="shuttle-sub-dest" name="parent_types" multiple class="w-1/2 h-40 border rounded p-2 dark:bg-gray-700 dark:text-white text-sm"></select>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeModal('modal-subtype')" class="px-4 py-2 bg-gray-200 rounded text-gray-700">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-prime-orange text-white rounded">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-item" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-lg shadow-lg p-6">
+        <h3 class="text-lg font-bold mb-4 dark:text-white">Add/Edit Item</h3>
+        <form method="post" id="form-item" onsubmit="selectAllOptions('shuttle-item-dest')">
+            {% csrf_token %}
+            <input type="hidden" name="active_tab" value="service-taxonomy">
+            <input type="hidden" name="action" value="create_item" id="item-action">
+            <input type="hidden" name="item_id" id="item-id">
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Item Name</label>
+                <input type="text" name="name" id="item-name" class="w-full border rounded p-2 dark:bg-gray-700 dark:text-white" required>
+            </div>
+
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Associate with Subtypes</label>
+            <div class="flex gap-4 items-center mb-6">
+                <select id="shuttle-item-src" multiple class="w-1/2 h-40 border rounded p-2 dark:bg-gray-700 dark:text-white text-sm">
+                    {% for sub in service_subtypes %}
+                        <option value="{{ sub.id }}">{{ sub.name }}</option>
+                    {% endfor %}
+                </select>
+                <div class="flex flex-col justify-center gap-2 px-2">
+                    <button type="button" onclick="moveOptions('shuttle-item-src', 'shuttle-item-dest')" class="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300" title="Add Selected">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                    </button>
+                    <button type="button" onclick="moveOptions('shuttle-item-dest', 'shuttle-item-src')" class="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300" title="Remove Selected">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M19 19l-7-7 7-7"></path></svg>
+                    </button>
+                </div>
+                <select id="shuttle-item-dest" name="parent_subtypes" multiple class="w-1/2 h-40 border rounded p-2 dark:bg-gray-700 dark:text-white text-sm"></select>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeModal('modal-item')" class="px-4 py-2 bg-gray-200 rounded text-gray-700">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-prime-orange text-white rounded">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-    function switchTab(tabName, buttonElement) {
-        document.querySelectorAll('.panel-content').forEach(panel => panel.classList.add('hidden'));
-        const target = document.getElementById('panel-' + tabName);
-        if(target) target.classList.remove('hidden');
-        
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active', 'bg-gray-100', 'dark:bg-gray-700', 'text-prime-navy', 'dark:text-white');
-            btn.classList.add('text-gray-600', 'dark:text-gray-400');
+    // --- TAB SWITCHING ---
+    function switchTab(tabName, btn) {
+        document.querySelectorAll('.panel-content').forEach(p => p.classList.add('hidden'));
+        document.getElementById('panel-' + tabName).classList.remove('hidden');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active', 'bg-gray-100', 'dark:bg-gray-700', 'text-prime-navy', 'dark:text-white');
+            b.classList.add('text-gray-600', 'dark:text-gray-400');
         });
         
-        if(buttonElement) {
-            buttonElement.classList.add('active', 'bg-gray-100', 'dark:bg-gray-700', 'text-prime-navy', 'dark:text-white');
-            buttonElement.classList.remove('text-gray-600', 'dark:text-gray-400');
+        if(btn) {
+            btn.classList.add('active', 'bg-gray-100', 'dark:bg-gray-700', 'text-prime-navy', 'dark:text-white');
+            btn.classList.remove('text-gray-600', 'dark:text-gray-400');
         }
+    }
+
+    function switchSubTab(subName) {
+        document.getElementById('subpanel-types').classList.add('hidden');
+        document.getElementById('subpanel-subtypes').classList.add('hidden');
+        document.getElementById('subpanel-items').classList.add('hidden');
+        
+        document.getElementById('subpanel-' + subName).classList.remove('hidden');
+        
+        document.querySelectorAll('.subtab-btn').forEach(b => {
+            b.classList.remove('text-prime-orange', 'border-prime-orange');
+            b.classList.add('text-gray-500', 'border-transparent');
+        });
+        const activeBtn = document.querySelector(`[data-subtab="${subName}"]`);
+        activeBtn.classList.add('text-prime-orange', 'border-prime-orange');
+        activeBtn.classList.remove('text-gray-500', 'border-transparent');
+    }
+
+    // --- MODAL & SHUTTLE LOGIC ---
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function moveOptions(srcId, destId) {
+        const src = document.getElementById(srcId);
+        const dest = document.getElementById(destId);
+        const selected = Array.from(src.selectedOptions);
+        selected.forEach(opt => dest.appendChild(opt));
+    }
+
+    function selectAllOptions(selectId) {
+        const select = document.getElementById(selectId);
+        for (let i = 0; i < select.options.length; i++) {
+            select.options[i].selected = true;
+        }
+    }
+
+    // --- EDIT HELPERS ---
+    // Pre-populates the shuttle boxes based on existing relationships
+    function editType(id, name, formClass, boardIds) {
+        document.getElementById('type-action').value = 'update_type';
+        document.getElementById('type-id').value = id;
+        document.getElementById('type-name').value = name;
+        document.getElementById('type-class').value = formClass;
+        document.getElementById('modal-type-title').innerText = "Edit Service Type";
+        
+        // Reset Shuttle
+        const src = document.getElementById('shuttle-type-src');
+        const dest = document.getElementById('shuttle-type-dest');
+        // Move all back to src first
+        Array.from(dest.options).forEach(opt => src.appendChild(opt));
+        
+        // Move selected to dest
+        boardIds.forEach(bId => {
+            const opt = src.querySelector(`option[value="${bId}"]`);
+            if (opt) dest.appendChild(opt);
+        });
+        
+        openModal('modal-type');
+    }
+
+    function editSubtype(id, name, parentIds) {
+        document.getElementById('subtype-action').value = 'update_subtype';
+        document.getElementById('subtype-id').value = id;
+        document.getElementById('subtype-name').value = name;
+        
+        const src = document.getElementById('shuttle-sub-src');
+        const dest = document.getElementById('shuttle-sub-dest');
+        Array.from(dest.options).forEach(opt => src.appendChild(opt));
+        
+        parentIds.forEach(pId => {
+            const opt = src.querySelector(`option[value="${pId}"]`);
+            if (opt) dest.appendChild(opt);
+        });
+        openModal('modal-subtype');
+    }
+
+    function editItem(id, name, parentIds) {
+        document.getElementById('item-action').value = 'update_item';
+        document.getElementById('item-id').value = id;
+        document.getElementById('item-name').value = name;
+        
+        const src = document.getElementById('shuttle-item-src');
+        const dest = document.getElementById('shuttle-item-dest');
+        Array.from(dest.options).forEach(opt => src.appendChild(opt));
+        
+        parentIds.forEach(pId => {
+            const opt = src.querySelector(`option[value="${pId}"]`);
+            if (opt) dest.appendChild(opt);
+        });
+        openModal('modal-item');
     }
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-        if (window.location.search.includes('tab=health') || '{{ active_tab }}' == 'health') {
-            const btn = document.querySelector('button[data-tab="health"]');
-            switchTab('health', btn);
+        // Handle tab linking via URL parameter (e.g. ?tab=health)
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab') || '{{ active_tab }}';
+        
+        if(tab) {
+            const btn = document.querySelector(`button[data-tab="${tab}"]`);
+            if(btn) switchTab(tab, btn);
+        }
+
+        const subtab = urlParams.get('subtab') || '{{ active_subtab|default:"types" }}';
+        if(subtab && tab === 'service-taxonomy') {
+            switchSubTab(subtab);
         }
 
         const presetSelect = document.getElementById('announcement_quick_select');
@@ -399,7 +1016,7 @@
         }
     });
 
-    // Taxonomy Category Selector
+    // Taxonomy Category Selector (Existing KB)
     function selectCategory(categoryId) {
         document.getElementById('subcat-empty').classList.add('hidden');
         document.querySelectorAll('.subcat-panel').forEach(p => p.classList.add('hidden'));

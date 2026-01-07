@@ -1,0 +1,84 @@
+<div class="flex flex-col h-full bg-white dark:bg-gray-800">
+    
+    <div class="p-6 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex justify-between items-start mb-2">
+            <span class="px-2 py-1 text-xs font-bold rounded 
+                {% if 'Critical' in ticket.priority %}
+                    bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200
+                {% elif 'High' in ticket.priority %}
+                    bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200
+                {% elif 'Medium' in ticket.priority %}
+                    bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200
+                {% else %}
+                    bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
+                {% endif %}">
+                
+                {% if 'Critical' in ticket.priority %}Critical
+                {% elif 'High' in ticket.priority %}High
+                {% elif 'Medium' in ticket.priority %}Medium
+                {% else %}Low{% endif %}
+            </span>
+            <span class="text-xs text-gray-500">{{ ticket.created_at|date:"M d, Y H:i" }}</span>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">{{ ticket.title }}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
+            Submitted by <span class="font-semibold text-prime-navy dark:text-prime-orange">{{ ticket.submitter.get_full_name }}</span>
+        </p>
+    </div>
+
+    <div class="flex-grow overflow-y-auto p-6 space-y-6">
+        
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+            <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Issue Description</h4>
+            <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{{ ticket.description }}</p>
+        </div>
+
+        {% if asset %}
+        <div class="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-full text-blue-600 dark:text-blue-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-gray-900 dark:text-white">{{ asset.manufacturer }} {{ asset.model_number }}</h4>
+                <p class="text-xs text-gray-500">{{ asset.asset_tag }} • {{ asset.specs.ram|default:"Unknown RAM" }}</p>
+            </div>
+            <a href="{% url 'inventory:asset_detail' asset.asset_tag %}" class="ml-auto text-xs text-prime-orange font-semibold hover:underline">View Asset</a>
+        </div>
+        {% endif %}
+
+        <div>
+            <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Recent Activity</h4>
+            <div class="space-y-3">
+                {% for comment in comments|slice:":3" %}
+                <div class="flex gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
+                        {% if comment.author.profile.avatar %}
+                            <img src="{{ comment.author.profile.avatar.url }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="flex items-center justify-center h-full text-xs font-bold">{{ comment.author.first_name|slice:":1" }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg rounded-tl-none text-sm w-full">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-gray-900 dark:text-white">{{ comment.author.first_name }}</span>
+                            <span class="text-[10px] text-gray-500">{{ comment.created_at|timesince }} ago</span>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">{{ comment.text }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-gray-400 italic">No comments yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between">
+        <a href="{% url 'ticket_detail' ticket.id %}" class="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-prime-orange flex items-center gap-2">
+            Full Details <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+        </a>
+        <button class="bg-prime-orange text-white px-4 py-2 rounded-md text-sm font-bold hover:bg-orange-600 transition-colors">
+            Quick Reply
+        </button>
+    </div>
+</div>

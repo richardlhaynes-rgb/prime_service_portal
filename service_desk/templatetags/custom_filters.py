@@ -22,3 +22,10 @@ def urlize_target_blank(value, autoescape=True):
         return f'<a href="{url}" target="_blank" rel="noopener noreferrer" class="text-prime-orange hover:underline break-all">{url}</a>'
     
     return mark_safe(url_regex.sub(replace, value))
+
+@register.filter
+def get_item(dictionary, key):
+    """
+    Dictionary lookup filter. Usage: {{ my_dict|get_item:my_key }}
+    """
+    return dictionary.get(key)

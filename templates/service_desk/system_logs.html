@@ -3,13 +3,11 @@
 {% block content %}
 <div class="max-w-7xl mx-auto space-y-6">
 
-    <!-- Block 1: Page Header -->
     <div>
         <h1 class="text-2xl font-bold text-prime-navy dark:text-white">System Activity Logs</h1>
         <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Audit trail of administrative actions</p>
     </div>
 
-    <!-- Block 2: Main Card (Toolbar + Table) -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 space-y-4">
@@ -43,13 +41,13 @@
                     <div class="flex items-center gap-2">
                         <div id="preset-buttons" class="flex gap-2 {% if current_range == 'custom' %}hidden{% endif %}">
                             {% with r=current_range|default:'7d' %}
-                            <button hx-get=".?range=today&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true"
+                            <button hx-get=".?range=today&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true" onclick="setActiveLogFilter(this)"
                                     class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == 'today' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Today</button>
-                            <button hx-get=".?range=yesterday&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true"
+                            <button hx-get=".?range=yesterday&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true" onclick="setActiveLogFilter(this)"
                                     class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == 'yesterday' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Yesterday</button>
-                            <button hx-get=".?range=7d&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true"
+                            <button hx-get=".?range=7d&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true" onclick="setActiveLogFilter(this)"
                                     class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == '7d' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Last 7 Days</button>
-                            <button hx-get=".?range=30d&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true"
+                            <button hx-get=".?range=30d&q={{ search_query }}&timezone={{ selected_tz }}" hx-target="#logs-table-container" hx-push-url="true" onclick="setActiveLogFilter(this)"
                                     class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm {% if r == '30d' %}bg-prime-orange text-white border-prime-orange{% else %}bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600{% endif %}">Last 30 Days</button>
                             <button type="button" onclick="toggleCustomRange(true)" class="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600">Custom Range</button>
                             {% endwith %}
@@ -150,6 +148,25 @@
             currentLogPage = newPage;
             renderLogPage();
         }
+    }
+
+    // UPDATED: Function to handle visual state of filter buttons immediately
+    function setActiveLogFilter(selectedBtn) {
+        // Classes for a button when it is NOT selected
+        const inactiveClasses = "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600";
+        // Classes for a button when it IS selected
+        const activeClasses = "bg-prime-orange text-white border-prime-orange";
+        // Base classes common to both states
+        const baseClasses = "whitespace-nowrap px-4 py-2 text-sm font-medium rounded-md border transition-colors shadow-sm";
+
+        // 1. Reset all filter buttons to inactive state
+        const buttons = document.querySelectorAll('#preset-buttons button[hx-get]');
+        buttons.forEach(btn => {
+            btn.className = `${baseClasses} ${inactiveClasses}`;
+        });
+
+        // 2. Set the clicked button to active state
+        selectedBtn.className = `${baseClasses} ${activeClasses}`;
     }
 
     // Initialize on Load

@@ -6,6 +6,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [2.8.0] - 2026-01-06 (Omni-Search & Registry Architecture)
+
+### 🚀 New Features
+- **Omni-Search Engine:** Implemented a global, real-time search bar (HTMX) that simultaneously queries Tickets, Hardware Assets, Users, and Knowledge Base articles.
+- **Ticket Registry:** Launched a dedicated "Power Search" interface allowing deep filtering by Status, Priority, Technician, Submitter, and Service Board with persistent URL parameters.
+- **User Dossier:** Introduced a safe "Read-Only" profile view for general search results, displaying contact info, assigned assets, and recent ticket history (replacing the risky "Edit User" form link).
+- **Asset History Bridge:** Asset Detail views now dynamically aggregate and display all tickets referencing the specific Asset Tag, creating a complete hardware lifecycle history.
+
+### ⚙️ Backend & Architecture
+- **Search Logic Expansion:** Updated query logic to include Technician and Submitter identities (First Name, Last Name, Username) in global keyword searches.
+- **Navigation Bridging:** Created a "Bridge" link in the Omni-Search footer that passes the current search query directly to the Ticket Registry for advanced filtering.
+- **Routing Standardization:** Formalized `asset_detail` and `user_dossier` URL patterns to ensure consistent linking across the application.
+
+### 🎨 UI & UX Polish
+- **Search Ergonomics:** Replaced the non-functional "ESC" visual badge in the search modal with a fully interactive "Close" icon.
+- **Visual State Management:** Fixed a JavaScript regression in System Logs where date filter buttons (Today, 7d) failed to highlight when active.
+- **Workspace Integration:** Added a "Ticket Registry" shortcut button to the Technician Workspace toolbar for quick access to historical data.
+
+---
+
 ## [2.7.0] - 2026-01-04 (Asset Intelligence & Data Integrity)
 
 ### 🚀 New Features
