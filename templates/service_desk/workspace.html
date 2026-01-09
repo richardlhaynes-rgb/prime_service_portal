@@ -164,7 +164,34 @@
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ ticket.submitter.get_full_name }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">{{ ticket.created_at|timesince }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-right">
-                                {% if ticket.technician %}<img class="h-7 w-7 rounded-full border-2 border-white dark:border-gray-700 shadow-sm" src="{% if ticket.technician.profile.avatar %}{{ ticket.technician.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ ticket.technician.first_name }}+{{ ticket.technician.last_name }}&background=0D8ABC&color=fff{% endif %}" title="{{ ticket.technician.get_full_name }}">{% else %}<div class="h-7 w-7 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-[8px] text-gray-400 uppercase font-bold">Open</div>{% endif %}
+                                <div class="flex items-center justify-end gap-1">
+                                    
+                                    {% if request.user in ticket.collaborators.all and ticket.technician != request.user %}
+                                        <span class="text-blue-400 bg-blue-100/50 p-1 rounded-full mr-1" title="You are watching this">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </span>
+                                    {% endif %}
+
+                                    {% with collab_count=ticket.collaborators.count %}
+                                        {% if collab_count > 0 %}
+                                            <span class="text-[9px] font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-600" 
+                                                  title="Collaborators: {% for c in ticket.collaborators.all %}{{ c.get_full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                                                +{{ collab_count }}
+                                            </span>
+                                        {% endif %}
+                                    {% endwith %}
+
+                                    {% if ticket.technician %}
+                                        <img class="h-7 w-7 rounded-full border-2 border-white dark:border-gray-700 shadow-sm" 
+                                             src="{% if ticket.technician.profile.avatar %}{{ ticket.technician.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ ticket.technician.first_name }}+{{ ticket.technician.last_name }}&background=0D8ABC&color=fff{% endif %}" 
+                                             title="Owner: {{ ticket.technician.get_full_name }}">
+                                    {% else %}
+                                        <div class="h-7 w-7 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-[8px] text-gray-400 uppercase font-bold" title="Unassigned">Open</div>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -197,6 +224,7 @@
 </div>
 
 <script>
+    // ... (Scripts remain same) ...
     function openDrawer() {
         document.getElementById('drawer-backdrop').classList.remove('pointer-events-none', 'opacity-0');
         document.getElementById('drawer-backdrop').classList.add('opacity-100');
@@ -220,14 +248,12 @@
         window.location.href = url.toString();
     }
     
-    // NEW SORTING FUNCTION
     function sortGrid(field) {
         const url = new URL(window.location.href);
         const currentSort = url.searchParams.get('sort');
         const currentDir = url.searchParams.get('direction');
         
         let newDir = 'asc';
-        // If clicking the same column that is currently sorted ascending, switch to descending
         if (currentSort === field && currentDir === 'asc') {
             newDir = 'desc';
         }

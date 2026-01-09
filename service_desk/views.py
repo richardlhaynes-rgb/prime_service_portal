@@ -44,7 +44,8 @@ from django.core.paginator import Paginator
 
 @login_required
 def dashboard(request):
-    user_tickets = Ticket.objects.filter(submitter=request.user).order_by('-created_at')
+    # UPDATED: Added select_related/prefetch_related for Technician & Collaborators
+    user_tickets = Ticket.objects.filter(submitter=request.user).select_related('technician', 'technician__profile').prefetch_related('collaborators').order_by('-created_at')
     
     open_statuses = ['New', 'User Commented', 'Work In Progress', 'Reopened', 'Assigned', 'In Progress', 'Awaiting User Reply', 'On Hold']
     resolved_statuses = ['Resolved', 'Cancelled']
@@ -94,7 +95,6 @@ def dashboard_stats(request):
         'total_tickets': total_tickets,
     })
 
-
 # ============================================================================
 # SERVICE CATALOG
 # ============================================================================
@@ -118,7 +118,6 @@ def service_catalog(request):
     return render(request, 'service_desk/service_catalog.html', {
         'recommended_articles': recommended_articles
     })
-
 
 # ============================================================================
 # TICKET SUBMISSION FORMS
@@ -318,7 +317,6 @@ def report_vp_permissions(request):
         form = VPPermissionsForm()
     return render(request, 'service_desk/forms/vp_permissions.html', {'form': form})
 
-
 # ============================================================================
 # TICKET DETAIL & SURVEY
 # ============================================================================
@@ -332,6 +330,23 @@ def ticket_detail(request, ticket_id):
         changes_made = False
         action_summary = []
         
+        # --- 1. Collaborators Update (New) ---
+        # Get list of IDs from the multiple hidden inputs named 'collaborators'
+        new_collab_ids = request.POST.getlist('collaborators')
+        # Convert to integers for comparison
+        new_collab_ids = [int(id) for id in new_collab_ids if id.isdigit()]
+        
+        # Get current IDs
+        current_collab_ids = list(ticket.collaborators.values_list('id', flat=True))
+        
+        # Compare sorted lists to see if change occurred
+        if sorted(new_collab_ids) != sorted(current_collab_ids):
+            # Update the Many-to-Many relationship
+            ticket.collaborators.set(new_collab_ids)
+            action_summary.append("collaborators updated")
+            changes_made = True
+
+        # --- 2. Standard Field Updates ---
         if request.POST.get('reopen_ticket'):
             ticket.status = 'Reopened'
             ticket.closed_at = None
@@ -435,6 +450,16 @@ def ticket_detail(request, ticket_id):
     technicians = User.objects.filter(groups__name='Service Desk') 
     boards = ServiceBoard.objects.filter(is_active=True)
     status_choices = Ticket.Status.choices
+    
+    # Pre-fetch collaborators for the JS widget
+    current_collaborators = [
+        {
+            'id': u.id,
+            'name': u.get_full_name(),
+            'avatar': u.profile.avatar.url if u.profile.avatar else f"https://ui-avatars.com/api/?name={u.first_name}+{u.last_name}&background=0D8ABC&color=fff"
+        } 
+        for u in ticket.collaborators.all()
+    ]
 
     context = {
         'ticket': ticket,
@@ -443,9 +468,42 @@ def ticket_detail(request, ticket_id):
         'technicians': technicians,
         'boards': boards,
         'status_choices': status_choices,
+        'current_collaborators_json': json.dumps(current_collaborators), # Pass as JSON for Alpine
         'is_demo_mode': False,
     }
     
+# 1. Pre-fetch Collaborators for JS
+    current_collaborators = [
+        {
+            'id': u.id,
+            'name': u.get_full_name(),
+            'avatar': u.profile.avatar.url if u.profile.avatar else f"https://ui-avatars.com/api/?name={u.first_name}+{u.last_name}&background=0D8ABC&color=fff"
+        } 
+        for u in ticket.collaborators.all()
+    ]
+
+    # 2. Pre-fetch Technician for JS (NEW)
+    current_tech = None
+    if ticket.technician:
+        u = ticket.technician
+        current_tech = {
+            'id': u.id,
+            'name': u.get_full_name(),
+            'avatar': u.profile.avatar.url if u.profile.avatar else f"https://ui-avatars.com/api/?name={u.first_name}+{u.last_name}&background=0D8ABC&color=fff"
+        }
+
+    context = {
+        'ticket': ticket,
+        'comments': comments,
+        'form': form,
+        'technicians': technicians,
+        'boards': boards,
+        'status_choices': status_choices,
+        'current_collaborators_json': json.dumps(current_collaborators),
+        'current_tech_json': json.dumps(current_tech) if current_tech else 'null', # Pass Tech as JSON
+        'is_demo_mode': False,
+    }
+
     return render(request, 'service_desk/ticket_detail.html', context)
 
 
@@ -488,7 +546,6 @@ def ticket_survey(request, ticket_id):
     }
     
     return render(request, 'service_desk/ticket_survey.html', context)
-
 
 # ============================================================================
 # MANAGEMENT HUB & MANAGER TOOLS
@@ -749,7 +806,6 @@ def technician_profile(request, name):
 
     return render(request, 'service_desk/technician_profile.html', {'technician': tech_data})
 
-
 # ============================================================================
 # KNOWLEDGE BASE VIEWER
 # ============================================================================
@@ -793,7 +849,6 @@ def article_detail(request, article_id=None, pk=None):
     lookup_id = article_id if article_id is not None else pk
     article = get_object_or_404(Article, pk=lookup_id)
     return render(request, 'knowledge_base/article_detail.html', {'article': article})
-
 
 # ============================================================================
 # KNOWLEDGE BASE MANAGER
@@ -962,7 +1017,6 @@ def kb_bulk_action(request):
 
     return redirect('kb_manager')
 
-
 # ============================================================================
 # SYSTEM LOGS
 # ============================================================================
@@ -1075,7 +1129,6 @@ def system_logs(request):
         return render(request, 'service_desk/partials/logs_table.html', context)
     return render(request, 'service_desk/system_logs.html', context)
 
-
 # ============================================================================
 # USER PROFILE & SETTINGS
 # ============================================================================
@@ -1115,7 +1168,6 @@ def my_profile(request):
         'page_title': 'My Profile'
     }
     return render(request, 'service_desk/user_profile.html', context)
-
 
 # ============================================================================
 # SITE CONFIGURATION (ADMIN ONLY)
@@ -1264,7 +1316,6 @@ def site_configuration(request):
     }
     return render(request, 'service_desk/site_configuration.html', context)
 
-
 # ============================================================================
 # USER MANAGEMENT (ADMIN ONLY)
 # ============================================================================
@@ -1370,7 +1421,6 @@ def user_edit(request, user_id):
         'page_title': f'Edit User: {target_user.username}'
     }
     return render(request, 'service_desk/user_profile.html', context)
-
 
 # ============================================================================
 # KB TAXONOMY MANAGEMENT
@@ -1600,11 +1650,14 @@ def workspace(request):
         board__id__in=selected_board_ids
     ).exclude(
         status__in=['Resolved', 'Closed', 'Cancelled']
-    ).select_related('submitter', 'technician', 'board').order_by(db_sort_field)
+    ).select_related('submitter', 'technician', 'board').prefetch_related('collaborators').order_by(db_sort_field)
 
-    my_tickets = Ticket.objects.filter(technician=request.user).exclude(
+    # UPDATED: 'My Tickets' now includes tickets where user is Assignee OR Collaborator
+    my_tickets = Ticket.objects.filter(
+        Q(technician=request.user) | Q(collaborators=request.user)
+    ).exclude(
         status__in=['Resolved', 'Closed', 'Cancelled']
-    ).order_by('-priority')
+    ).select_related('submitter', 'technician').prefetch_related('collaborators').order_by('-priority').distinct()
     
     kanban_new = my_tickets.filter(status__in=['New', 'Assigned', 'Reopened'])
     kanban_progress = my_tickets.filter(status__in=['In Progress', 'Work In Progress', 'Waiting on User'])
@@ -1657,7 +1710,6 @@ def manage_service_boards(request):
     if request.method == 'POST':
         pass
     return render(request, 'service_desk/admin_service_boards.html', {'boards': boards})
-
 
 # ============================================================================
 # CSAT REPORT
@@ -1753,7 +1805,6 @@ def ticket_quick_view(request, ticket_id):
         'asset': primary_asset
     })
 
-
 # ============================================================================
 # AGENT TICKET CREATION (POWER FORM)
 # ============================================================================
@@ -1782,7 +1833,8 @@ def agent_create_ticket(request):
                 ticket = master_form.save(commit=False)
                 
                 ticket.submitter = master_form.cleaned_data['contact']
-                ticket.technician = request.user
+                # UPDATED: Use the form field, defaulting to None if empty
+                ticket.technician = master_form.cleaned_data.get('technician')
                 
                 profile = getattr(ticket.submitter, 'profile', None)
                 if profile:
@@ -1856,6 +1908,33 @@ def hx_get_contact_info(request):
     return render(request, 'service_desk/partials/contact_info_inputs.html', {
         'user': user,
         'profile': profile
+    })
+
+@login_required
+def hx_search_users(request):
+    query = request.GET.get('q', '').strip()
+    target = request.GET.get('target', 'contact')
+    variant = request.GET.get('variant', 'full') # Capture variant (default to 'full')
+    
+    users = User.objects.filter(is_active=True).select_related('profile')
+    
+    if target == 'technician' or target == 'collaborators':
+        users = users.filter(groups__name='Service Desk')
+
+    if query:
+        users = users.filter(
+            Q(first_name__icontains=query) | 
+            Q(last_name__icontains=query) | 
+            Q(username__icontains=query) |
+            Q(email__icontains=query)
+        ).distinct()[:25]
+    else:
+        users = users.order_by('first_name')[:25]
+        
+    return render(request, 'service_desk/partials/user_search_results.html', {
+        'users': users,
+        'target': target,
+        'variant': variant # Pass variant to template
     })
 
 # --- Omni-Search Engine ---
@@ -1994,4 +2073,35 @@ def user_dossier(request, user_id):
         'assets': assigned_assets,
         'tickets': recent_tickets,
         'is_technician': is_technician
+    })
+
+@login_required
+def hx_search_users(request):
+    """
+    HTMX Endpoint: Live user search for Agent Ticket Form & Details View.
+    """
+    query = request.GET.get('q', '').strip()
+    target = request.GET.get('target', 'contact') # 'contact', 'technician', or 'collaborators'
+    
+    # Base query with optimization for profiles (avatars)
+    users = User.objects.filter(is_active=True).select_related('profile')
+    
+    # RESTRICTION: If searching for Assignee OR Collaborators, only show Service Desk members
+    if target == 'technician' or target == 'collaborators':
+        users = users.filter(groups__name='Service Desk')
+
+    if query:
+        users = users.filter(
+            Q(first_name__icontains=query) | 
+            Q(last_name__icontains=query) | 
+            Q(username__icontains=query) |
+            Q(email__icontains=query)
+        ).distinct()[:25]
+    else:
+        # Default: Top 25 alphabetical
+        users = users.order_by('first_name')[:25]
+        
+    return render(request, 'service_desk/partials/user_search_results.html', {
+        'users': users,
+        'target': target
     })

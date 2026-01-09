@@ -6,6 +6,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and 
 
 ---
 
+## [2.9.0] - 2026-01-08 (Collaborative Support & UI Refinement)
+
+### 🚀 New Features
+- **Collaborator System:** Added the ability to assign multiple "Collaborators" to a ticket alongside the primary Technician, enabling team swarming on complex issues.
+- **Smart Chip Interface:** Implemented a multi-select "Chip" UI for managing Assignees and Collaborators on both the New Ticket (Agent) form and Ticket Detail sidebar.
+- **Team Visibility:** Updated the **Workspace** "Res" column and **User Dashboard** "Support" column to display "+N" badges, revealing the full team working on a ticket via tooltip.
+- **Watcher Indicators:** Technicians now see a specific "Eye" icon in their grid view for tickets where they are a Collaborator but not the Primary Owner.
+
+### ⚙️ Backend & Architecture
+- **Schema Expansion:** Updated `Ticket` model to include a `collaborators` ManyToMany relationship with `User`.
+- **Search Logic Refactor:** Standardized user search results into `full` (Rich) and `compact` (Avatar/Name only) variants to support high-density UI zones.
+- **Query Optimization:** Added `prefetch_related` lookups to Dashboard and Workspace views to efficiently load collaborator data without N+1 query performance hits.
+- **Scope Restriction:** Restricted Assignee and Collaborator search results to strictly filter for members of the 'Service Desk' group.
+
+### 🎨 UI & UX Polish
+- **Context-Aware Density:** Applied the new `compact` search variant to the Ticket Detail sidebar and Agent Create form to eliminate horizontal scrollbars and visual clutter.
+- **Dashboard Transparency:** Added a "Support" column to the End-User Dashboard, giving users full visibility into who is handling their request.
+- **Agent Ergonomics:** Added an "Assign to Me" shortcut link to the Agent Create Ticket form for rapid self-assignment.
+
+---
+
 ## [2.8.0] - 2026-01-06 (Omni-Search & Registry Architecture)
 
 ### 🚀 New Features

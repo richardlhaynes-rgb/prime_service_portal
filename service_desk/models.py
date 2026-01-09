@@ -138,7 +138,17 @@ class Ticket(models.Model):
     
     # People
     submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='submitted_tickets')
+    
+    # Primary Technician (The Owner)
     technician = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
+    
+    # NEW: Collaborators (Watchers/Helpers)
+    collaborators = models.ManyToManyField(
+        User, 
+        blank=True, 
+        related_name='collaborating_tickets',
+        help_text="Additional technicians watching or helping with this ticket."
+    )
     
     # Contact Snapshot (Stored at time of creation for history)
     contact_email = models.EmailField(blank=True)

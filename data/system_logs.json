@@ -206,5 +206,117 @@
         "action": "User Updated",
         "target": "marty.mcfly",
         "details": "Updated profile for user: marty.mcfly"
+    },
+    {
+        "id": 27,
+        "timestamp": "2026-01-08T08:16:18.432997Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "max.headroom",
+        "details": "Updated profile for user: max.headroom"
+    },
+    {
+        "id": 28,
+        "timestamp": "2026-01-08T08:17:46.437512Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "max.headroom",
+        "details": "Updated profile for user: max.headroom"
+    },
+    {
+        "id": 29,
+        "timestamp": "2026-01-08T08:19:20.478363Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "marty.mcfly",
+        "details": "Updated profile for user: marty.mcfly"
+    },
+    {
+        "id": 30,
+        "timestamp": "2026-01-08T08:20:23.990315Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "lorraine.baines",
+        "details": "Updated profile for user: lorraine.baines"
+    },
+    {
+        "id": 31,
+        "timestamp": "2026-01-08T08:21:08.599217Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "lorraine.baines",
+        "details": "Updated profile for user: lorraine.baines"
+    },
+    {
+        "id": 32,
+        "timestamp": "2026-01-08T08:24:06.308386Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "lorraine.baines",
+        "details": "Updated profile for user: lorraine.baines"
+    },
+    {
+        "id": 33,
+        "timestamp": "2026-01-08T08:24:57.562876Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "marty.mcfly",
+        "details": "Updated profile for user: marty.mcfly"
+    },
+    {
+        "id": 34,
+        "timestamp": "2026-01-08T08:26:24.120468Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "max.headroom",
+        "details": "Updated profile for user: max.headroom"
+    },
+    {
+        "id": 35,
+        "timestamp": "2026-01-08T08:26:55.433273Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "jennifer.parker",
+        "details": "Updated profile for user: jennifer.parker"
+    },
+    {
+        "id": 36,
+        "timestamp": "2026-01-08T08:27:23.316033Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "goldie.wilson",
+        "details": "Updated profile for user: goldie.wilson"
+    },
+    {
+        "id": 37,
+        "timestamp": "2026-01-08T08:27:56.537191Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "george.mcfly",
+        "details": "Updated profile for user: george.mcfly"
+    },
+    {
+        "id": 38,
+        "timestamp": "2026-01-08T08:28:25.319298Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "doc.brown",
+        "details": "Updated profile for user: doc.brown"
+    },
+    {
+        "id": 39,
+        "timestamp": "2026-01-08T08:31:21.260645Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "biff.tannen",
+        "details": "Updated profile for user: biff.tannen"
+    },
+    {
+        "id": 40,
+        "timestamp": "2026-01-08T08:32:01.990576Z",
+        "user": "marty.mcfly",
+        "action": "User Updated",
+        "target": "george.mcfly",
+        "details": "Updated profile for user: george.mcfly"
     }
 ]

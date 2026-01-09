@@ -1,0 +1,39 @@
+{% for u in users %}
+{% with avatar_url=u.profile.avatar.url|default:None %}
+{% with name_str=u.first_name|add:"+"|add:u.last_name %}
+{% with fallback="https://ui-avatars.com/api/?name="|add:name_str|add:"&background=0D8ABC&color=fff" %}
+    
+    {% if variant == 'compact' %}
+        <div class="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 flex items-center gap-2 border-b border-gray-100 dark:border-gray-600 last:border-0"
+             onmousedown="triggerUserSelection('{{ target }}', '{{ u.id }}', '{{ u.get_full_name|escapejs }}', '{% if avatar_url %}{{ avatar_url }}{% else %}{{ fallback }}{% endif %}')">
+            <div class="shrink-0">
+                <img class="h-6 w-6 rounded-full object-cover border border-gray-200 dark:border-gray-500" 
+                     src="{% if avatar_url %}{{ avatar_url }}{% else %}{{ fallback }}{% endif %}" 
+                     alt="{{ u.username }}">
+            </div>
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-medium text-gray-900 dark:text-white truncate">{{ u.get_full_name }}</p>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 flex items-center gap-3 border-b border-gray-100 dark:border-gray-600 last:border-0"
+             onmousedown="triggerUserSelection('{{ target }}', '{{ u.id }}', '{{ u.get_full_name|escapejs }}', '{% if avatar_url %}{{ avatar_url }}{% else %}{{ fallback }}{% endif %}')">
+            <div class="shrink-0">
+                <img class="h-8 w-8 rounded-full object-cover border border-gray-200 dark:border-gray-600" 
+                     src="{% if avatar_url %}{{ avatar_url }}{% else %}{{ fallback }}{% endif %}" 
+                     alt="{{ u.username }}">
+            </div>
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ u.get_full_name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ u.email }} {% if u.profile.title %}• {{ u.profile.title }}{% endif %}</p>
+            </div>
+        </div>
+    {% endif %}
+
+{% endwith %}
+{% endwith %}
+{% endwith %}
+{% empty %}
+    <div class="p-3 text-sm text-gray-500 italic text-center">No users found.</div>
+{% endfor %}

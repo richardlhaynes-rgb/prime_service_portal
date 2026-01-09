@@ -115,18 +115,17 @@
     <div class="lg:col-span-1">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5 sticky top-6">
             <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-4 border-b pb-2">Manage Ticket</h3>
-            <!-- Remove the "Partial Update" instructions and force a standard "Full Page Refresh." -->
-            <!-- With autocomplete="off": The browser ignores its cache. It renders exactly what the server sends -->
-            <form method="post" id="ticket-update-form" autocomplete="off">
+            
+            <form method="post" id="ticket-update-form" autocomplete="off"
+                  x-data="ticketManager({{ current_tech_json|default:'null' }}, {{ current_collaborators_json|default:'[]' }})"
+                  @user-selected="handleSelection($event.detail)">
                 {% csrf_token %}
                 
                 <div class="mb-4">
                     <label class="block text-xs font-medium text-gray-500 mb-1">Board</label>
                     <select name="board" id="id_board" class="w-full text-sm border-gray-300 rounded-md focus:ring-prime-orange focus:border-prime-orange bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600">
                         {% for board in boards %}
-                            <option value="{{ board.id }}" {% if ticket.board.id == board.id %}selected{% endif %}>
-                                {{ board.name }}
-                            </option>
+                            <option value="{{ board.id }}" {% if ticket.board.id == board.id %}selected{% endif %}>{{ board.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -135,23 +134,76 @@
                     <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
                     <select name="status" id="id_status" class="w-full text-sm border-gray-300 rounded-md focus:ring-prime-orange focus:border-prime-orange bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600">
                         {% for code, label in status_choices %}
-                            <option value="{{ code }}" {% if ticket.status == code %}selected{% endif %}>
-                                {{ label }}
-                            </option>
+                            <option value="{{ code }}" {% if ticket.status == code %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Assigned To</label>
-                    <select name="technician" id="id_technician" class="w-full text-sm border-gray-300 rounded-md focus:ring-prime-orange focus:border-prime-orange bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                        <option value="">-- Unassigned --</option>
-                        {% for tech in technicians %}
-                            <option value="{{ tech.id }}" {% if ticket.technician == tech %}selected{% endif %}>
-                                {{ tech.get_full_name|default:tech.username }}
-                            </option>
-                        {% endfor %}
-                    </select>
+                <div class="mb-4 relative" @click.away="openTech = false">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-medium text-gray-500">Assignee</label>
+                        <button type="button" x-show="!selectedTech" class="text-xs text-prime-orange font-bold hover:underline" onclick="assignToMe()">Assign to Me</button>
+                    </div>
+                    
+                    <input type="hidden" name="technician" id="id_technician" :value="selectedTech ? selectedTech.id : ''">
+                    
+                    <div x-show="!selectedTech">
+                        <input type="text" id="tech-search" name="q"
+                               class="w-full text-sm border-gray-300 rounded-md focus:ring-prime-orange focus:border-prime-orange bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600 placeholder-gray-400"
+                               placeholder="Unassigned"
+                               autocomplete="off"
+                               @focus="openTech = true"
+                               hx-get="{% url 'hx_search_users' %}"
+                               hx-trigger="keyup changed delay:200ms, focus"
+                               hx-target="#tech-results"
+                               hx-vals='{"target": "technician", "variant": "compact"}'>
+                        
+                        <div id="tech-results" class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto" x-show="openTech" style="display: none;"></div>
+                    </div>
+
+                    <div x-show="selectedTech" style="display: none;" class="flex items-center justify-between p-2 pl-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-md shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <img :src="selectedTech?.avatar" class="w-6 h-6 rounded-full border border-purple-200 dark:border-purple-700 object-cover">
+                            <div>
+                                <p class="text-xs font-bold text-prime-navy dark:text-white" x-text="selectedTech?.name"></p>
+                            </div>
+                        </div>
+                        <button type="button" @click="removeUser('technician')" class="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-white dark:hover:bg-gray-800 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4 relative" @click.away="openCollab = false">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Collaborators</label>
+                    
+                    <template x-for="c in selectedCollaborators" :key="c.id">
+                        <input type="hidden" name="collaborators" :value="c.id">
+                    </template>
+
+                    <input type="text" id="collab-search" name="q"
+                           class="w-full text-sm border-gray-300 rounded-md focus:ring-prime-orange focus:border-prime-orange bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600 placeholder-gray-400"
+                           placeholder="Add technician..."
+                           autocomplete="off"
+                           @focus="openCollab = true"
+                           hx-get="{% url 'hx_search_users' %}"
+                           hx-trigger="keyup changed delay:200ms, focus"
+                           hx-target="#collab-results"
+                           hx-vals='{"target": "collaborators", "variant": "compact"}'>
+                    
+                    <div id="collab-results" class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto" x-show="openCollab" style="display: none;"></div>
+
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+                        <template x-for="(c, index) in selectedCollaborators" :key="c.id">
+                            <div class="inline-flex items-center bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full px-2 py-0.5">
+                                <img :src="c.avatar" class="w-4 h-4 rounded-full mr-1.5">
+                                <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200" x-text="c.name"></span>
+                                <button type="button" @click="removeCollaborator(index)" class="ml-1 text-gray-400 hover:text-red-500">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -179,7 +231,7 @@
                     {% endif %}
                 </div>
 
-                <button type="submit" id="submit-update-btn" disabled class="w-full bg-prime-orange text-white py-2 px-4 rounded-md font-bold hover:bg-orange-600 transition opacity-50 cursor-not-allowed">
+                <button type="submit" id="submit-update-btn" class="w-full bg-prime-orange text-white py-2 px-4 rounded-md font-bold hover:bg-orange-600 transition">
                     Update Ticket
                 </button>
             </form>
@@ -188,42 +240,114 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('ticket-update-form');
-    const submitBtn = document.getElementById('submit-update-btn');
-    const inputs = ['id_board', 'id_status', 'id_technician', 'id_priority', 'id_comment', 'id_close_ticket', 'id_reopen_ticket'];
-    let initialValues = {};
+    // 1. Alpine Component for Sidebar Logic
+    function ticketManager(initialTech, initialCollaborators) {
+        return {
+            openTech: false,
+            openCollab: false,
+            
+            selectedTech: initialTech || null,
+            selectedCollaborators: initialCollaborators || [],
 
-    if (!form || !submitBtn) return;
+            handleSelection(data) {
+                if (data.target === 'technician') {
+                    this.selectedTech = { id: data.id, name: data.name, avatar: data.avatar };
+                    this.openTech = false;
+                    document.getElementById('tech-search').value = '';
+                    this.enableSubmit();
+                }
+                else if (data.target === 'collaborators') {
+                    if (!this.selectedCollaborators.some(c => c.id == data.id)) {
+                        this.selectedCollaborators.push({ id: data.id, name: data.name, avatar: data.avatar });
+                        this.enableSubmit();
+                    }
+                    this.openCollab = false;
+                    document.getElementById('collab-search').value = ''; 
+                }
+            },
 
-    // Capture initial state
-    inputs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            initialValues[id] = el.type === 'checkbox' ? el.checked : el.value;
-            el.addEventListener('input', checkDirty);
-            el.addEventListener('change', checkDirty);
-        }
-    });
+            removeUser(target) {
+                if (target === 'technician') {
+                    this.selectedTech = null;
+                    document.getElementById('tech-search').value = '';
+                    this.enableSubmit();
+                }
+            },
 
-    function checkDirty() {
-        let isDirty = false;
-        inputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const currentVal = el.type === 'checkbox' ? el.checked : el.value;
-            if (currentVal !== initialValues[id]) isDirty = true;
-            if (id === 'id_comment' && currentVal.trim() !== '') isDirty = true;
-        });
-
-        if (isDirty) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            removeCollaborator(index) {
+                this.selectedCollaborators.splice(index, 1);
+                this.enableSubmit();
+            },
+            
+            enableSubmit() {
+                const btn = document.getElementById('submit-update-btn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
         }
     }
-});
+
+    // 2. Global Event Helper
+    function triggerUserSelection(target, id, name, avatar) {
+        const form = document.getElementById('ticket-update-form');
+        form.dispatchEvent(new CustomEvent('user-selected', {
+            detail: { target, id, name, avatar }
+        }));
+    }
+
+    // 3. "Assign to Me" Logic
+    function assignToMe() {
+        const myId = '{{ request.user.id }}';
+        const myName = '{{ request.user.get_full_name|escapejs }}';
+        {% if request.user.profile.avatar %}
+            const myAvatar = '{{ request.user.profile.avatar.url }}';
+        {% else %}
+            const myAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&background=0D8ABC&color=fff`;
+        {% endif %}
+        
+        triggerUserSelection('technician', myId, myName, myAvatar);
+    }
+
+    // 4. Dirty Form Checker
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('ticket-update-form');
+        const submitBtn = document.getElementById('submit-update-btn');
+        // Initial state: disabled until user interacts
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+        const inputs = ['id_board', 'id_status', 'id_priority', 'id_comment', 'id_close_ticket', 'id_reopen_ticket'];
+        let initialValues = {};
+
+        if (!form) return;
+
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                initialValues[id] = el.type === 'checkbox' ? el.checked : el.value;
+                el.addEventListener('input', checkDirty);
+                el.addEventListener('change', checkDirty);
+            }
+        });
+
+        function checkDirty() {
+            let isDirty = false;
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const currentVal = el.type === 'checkbox' ? el.checked : el.value;
+                if (currentVal !== initialValues[id]) isDirty = true;
+                if (id === 'id_comment' && currentVal.trim() !== '') isDirty = true;
+            });
+
+            // Note: Tech/Collab changes are handled via Alpine's 'enableSubmit'
+            if (isDirty) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    });
 </script>
 {% endblock %}

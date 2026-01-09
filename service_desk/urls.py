@@ -26,6 +26,7 @@ urlpatterns = [
     path('htmx/load-items/', views.hx_load_items, name='hx_load_items'),
     path('htmx/load-form/', views.hx_load_ticket_form, name='hx_load_ticket_form'),
     path('htmx/get-contact-info/', views.hx_get_contact_info, name='hx_get_contact_info'),
+    path('htmx/search-users/', views.hx_search_users, name='hx_search_users'),
 
     # --- Omni-Search ---
     path('search/omni/', views.omni_search, name='omni_search'),

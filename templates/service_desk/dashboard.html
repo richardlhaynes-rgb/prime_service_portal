@@ -80,6 +80,8 @@
                         <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                             <a href="?sort={% if current_sort == 'status' %}-status{% else %}status{% endif %}" class="flex items-center justify-center">Status {% if current_sort == 'status' %}↑{% elif current_sort == '-status' %}↓{% endif %}</a>
                         </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Support</th>
+                        
                         <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                             <a href="?sort={% if current_sort == 'created_at' %}-created_at{% else %}created_at{% endif %}" class="flex items-center">Date {% if current_sort == 'created_at' %}↑{% elif current_sort == '-created_at' %}↓{% endif %}</a>
                         </th>
@@ -177,6 +179,28 @@
                             </div>
                         </td>
                         
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                
+                                {% with collab_count=ticket.collaborators.count %}
+                                    {% if collab_count > 0 %}
+                                        <span class="text-[9px] font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded-full border border-gray-200 dark:border-gray-600 cursor-help" 
+                                              title="Collaborators: {% for c in ticket.collaborators.all %}{{ c.get_full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                                            +{{ collab_count }}
+                                        </span>
+                                    {% endif %}
+                                {% endwith %}
+
+                                {% if ticket.technician %}
+                                    <img class="h-7 w-7 rounded-full border-2 border-white dark:border-gray-700 shadow-sm object-cover" 
+                                         src="{% if ticket.technician.profile.avatar %}{{ ticket.technician.profile.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ ticket.technician.first_name }}+{{ ticket.technician.last_name }}&background=0D8ABC&color=fff{% endif %}" 
+                                         title="Assigned to: {{ ticket.technician.get_full_name }}">
+                                {% else %}
+                                    <span class="text-[10px] text-gray-400 italic">Unassigned</span>
+                                {% endif %}
+                            </div>
+                        </td>
+
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {{ ticket.created_at|date:"M d, Y" }}
                         </td>
@@ -190,7 +214,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="8" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

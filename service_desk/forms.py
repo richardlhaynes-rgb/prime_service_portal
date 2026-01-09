@@ -448,7 +448,7 @@ class CustomUserChangeForm(UserChangeForm):
         profile.save()
         return user
 
-# --- NEW: AGENT MASTER TICKET FORM (Added 2026-01-05) ---
+# --- NEW: AGENT MASTER TICKET FORM ---
 class AgentTicketForm(forms.ModelForm):
     """
     The 'Power Form' for technicians.
@@ -457,16 +457,27 @@ class AgentTicketForm(forms.ModelForm):
     # 1. Contact Info (Who is this for?)
     contact = forms.ModelChoiceField(
         queryset=User.objects.all().order_by('username'),
-        widget=forms.Select(attrs={
-            'class': INPUT_STYLE, 
-            'hx-get': '/service-desk/htmx/get-contact-info/', 
-            'hx-target': '#contact-details'
-        }),
+        widget=forms.HiddenInput(), # Controlled by JS Combobox
         label="Contact / User"
     )
     
-    # 2. Classification Hierarchy
-    # Note: Querysets for subtype/item are empty initially and filled via HTMX
+    # 2. Technician (Assignee)
+    technician = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_active=True).order_by('first_name'),
+        required=False,
+        label="Assignee",
+        widget=forms.HiddenInput() # Controlled by JS Combobox
+    )
+
+    # 3. Collaborators (Multiple Select)
+    collaborators = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_active=True),
+        required=False,
+        label="Collaborators",
+        widget=forms.MultipleHiddenInput() # Controlled by JS Multi-Chip UI
+    )
+    
+    # 4. Classification Hierarchy
     board = forms.ModelChoiceField(
         queryset=ServiceBoard.objects.filter(is_active=True),
         widget=forms.Select(attrs={
@@ -477,14 +488,13 @@ class AgentTicketForm(forms.ModelForm):
     )
     
     type = forms.ModelChoiceField(
-        queryset=ServiceType.objects.none(), # Populated by HTMX
+        queryset=ServiceType.objects.none(), 
         widget=forms.Select(attrs={
             'class': INPUT_STYLE,
             'hx-get': '/service-desk/htmx/load-subtypes/',
             'hx-target': '#id_subtype',
-            'hx-include': '#id_type', # Pass type ID to the view
-            'hx-swap': 'innerHTML',   # Only swap options, not the select itself
-            # Trigger form load on change:
+            'hx-include': '#id_type',
+            'hx-swap': 'innerHTML',
             '_': "on change htmx.ajax('GET', '/service-desk/htmx/load-form/?type=' + this.value, '#dynamic-form-container')"
         })
     )
@@ -507,7 +517,8 @@ class AgentTicketForm(forms.ModelForm):
 
     class Meta:
         model = Ticket
-        fields = ['contact', 'board', 'type', 'subtype', 'item', 'status', 'priority', 'source']
+        # UPDATED: Added 'technician' and 'collaborators' to fields list
+        fields = ['contact', 'technician', 'collaborators', 'board', 'type', 'subtype', 'item', 'status', 'priority', 'source']
         widgets = {
             'status': forms.Select(attrs={'class': INPUT_STYLE}),
             'priority': forms.Select(attrs={'class': INPUT_STYLE}),
@@ -517,8 +528,6 @@ class AgentTicketForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Handling Dynamic Querysets on POST (Form Validation)
-        # Without this, Django rejects the choices because querysets are empty/filtered
         if 'board' in self.data:
             try:
                 board_id = int(self.data.get('board'))
